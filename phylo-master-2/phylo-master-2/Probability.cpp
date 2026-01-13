@@ -302,6 +302,32 @@ void Probability::Dirichlet::rv(RandomVariable* rng, const std::vector<double> &
         z[i] /= sum;
 }
 
+double Probability::Dirichlet::lnPdf(const Eigen::VectorXd &a, const Eigen::VectorXd &z){
+    int n = (int)a.size(); //!< we assume that a and z have the same size
+    double alpha0 = 0.0;
+    for (int i=0; i<n; i++)
+        alpha0 += a(i);
+    double lnP = Probability::Helper::lnGamma(alpha0);
+    for (int i=0; i<n; i++)
+        lnP -= Probability::Helper::lnGamma(a(i));
+    for (int i=0; i<n; i++)
+        lnP += (a(i) - 1.0) * log(z(i));
+    return lnP;
+}
+
+void Probability::Dirichlet::rv(RandomVariable* rng, const Eigen::VectorXd &a, Eigen::VectorXd &z){
+    int n = (int)a.size();
+    double sum = 0.0;
+    for(int i=0; i<n; i++)
+        {
+        /* z[i] = rndGamma(a[i]) / 1.0; */
+        z(i) = Probability::Helper::rndGamma(rng, a(i));
+        sum += z(i);
+        }
+    for(int i=0; i<n; i++)
+        z(i) /= sum;
+}
+
 #pragma mark - Exponential
 
 double  Probability::Exponential::pdf(double lambda, double x) {
@@ -748,6 +774,437 @@ double  Probability::Uniform::cdf(double low, double high, double x) {
         return 1.0;
     else
         return 1.0 - ((high - x) / (high - low));
+}
+
+#pragma mark - Multivariate T distribution
+
+double Probability::MultivariateT::lnPdf(Eigen::MatrixXd* dat, Eigen::MatrixXd* u, Eigen::MatrixXd* scale, double dof){
+    if(dof <= 0)
+        Msg::error("dof needs to be greater than 0");
+    if(scale->rows() != scale->cols())
+        Msg::error("expected square scale matrix");
+        
+    //we need u and x to be p x 1
+    int p = (int)scale->cols();
+    
+    Eigen::MatrixXd mu;
+    Eigen::MatrixXd x;
+    if(dat->rows() == 1){
+        x = dat->transpose();
+    }else if(dat->rows() == p){
+        x = *dat;
+    }else{
+        Msg::error("expected dat to be 1xp or px1 and it was neither");
+    }
+    if(u->rows() == 1){
+        mu = u->transpose();
+    }else if(u->rows() == p){
+        mu = *dat;
+    }else{
+        Msg::error("expected u to be 1xp or px1 and it was neither");
+    }
+    
+    double res = std::lgamma((dof + p)/2);
+    res -= std::lgamma(dof/2);
+    res -= 0.5 * p * std::log(dof);
+    res -= 0.5 * p * std::log(PI);
+    res -= 0.5 * std::log(scale->determinant());
+    res += -0.5 * (dof + p) * std::log(1 + (1/dof * (x-mu).transpose() *  scale->inverse() * (x-mu))(0,0));
+    
+    return res;
+}
+
+#pragma mark - Multivariate Normal
+std::vector<double> Probability::MultivariateNormal::rv(RandomVariable* rng, std::vector<double> u, Eigen::MatrixXd* VCV){
+    //u + lltVCV * z where z is n x 1 vector of standard normal draws
+    Eigen::LDLT<Eigen::MatrixXd> check(*VCV);
+    if(check.info() == Eigen::NumericalIssue)
+        throw std::invalid_argument("vcv apparently not pos def");
+        
+    Eigen::LLT<Eigen::MatrixXd> cholDec(*VCV);
+    Eigen::MatrixXd lltVCV = cholDec.matrixL();
+    
+    Eigen::MatrixXd z = Eigen::MatrixXd::Zero(u.size(), 1);
+    Eigen::MatrixXd U = Eigen::MatrixXd::Zero(u.size(), 1);
+    
+    for(int i = 0; i < z.rows(); i++){
+        z(i, 0) = Probability::Normal::rv(rng);
+        U(i, 0) = u[i];
+    }
+    
+    Eigen::MatrixXd res = U + lltVCV * z; // expecting n x 1 matrix here
+    
+    //converting back
+    std::vector<double> resVec;
+    resVec.clear();
+    for(int i = 0; i < res.rows(); i++)
+        resVec.push_back(res(i, 0));
+    return resVec;
+}
+
+Eigen::VectorXd Probability::MultivariateNormal::rv(RandomVariable* rng, Eigen::VectorXd u, Eigen::MatrixXd* VCV){
+    //u + lltVCV * z where z is n x 1 vector of standard normal draws
+    Eigen::LLT<Eigen::MatrixXd> cholDec(*VCV);
+    Eigen::MatrixXd lltVCV = cholDec.matrixL();
+    Eigen::VectorXd z = Eigen::VectorXd::Zero(u.size());
+    for(int i = 0; i < z.rows(); i++)
+        z(i) = Probability::Normal::rv(rng);
+    Eigen::VectorXd res = u + lltVCV * z;
+    
+    return res;
+}
+
+double Probability::MultivariateNormal::lnPdf(Eigen::MatrixXd* vec, Eigen::MatrixXd* distribVec, Eigen::MatrixXd* VCV){
+    //Checked good LYR Aug 28, 2025
+    Eigen::VectorXd scope = *vec;
+    Eigen::VectorXd mean = *distribVec;
+    Eigen::MatrixXd sigma = *VCV;
+    double prob = std::log(1 / std::sqrt( (2*PI* sigma).determinant() )) + (-0.5 * (scope-mean).transpose() * sigma.inverse() * (scope - mean) );
+    return prob;
+    
+    /*
+    //need: vec to be nx1, distribVec to be nx1, vcv to be nxn; vec is scope, distribVec/VCV are dist. params
+    Eigen::MatrixXd x = *vec; //need to be nx1
+    Eigen::MatrixXd m = *distribVec; //need to be nx1
+    Eigen::MatrixXd sigma = *VCV;
+//    Eigen::LLT<Eigen::MatrixXd> lltOfV(sigma);
+    Eigen::LDLT<Eigen::MatrixXd> lltOfV(sigma); //more numerically stable
+    if(lltOfV.info() == Eigen::NumericalIssue){
+        printEigen(sigma);
+        Msg::error("non posiative definite VCV");
+    }
+    if(sigma.cols() != sigma.rows())
+        Msg::error("MVN lnPdf expecting sigma to be square matrix");
+    if(x.cols() > x.rows())
+        x.transposeInPlace(); //if 1xn, transpose to nx1
+    if(m.cols() > m.rows())
+        m.transposeInPlace(); //if 1xn, transpose to nx1
+    if(x.cols() != 1)
+        Msg::error("Scope of mvn is expecting nx1");
+    if(m.cols() != 1)
+        Msg::error("Mean of mvn is expecting nx1");
+    Eigen::MatrixXd sigInv = sigma.inverse();
+//    Eigen::MatrixXd sigInv = lltOfV.solve(Eigen::MatrixXd::Identity(sigma.rows(), sigma.cols()));
+    Eigen::MatrixXd scatter = x-m;
+    
+    double logP = -0.5 * (scatter.transpose() * sigInv * scatter)(0,0);
+//    logP -= (0.5 * (sigma.cols()*std::log(2 * PI) + std::log(sigma.determinant())));
+    logP -= (0.5 * (sigma.cols()*std::log(2 * PI) + lltOfV.vectorD().array().log().sum()));
+    return logP;
+    */
+}
+
+double Probability::MultivariateNormal::lnPdf(Eigen::VectorXd* vec, Eigen::VectorXd* u, Eigen::MatrixXd* VCV){
+    //Checked good LYR Aug 28, 2025
+    Eigen::VectorXd scope = *vec;
+    Eigen::VectorXd mean = *u;
+    Eigen::MatrixXd sigma = *VCV;
+    double prob = std::log(1 / std::sqrt( (2*PI* sigma).determinant() )) + (-0.5 * (scope-mean).transpose() * sigma.inverse() * (scope - mean) );
+    return prob;
+    
+    /*
+    //need: vec to be nx1, distribVec to be nx1, vcv to be nxn; vec is scope, distribVec/VCV are dist. params
+    Eigen::MatrixXd x = *vec; //need to be nx1
+    Eigen::MatrixXd m = *distribVec; //need to be nx1
+    Eigen::MatrixXd sigma = *VCV;
+//    Eigen::LLT<Eigen::MatrixXd> lltOfV(sigma);
+    Eigen::LDLT<Eigen::MatrixXd> lltOfV(sigma); //more numerically stable
+    if(lltOfV.info() == Eigen::NumericalIssue){
+        printEigen(sigma);
+        Msg::error("non posiative definite VCV");
+    }
+    if(sigma.cols() != sigma.rows())
+        Msg::error("MVN lnPdf expecting sigma to be square matrix");
+    if(x.cols() > x.rows())
+        x.transposeInPlace(); //if 1xn, transpose to nx1
+    if(m.cols() > m.rows())
+        m.transposeInPlace(); //if 1xn, transpose to nx1
+    if(x.cols() != 1)
+        Msg::error("Scope of mvn is expecting nx1");
+    if(m.cols() != 1)
+        Msg::error("Mean of mvn is expecting nx1");
+    Eigen::MatrixXd sigInv = sigma.inverse();
+//    Eigen::MatrixXd sigInv = lltOfV.solve(Eigen::MatrixXd::Identity(sigma.rows(), sigma.cols()));
+    Eigen::MatrixXd scatter = x-m;
+    
+    double logP = -0.5 * (scatter.transpose() * sigInv * scatter)(0,0);
+//    logP -= (0.5 * (sigma.cols()*std::log(2 * PI) + std::log(sigma.determinant())));
+    logP -= (0.5 * (sigma.cols()*std::log(2 * PI) + lltOfV.vectorD().array().log().sum()));
+    return logP;
+    */
+}
+
+double Probability::MultivariateNormal::lnPrecisionMatrixPdf(Eigen::VectorXd* vec, Eigen::VectorXd* u, Eigen::MatrixXd* VCVInv){
+    Eigen::VectorXd scope = *vec;
+    Eigen::VectorXd mean = *u;
+    Eigen::MatrixXd sigma = *VCVInv;
+    double prob = std::log(sigma.determinant() / std::sqrt( 2*PI )) + (-0.5 * (scope-mean).transpose() * sigma * (scope - mean) );
+    return prob;
+    
+    /*
+    //need: vec to be nx1, distribVec to be nx1, vcv to be nxn; vec is scope, distribVec/VCV are dist. params
+    Eigen::MatrixXd x = *vec; //need to be nx1
+    Eigen::MatrixXd m = *distribVec; //need to be nx1
+    Eigen::MatrixXd sigma = *VCV;
+//    Eigen::LLT<Eigen::MatrixXd> lltOfV(sigma);
+    Eigen::LDLT<Eigen::MatrixXd> lltOfV(sigma); //more numerically stable
+    if(lltOfV.info() == Eigen::NumericalIssue){
+        printEigen(sigma);
+        Msg::error("non posiative definite VCV");
+    }
+    if(sigma.cols() != sigma.rows())
+        Msg::error("MVN lnPdf expecting sigma to be square matrix");
+    if(x.cols() > x.rows())
+        x.transposeInPlace(); //if 1xn, transpose to nx1
+    if(m.cols() > m.rows())
+        m.transposeInPlace(); //if 1xn, transpose to nx1
+    if(x.cols() != 1)
+        Msg::error("Scope of mvn is expecting nx1");
+    if(m.cols() != 1)
+        Msg::error("Mean of mvn is expecting nx1");
+    Eigen::MatrixXd sigInv = sigma.inverse();
+//    Eigen::MatrixXd sigInv = lltOfV.solve(Eigen::MatrixXd::Identity(sigma.rows(), sigma.cols()));
+    Eigen::MatrixXd scatter = x-m;
+    
+    double logP = -0.5 * (scatter.transpose() * sigInv * scatter)(0,0);
+//    logP -= (0.5 * (sigma.cols()*std::log(2 * PI) + std::log(sigma.determinant())));
+    logP -= (0.5 * (sigma.cols()*std::log(2 * PI) + lltOfV.vectorD().array().log().sum()));
+    return logP;
+    */
+}
+
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Probability::MultivariateNormal::productMVN(Eigen::MatrixXd& mean0, Eigen::MatrixXd& var0,Eigen::MatrixXd& mean1, Eigen::MatrixXd& var1){
+    Eigen::MatrixXd vcvSumInv = (var0+var1).inverse();
+    Eigen::MatrixXd meanProd = var1*vcvSumInv*mean0 + var0*vcvSumInv*mean1;
+    Eigen::MatrixXd varProd = var0*vcvSumInv*var1;
+//    Eigen::LDLT<Eigen::MatrixXd> ldlt(var0+var1);
+//    Eigen::MatrixXd meanProd = var1*ldlt.solve(mean0) + var0*ldlt.solve(mean1);
+//    Eigen::MatrixXd varProd = var0*ldlt.solve(var1);
+    
+    return {meanProd, varProd};
+}
+
+
+#pragma mark - Wishart
+  
+Eigen::MatrixXd Probability::Wishart::rv(RandomVariable* rng, Eigen::MatrixXd* V, double n){
+//    Msg::warning("possibly bad???");
+    int dim = (int)V->rows();
+    if(n < dim)
+        Msg::error("DOF must be greater or equal to dimension of matrix");
+
+    int retryCnt = 0;
+    retry:
+    retryCnt++;
+    
+    Eigen::LLT<Eigen::MatrixXd> cholDec(*V);
+    Eigen::MatrixXd L = cholDec.matrixL();
+    Eigen::MatrixXd Lt = cholDec.matrixL().transpose();
+    
+    Eigen::MatrixXd A = Eigen::MatrixXd::Zero(dim, dim);
+    for(int i = 0; i < dim; i++){
+        for(int j = 0; j < dim; j++){
+            if(i==j)
+                A(i,j) = std::sqrt(Probability::ChiSquare::rv(rng, (n - i + 1)));
+            else if(i > j)
+                A(i,j) = Probability::Normal::rv(rng); //standard normal
+        }
+    }
+//    printEigen(A);
+    Eigen::MatrixXd LALAT = L * A * A.transpose() * Lt;
+    
+    if(retryCnt > 100)
+        Msg::error("can't manage to draw from wishart matrix with determinant that is greater than 0");
+    if (LALAT.determinant() <= 0)
+        goto retry;
+    
+    return LALAT;
+}
+
+double Probability::Wishart::lnPdf(Eigen::MatrixXd* support, Eigen::MatrixXd* scale, double dof){
+    //lYR checked 5/28/2025
+    Eigen::MatrixXd X = *support;
+    Eigen::MatrixXd V = *scale;
+    double          n = dof;
+    int p = (int)V.cols();
+    if(n < p)
+        Msg::error("DOF must be greater or equal to dimension of matrix");
+    double detX = X.determinant();
+    double detV = V.determinant();
+//    if (detX <= 0 || detV <= 0)
+//        Msg::error("Support and scale matrices must be positive definite");
+    
+    Eigen::LDLT<Eigen::MatrixXd> ldltV(V);
+    Eigen::LDLT<Eigen::MatrixXd> ldltX(X);
+    if (ldltX.info() == Eigen::NumericalIssue)
+        Msg::error("X is not pos def?");
+    if (ldltV.info() == Eigen::NumericalIssue)
+        Msg::error("V is not pos def?");
+
+    double logP = (0.5*(n-p-1) * std::log(detX)) - 0.5 * (V.inverse() * X).trace();
+//    double logP = (0.5*(n-p-1) * std::log(detX)) - 0.5 * (ldltV.solve(X)).trace();
+    logP -= (0.5*n*p*std::log(2) + 0.5*n*std::log(detV));
+    
+    double nOver2 = n*0.5;
+    double multiGammaRes = p * (p - 1) / 4.0 * std::log(PI);
+    for (int j = 1; j <= p; ++j) {
+        multiGammaRes += std::lgamma(nOver2 - (j - 1) / 2.0);
+    }
+    logP -= (multiGammaRes);
+
+    return logP;
+}
+
+#pragma mark - Inverse Wishart
+  
+Eigen::MatrixXd Probability::InverseWishart::rv(RandomVariable* rng, Eigen::MatrixXd* psi, double n){
+    int dim = psi->rows();
+    if(psi->cols() != dim)
+        throw std::runtime_error("Scale matrix psi must be square");
+
+    if(n <= dim - 1)
+        throw std::runtime_error("Degrees of freedom n must be > dim - 1");
+
+    // Cholesky decomposition: psi = L * L^T
+    Eigen::LLT<Eigen::MatrixXd> llt(*psi);
+    Eigen::MatrixXd L = llt.matrixL();
+
+    // Build generalized Bartlett matrix A
+    Eigen::MatrixXd A = Eigen::MatrixXd::Zero(dim, dim);
+    for(int i = 0; i < dim; ++i) {
+        // Diagonal: sqrt of chi-square with real df = n - i
+        double df = n - i;
+        if(df <= 0.0) throw std::runtime_error("Invalid degrees of freedom on diagonal");
+        A(i,i) = std::sqrt(Probability::ChiSquare::rv(rng, df));
+
+        // Lower triangle: standard normal
+        for(int j = 0; j < i; ++j) {
+            A(i,j) = Probability::Normal::rv(rng);
+        }
+    }
+
+    // QR decomposition of A to get upper-triangular R
+    Eigen::HouseholderQR<Eigen::MatrixXd> qr(A);
+    Eigen::MatrixXd R = qr.matrixQR().triangularView<Eigen::Upper>();
+
+    // Solve R^T * T^T = L^T  => T = ...
+    Eigen::MatrixXd Tt = R.transpose().triangularView<Eigen::Upper>().solve(L.transpose());
+    Eigen::MatrixXd T = Tt.transpose();
+
+    // Return Inverse Wishart sample
+    return T * T.transpose();
+
+
+
+//    Eigen::MatrixXd psiInv = psi->inverse();
+//    Eigen::MatrixXd res = Probability::Wishart::rv(rng, &psiInv, n);
+//    return res.inverse();
+}
+
+double Probability::InverseWishart::lnPdf(Eigen::MatrixXd* support, Eigen::MatrixXd* scale, double dof){
+
+//    int p = support->rows();
+//    if(support->cols() != p || scale->rows() != p || scale->cols() != p)
+//        throw std::runtime_error("Matrices must be square and same dimension");
+//
+//    if(dof <= p - 1)
+//        throw std::runtime_error("Degrees of freedom must be > p - 1");
+//
+//    // Log determinant of matrices
+//    double logDetSigma = std::log(support->determinant());
+//    double logDetPsi = std::log(scale->determinant());
+//
+//    // Trace of Psi * Sigma^-1
+//    Eigen::MatrixXd SigmaInv = support->inverse();
+//    double traceTerm = ( (*scale) * SigmaInv ).trace();
+//
+//    // Log multivariate gamma
+//    double lnGammaTerm = 0.0;
+//    for(int i = 1; i <= p; ++i)
+//        lnGammaTerm += std::lgamma(dof / 2.0 + (1.0 - i) / 2.0);
+//
+//    // Assemble log PDF
+//    double logPdf = - (dof * p / 2.0) * std::log(2.0)
+//                    - (p * (p - 1) / 4.0) * std::log(M_PI)
+//                    - lnGammaTerm
+//                    - ((dof + p + 1.0)/2.0) * logDetSigma
+//                    - 0.5 * traceTerm
+//                    + (dof / 2.0) * logDetPsi; // optional: depends on IW parameterization
+//
+//    return logPdf;
+
+
+    Eigen::MatrixXd x = *support;
+    Eigen::MatrixXd psi = *scale;
+    double v = dof;
+    int p = x.cols();
+    double res = 0.0;
+    
+    res += v/2 * std::log(psi.determinant());
+    
+    double vOver2 = v*0.5;
+    double multiGammaRes = p * (p - 1) / 4.0 * std::log(PI);
+    for (int j = 1; j <= p; ++j) {
+        multiGammaRes += std::lgamma(vOver2 - (j - 1) / 2.0);
+    }
+    res -= v*p/2 * std::log(multiGammaRes);
+    
+    res += -(v+p+1)/2 * std::log(x.determinant());
+    
+    res += -0.5 * (psi * x.inverse()).trace();
+    
+    return res;
+    
+    /*
+    //Checked good LYR Aug 28, 2025
+    int retryCnt = 0;
+    retry:
+    retryCnt++;
+    
+    Eigen::LDLT<Eigen::MatrixXd> lltOfPsi(*psi); //more numerically stable
+    Eigen::LDLT<Eigen::MatrixXd> lltOfX(*X); //more numerically stable
+    
+    if(retryCnt > 100){
+        std::cout << "X" << std::endl;
+        printEigen(*X);
+        std::cout << "psi" << std::endl;
+        printEigen(*psi);
+        std::cout << "n: " << n << std::endl;
+        Msg::error("can't manage to do LDLT without numerical issue");
+    }
+    
+    if (lltOfX.info() == Eigen::NumericalIssue || lltOfPsi.info() == Eigen::NumericalIssue)
+        goto retry;
+    
+//    Eigen::MatrixXd psiInv = lltOfPsi.solve(Eigen::MatrixXd::Identity(psi->rows(), psi->cols()));
+    Eigen::MatrixXd psiInv = psi->inverse();
+//    Eigen::MatrixXd xInv = lltOfX.solve(Eigen::MatrixXd::Identity(X->rows(), X->cols()));
+    Eigen::MatrixXd xInv = X->inverse();
+    
+    double res = Probability::Wishart::lnPdf(&xInv, &psiInv, n);
+    return res;
+    */
+}
+
+#pragma mark - LKJ
+
+double Probability::LKJ::lnPdf(Eigen::MatrixXd* support, double shape){
+    Eigen::MatrixXd R = *support;
+    int dim = R.rows();
+    
+    double lnPro = 0.0;
+    lnPro += (shape - 1) * std::log(R.determinant());
+    
+    //calcualting normalizing constant C
+    double scratch = 0.0;
+    for(int k = 0; k < (dim - 1); k++)
+        scratch += (2*shape - 2 + dim - k)*(dim - k);
+    lnPro += scratch * std::log(2);
+    
+    for(int k = 0; k < (dim - 1); k++)
+        lnPro += (dim - k) * std::log(Probability::Helper::beta(shape + (dim - k - 1)/2, shape + (dim-k-1)/2));
+    
+    return lnPro;
 }
 
 #pragma mark - Helper Functions

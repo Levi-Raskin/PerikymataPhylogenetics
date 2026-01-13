@@ -44,7 +44,9 @@ namespace  Probability {
     
         double  pdf(const std::vector<double> &a, const std::vector<double> &z);
         double  lnPdf(const std::vector<double> &a, const std::vector<double> &z);
+        double  lnPdf(const Eigen::VectorXd &a, const Eigen::VectorXd &z);
         void    rv(RandomVariable* rng, const std::vector<double> &a, std::vector<double> &z);
+        void    rv(RandomVariable* rng, const Eigen::VectorXd &a, Eigen::VectorXd &z);
     }
 
     namespace Gamma {
@@ -93,6 +95,33 @@ namespace  Probability {
         double  lnPdf(double low, double high, double x);
         double  rv(RandomVariable* rng, double low, double high);
         double  cdf(double low, double high, double x);
+    }
+    
+    namespace MultivariateT{
+        double          lnPdf(Eigen::MatrixXd* dat, Eigen::MatrixXd* u, Eigen::MatrixXd* scale, double dof);
+    }
+    
+    namespace MultivariateNormal{
+        std::vector<double> rv(RandomVariable* rng, std::vector<double> u, Eigen::MatrixXd* VCV);
+        Eigen::VectorXd rv(RandomVariable* rng, Eigen::VectorXd u, Eigen::MatrixXd* VCV);
+        double          lnPdf(Eigen::MatrixXd* vec, Eigen::MatrixXd* distribVec, Eigen::MatrixXd* VCV);
+        double          lnPdf(Eigen::VectorXd* vec, Eigen::VectorXd* u, Eigen::MatrixXd* VCV);
+        double          lnPrecisionMatrixPdf(Eigen::VectorXd* vec, Eigen::VectorXd* u, Eigen::MatrixXd* VCVInv);
+        std::pair<Eigen::MatrixXd, Eigen::MatrixXd> productMVN(Eigen::MatrixXd& mean0, Eigen::MatrixXd& var0,Eigen::MatrixXd& mean1, Eigen::MatrixXd& var1);
+    }
+    
+    namespace Wishart{
+        Eigen::MatrixXd rv(RandomVariable* rng, Eigen::MatrixXd* V, double n);
+        double          lnPdf(Eigen::MatrixXd* support, Eigen::MatrixXd* scale, double dof);
+    }
+    
+    namespace InverseWishart{
+        Eigen::MatrixXd rv(RandomVariable* rng, Eigen::MatrixXd* psi, double n);
+        double          lnPdf(Eigen::MatrixXd* support, Eigen::MatrixXd* scale, double dof);
+    }
+    
+    namespace LKJ{
+        double          lnPdf(Eigen::MatrixXd* support, double shape);
     }
     
     namespace Helper {
