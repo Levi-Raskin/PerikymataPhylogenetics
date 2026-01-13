@@ -2,8 +2,6 @@
 #include <iostream>
 #include "Msg.hpp"
 
-
-
 void Msg::error(std::string s) {
 
 	std::cout << "Error: " << s << std::endl;

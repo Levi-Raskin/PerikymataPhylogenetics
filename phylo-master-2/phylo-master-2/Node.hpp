@@ -15,6 +15,7 @@ class Node{
         double                      getBranchLength(void){return branchLength; }
         std::string                 getName(void) { return name; }
         const std::vector<Node*>&   getNeighbors(void) { return neighbors; }
+        int                         getOffset(void) { return offset; }
         void                        removeNeighbor(Node* p);
         void                        removeAllNeighbors(void) { neighbors.clear(); }
         void                        setAncestor(Node* p) { ancestor = p; }
@@ -22,6 +23,7 @@ class Node{
         void                        setIsTip(bool tf) { isTip = tf; }
         void                        setBranchLength(double x) {branchLength = x;}
         void                        setName(std::string s) { name = s; }
+        void                        setOffset(int x) { offset = x; }
     
     private:
         //Functions
@@ -32,6 +34,7 @@ class Node{
         std::string                 name;
         double                      branchLength; //subtending branch
         int                         index;
+        int                         offset;
         bool                        isTip;
 };
 

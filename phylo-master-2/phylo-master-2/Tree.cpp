@@ -70,16 +70,88 @@ Tree::Tree(int nt, double lambda) : numTaxa(nt){
         if (p != root)
             p->setBranchLength(Probability::Exponential::rv(&rng, lambda));
     }
+    setOffsets();
+}
+
+Tree::Tree(std::vector<std::string> taxonNames, double lambda) : Tree(taxonNames.size(), lambda) {
+    int i = 0;
+    for (Node* p : downPassSequence) {
+        if (p->getIsTip() && i < taxonNames.size()) {
+            p->setName(taxonNames[i++]);
+        }
+    }
+}
+
+Tree::Tree(std::string newick){
+    numTaxa = 0;
+    std::vector<std::string> newickTokens = parseNewickString(newick);
+    Node* p = nullptr;
+    bool readingBl = false;
+    for(int i = 0; i < newickTokens.size(); i++){
+        std::string token = newickTokens[i];
+        if(token == "("){
+            Node* newNode = addNode();
+            if(p == nullptr){
+                root = newNode;
+            }else{
+                setNeighbors(p, newNode);
+                newNode->setAncestor(p);
+            }
+            p = newNode;
+        }else if (token == ")" || token == ","){
+            if(p->getAncestor() == nullptr)
+                Msg::error("no anc found for p");
+            p = p->getAncestor();
+        }else if (token == ";"){
+            if(p != root)
+                Msg::error("expecting to be at root");
+        }else if (token == ":"){
+            readingBl = true;
+        }else{
+            if(readingBl == false){
+                Node* newNode = addNode();
+                
+                setNeighbors(newNode, p);
+                newNode->setAncestor(p);
+                newNode->setName(token);
+                newNode->setIsTip(true);
+                numTaxa++;
+                p = newNode;
+            }else{
+                double x = stod(token);
+                if(p->getAncestor() != nullptr)
+                    p->setBranchLength(x);
+                readingBl = false;
+            }
+        }
+    }
+    initializeDownPassSequence();
+    int idx = numTaxa;
+    int tIdx = 0;
+    for (Node* p : downPassSequence)
+        {
+            if(p->getIsTip() == true)
+                p->setIndex(tIdx++);
+            if (p->getIsTip() == false)
+                p->setIndex(idx++);
+        }
+    setOffsets();
+}
+
+Tree::Tree(const Tree& t){
+    clone(t);
 }
 
 Tree::~Tree(void){
-    for (int i=0; i<nodes.size(); i++)
-        delete nodes[i];
-    nodes.clear();
+    deleteNodes();
 }
 
 # pragma mark Methods
-
+Tree& Tree::operator=(const Tree& t){
+    if (this != &t)
+        clone(t);
+    return *this;
+}
 
 Node* Tree::addNode(void){
     Node* newNode = new Node;
@@ -87,11 +159,79 @@ Node* Tree::addNode(void){
     return newNode;
 }
 
+void Tree::clone(const Tree& t) {
+    
+    if (this->nodes.size() != t.nodes.size())
+        {
+        deleteNodes();
+        for (int i=0; i<t.nodes.size(); i++)
+            addNode();
+        }
+        
+    this->numTaxa = t.numTaxa;
+    this->root = this->nodes[t.root->getOffset()];
+    
+    for (int i=0; i<t.nodes.size(); i++)
+        {
+        Node* q = t.nodes[i];
+        Node* p = this->nodes[i];
+        p->setIndex(q->getIndex());
+        p->setIsTip(q->getIsTip());
+        p->setName(q->getName());
+        p->setBranchLength(q->getBranchLength());
+        if (q->getAncestor() != nullptr)
+            p->setAncestor( this->nodes[q->getAncestor()->getOffset()] );
+        else
+            p->setAncestor(nullptr);
+        std::vector<Node*> qNeighbors = q->getNeighbors();
+        p->removeAllNeighbors();
+        for (Node* qn : qNeighbors)
+            p->addNeighbor( this->nodes[qn->getOffset()] );
+        }
+        
+    initializeDownPassSequence();
+}
+
+void Tree::deleteNodes(void){
+    for (int i=0; i<nodes.size(); i++)
+        delete nodes[i];
+    nodes.clear();
+}
+
 void Tree::initializeDownPassSequence(void){
     if(root == nullptr)
         Msg::error("root is nullptr");
     downPassSequence.clear();
     passDown(root, root);
+}
+
+std::vector<std::string>  Tree::parseNewickString(std::string newickStr){
+    
+    std::vector<std::string> tokens;
+    
+    std::string token = "";
+    for(int i = 0; i < newickStr.length(); i++){
+        char c = newickStr[i];
+        if(c == '(' || c == ')' || c==',' || c==':' ||c == ';'){
+            if(token != ""){
+                tokens.push_back(token);
+                token = "";
+            }
+            tokens.push_back(std::string(1,c));
+        }else{
+            token += std::string(1,c);
+        }
+    }
+    
+    if(token != "")
+        tokens.push_back(token);
+    
+//    for(int i = 0; i < tokens.size(); i++){
+//        std::cout << i << " " << tokens[i] << std::endl;
+//    }
+//        
+    
+    return tokens;
 }
 
 void Tree::passDown(Node* p, Node* from) {
@@ -124,6 +264,11 @@ void Tree::removeAsNeighbors(Node* p, Node* q){
 void Tree::setNeighbors(Node* p, Node* q){
     p->addNeighbor(q);
     q->addNeighbor(p);
+}
+
+void Tree::setOffsets(void){
+    for(int i = 0; i < nodes.size(); i++)
+        nodes[i]->setOffset(i);
 }
 
 void Tree::showNode(Node* p, int indent) {
