@@ -1,3 +1,4 @@
+#include "Mcmc.hpp"
 #include "MultivariateBrownianMotion.hpp"
 #include "ReadCSV.hpp"
 #include "TicToc.hpp"
@@ -22,9 +23,10 @@ int main(int argc, const char * argv[]) {
     
     MultivariateBrownianMotion ctmc = MultivariateBrownianMotion(rawReadDatNames, &readDat);
     ctmc.setTree(&gatree);
-
-    TicToc t("likelihood");
-    double lnl = ctmc.lnLikelihood();
+    std::cout << ctmc.lnLikelihood() << std::endl;
+    TicToc t("chain");
+    Mcmc chain = Mcmc(100000, 100, 100, &ctmc, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/out/");
+    chain.run();
     t.end();
     return 0;
 }

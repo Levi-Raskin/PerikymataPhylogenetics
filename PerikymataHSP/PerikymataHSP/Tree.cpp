@@ -198,6 +198,13 @@ void Tree::deleteNodes(void){
     nodes.clear();
 }
 
+std::string Tree::getNewickString(void) {
+    std::stringstream strm;
+    writeTree(root, strm);
+    strm << ";";
+    return strm.str();
+}
+
 void Tree::initializeDownPassSequence(void){
     if(root == nullptr)
         Msg::error("root is nullptr");
@@ -302,5 +309,36 @@ void Tree::showNode(Node* p, int indent) {
                 showNode(n, indent + 3);
             }
             
+        }
+}
+
+void Tree::writeTree(Node* p, std::stringstream& strm) {
+
+    if (p != nullptr)
+        {
+        std::vector<Node*> pNeighbors = p->getNeighbors();
+        if (p->getIsTip() == false)
+            strm << "(";
+        else
+            {
+            std::string tName = p->getName();
+            std::replace( tName.begin(), tName.end(), ' ', '_');
+            strm << tName;
+            }
+        bool firstNode = true;
+        for (Node* n : pNeighbors)
+            {
+            if (n != p->getAncestor())
+                {
+                if (firstNode == false)
+                    strm << ",";
+                writeTree(n, strm);
+                strm << ":" << n->getBranchLength();
+                firstNode = false;
+                }
+            }
+        if (p->getIsTip() == false)
+            strm << ")";
+
         }
 }

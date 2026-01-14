@@ -16,6 +16,7 @@ class Tree{
                                     ~Tree(void);
         void                        initializeDownPassSequence(void);
         const std::vector<Node*>&   getDownPassSequence(void) { return downPassSequence; }
+        std::string                 getNewickString(void);
         int                         getNumTaxa(void) { return numTaxa; }
         Node*                       getRoot(void) {return root;}
         void                        print(void);
@@ -30,6 +31,7 @@ class Tree{
         void                        passDown(Node* p, Node* from);
         std::vector<std::string>    parseNewickString(std::string);
         void                        removeAsNeighbors(Node* p, Node* q);
+        void                        writeTree(Node* p, std::stringstream& strm);
         //Objects, ordered by memory footprint
         std::vector<Node*>          downPassSequence;
         std::vector<Node*>          nodes;

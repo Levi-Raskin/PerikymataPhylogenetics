@@ -141,6 +141,7 @@ double MultivariateBrownianMotion::lnLikelihoodF85Optim(void){
             }
             
             lnL += halfNTraitsLog2PiProd + halfNTraits * std::log(blSum) + halfLogDet - (1/(2*(blSum))) * u1.dot(vcvInv * u1);
+            std::cout << lnL <<std::endl;
         }else
             nodeVals[n] = (*observedData).row(tipHashMap.at(n->getName()));
     }
