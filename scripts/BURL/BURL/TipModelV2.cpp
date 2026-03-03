@@ -1,6 +1,5 @@
 #include "Msg.hpp"
 #include "ParameterDouble.hpp"
-#include "ParameterTree.hpp"
 #include "RandomVariable.hpp"
 #include "ParameterIntraspecificMean.hpp"
 #include "ParameterIntraspecificVarianceGibbs.hpp"
@@ -25,7 +24,7 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
             if(std::isnan(tipDataIncomplete(i,j))){
                 ParameterDouble* newParm = new ParameterDouble(
                     0.0, 
-                    "pkmm" + tipName + std::to_string(i) + "," + std::to_string(j)
+                    "missing_" + tipName + "_(" + std::to_string(i) + "," + std::to_string(j) + ")"
                 );
                 newParm->setParmPrintConsole(false);
                 parameters.push_back(newParm);
@@ -37,8 +36,9 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
     updateTipDataComplete();
     
 
-    taxonVariance = new ParameterIntraspecificVarianceGibbs(1.0, "intraspecificVCV" + tipName, &tipDataComplete, this);
-    taxonMean = new ParameterIntraspecificMean(10.0, "intraspecificMean" + tipName, &tipDataComplete, m);
+    taxonVariance = new ParameterIntraspecificVarianceGibbs(1.0, tipName + "_vcv", &tipDataComplete, this);
+    taxonVariance->setParmPrintConsole(false);
+    taxonMean = new ParameterIntraspecificMean(10.0, tipName + "_mean", &tipDataComplete, m);
     parameters.push_back(taxonMean);
     parameters.push_back(taxonVariance);
     taxonMean->setVarianceCovarianceMatrix(taxonVariance);
@@ -88,18 +88,13 @@ std::vector<std::string> TipModelV2::getParameterNames(void){
     for(int p = 0; p < parameters.size(); p++){
         ParameterIntraspecificMean* pim = dynamic_cast<ParameterIntraspecificMean*>(parameters[p]);
         ParameterIntraspecificVarianceGibbs* piv = dynamic_cast<ParameterIntraspecificVarianceGibbs*>(parameters[p]);
-        ParameterTree* pt = dynamic_cast<ParameterTree*>(parameters[p]);
         if(pim != nullptr){
-//            scratchVec = pim->getValue();
             for(int i = 0; i < numCols; i++)
-                parmNames.push_back(pim->getName() + std::to_string(i));
+                parmNames.push_back(pim->getName()+ "_" + std::to_string(i));
         }else if(piv != nullptr){
-//            scratchMat = piv->getValue();
             for(int i = 0; i < numCols; i++)
                 for(int j = 0; j < numCols; j++)
-                    parmNames.push_back(piv->getName() + std::to_string(i) + "," +  std::to_string(j));
-        }else if (pt != nullptr){
-        
+                    parmNames.push_back(piv->getName() + "_(" + std::to_string(i) + "," +  std::to_string(j) + ")");
         }else{
             parmNames.push_back(parameters[p]->getName());
         }
@@ -113,7 +108,6 @@ std::vector<double> TipModelV2::getParameterString(void){
         ParameterDouble* pt = dynamic_cast<ParameterDouble*>(parameters[i]);
         ParameterIntraspecificMean* pim = dynamic_cast<ParameterIntraspecificMean*>(parameters[i]);
         ParameterIntraspecificVarianceGibbs* piv = dynamic_cast<ParameterIntraspecificVarianceGibbs*>(parameters[i]);
-        ParameterTree* parmt = dynamic_cast<ParameterTree*>(parameters[i]);
         if(pt != nullptr){
             parmValues.push_back(pt->getValue());
         }else if(pim != nullptr){
@@ -125,8 +119,6 @@ std::vector<double> TipModelV2::getParameterString(void){
             for(int i = 0; i < scratchMat.rows(); i++)
                 for(int j = 0; j < scratchMat.cols(); j++)
                     parmValues.push_back(scratchMat(i,j));
-        }else if (parmt != nullptr){
-        
         }else{
             parmValues.push_back(-1.0);
         }
@@ -177,14 +169,13 @@ double TipModelV2::lnPriorProbability(void){
 }
 
 void TipModelV2::print(void){
-    std::cout << " | ";
-    if(hasMissingData == true)
-        std::cout << "pk missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances) << " | ";
-    
+    std::cout << " -- ";
     for(Parameter* p : parameters)
         if(p->getParmPrintConsole() == true)
-            std::cout << p->getName() << ": " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive() << " | ";
-    std::cout << std::endl;
+            std::cout << p->getName() << " a/r: " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive();
+    if(hasMissingData == true)
+        std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
+    std::cout << "\n";
 }
 
 double TipModelV2::update(void){

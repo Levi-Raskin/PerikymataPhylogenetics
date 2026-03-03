@@ -111,7 +111,7 @@ void MetropolisCoupledMcmc::run(void) {
             const double acceptanceRate = static_cast<double>(numAccepted) / recentAcceptRej.size();
             std::cout << n << " -- "
                 << currLnL[coldModelIdx] << " -> " << newLnL[coldModelIdx]
-                << " | Chain swap a/r: " << acceptanceRate << "\n";
+                << " | Chain swap acceptance ratio: " << acceptanceRate << "\n";
             models[coldModelIdx]->print();
         }
             

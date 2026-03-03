@@ -70,17 +70,13 @@ MultivariateBrownianMotionV2::~MultivariateBrownianMotionV2(void){
     delete treeParam;
 }
 
-double MultivariateBrownianMotionV2::calculatePosteriorProbability(void){
-    return Probability::InverseWishart::lnPdf(varianceCovarianceMatrix, psiN, dofN);
-}
-
 std::vector<std::string> MultivariateBrownianMotionV2::getParameterNames(void){
     std::vector<std::string> parmValues;
     
     //variance covariance matrix
     for(int i = 0; i < numberOfTraits; i++)
         for(int j = 0; j < numberOfTraits; j++)
-            parmValues.push_back("vcv" + std::to_string(i) + "," +  std::to_string(j));
+            parmValues.push_back("evo_vcv_(" + std::to_string(i) + "," +  std::to_string(j) + ")");
 
     return parmValues;
 }

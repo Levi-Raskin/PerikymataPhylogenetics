@@ -39,7 +39,6 @@ class MultivariateBrownianMotionV2 : public PhylogeneticModel{
 
     protected:
         //functions
-        double                                                              calculatePosteriorProbability(void);
         void                                                                instantiateIndependentContrasts(void);
         void                                                                normalizeProposalProbability(void);
         void                                                                populateObservedData();

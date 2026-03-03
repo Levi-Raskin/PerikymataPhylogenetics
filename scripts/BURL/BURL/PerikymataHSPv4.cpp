@@ -148,7 +148,6 @@ std::vector<double> PerikymataHSPv4::getParameterString(void){
 }
 
 void PerikymataHSPv4::print(void){
-    MultivariateBrownianMotionV2::print();
     for(auto& s : tipModels)
         s.second->print();
 }
