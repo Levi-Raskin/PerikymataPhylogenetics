@@ -16,5 +16,5 @@ And run from command line:
 ```
 
 ```{bash}
-./build/burl -h for help
+./burl -h for help
 ```
