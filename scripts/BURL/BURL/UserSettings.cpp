@@ -184,7 +184,7 @@ void UserSettings::printHelp(void){
     std::cout << "Options:\n";
     std::cout << "  -i  <file>    Input file        (expecting TSV or CSV)\n";
     std::cout << "                  *Input file requires rownames labeling species and colnames labeling traits\n";
-    std::cout << "  -it <file>    Input tree file   (expecting .txt file)\n";
+    std::cout << "  -it <file>    Input tree file   (expecting one line text file .txt, .nwk tested)\n";
     std::cout << "  -o  <file>    Output file       (Outputs TSV only)\n";
     std::cout << "  -n  <int>     Chain length\n";
     std::cout << "  -p  <int>     Print frequency\n";
