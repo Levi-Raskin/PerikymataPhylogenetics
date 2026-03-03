@@ -162,13 +162,15 @@ void MetropolisCoupledMcmc::sample(unsigned long n) {
         cn.insert( cn.end(), headStr.begin(), headStr.end() );
         w.addColumnNamesTSV(cn);
     }
-    else
-        w.addFilepath(tracerFileName, false);
         
     std::vector<double> dat = {(double)n, currLnL[coldModelIdx]};
     std::vector<double> parmStr = models[coldModelIdx]->getParameterString();
     dat.insert( dat.end(), parmStr.begin(), parmStr.end() );
     w.appendDataTSV(dat);
+    
+    if (n == numCycles){
+        w.closeTSV();
+    }
 }
 
 void MetropolisCoupledMcmc::updateDeltaT(void) {

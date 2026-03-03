@@ -210,7 +210,6 @@ void MultivariateBrownianMotionV2::populateObservedData(void){
 }
 
 void MultivariateBrownianMotionV2::print(void){
-    std::cout << " -- thread " + std::to_string(omp_get_thread_num()) + " ";
     for(Parameter* p : parameters)
         if(p->getParmPrintConsole() == true)
             std::cout << p->getName() << ": " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive() << " | ";

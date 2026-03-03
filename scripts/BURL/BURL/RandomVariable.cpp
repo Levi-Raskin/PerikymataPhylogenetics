@@ -3,7 +3,6 @@
 #include <limits>
 #include <random>
 #include <thread>
-#include </usr/local/include/omp.h>
 #include "RandomVariable.hpp"
 
 
