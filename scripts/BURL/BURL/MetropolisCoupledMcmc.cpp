@@ -1,6 +1,5 @@
 #include "MetropolisCoupledMcmc.hpp"
 #include "Msg.hpp"
-#include "ParameterDouble.hpp"
 #include "PhylogeneticModel.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"

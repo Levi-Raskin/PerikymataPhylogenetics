@@ -2,7 +2,6 @@
 #include "Msg.hpp"
 #include "MultivariateBrownianMotionV2.hpp"
 #include "Parameter.hpp"
-#include "ParameterDouble.hpp"
 #include "ParameterTree.hpp"
 #include "PhylogeneticModel.hpp"
 #include "Probability.hpp"

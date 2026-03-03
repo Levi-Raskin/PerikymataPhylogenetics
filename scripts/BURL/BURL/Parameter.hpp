@@ -26,9 +26,9 @@ class Parameter {
         virtual void        updateForRejection(void) = 0;
         
     protected:
+        std::string         parmName;
         PhylogeneticModel*  model;
         double              proposalProbability;
-        std::string         parmName;
         bool                adaptiveProposalActive;
         bool                parmPrintsToConsole;
 };

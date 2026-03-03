@@ -58,9 +58,6 @@ class MultivariateBrownianMotionV2 : public PhylogeneticModel{
         Eigen::MatrixXd                                                     varianceCovarianceMatrix;
         Eigen::MatrixXd                                                     psi;
         Eigen::MatrixXd                                                     psiN;
-        Eigen::MatrixXd                                                     L;
-        Eigen::MatrixXd                                                     C;
-        Eigen::MatrixXd                                                     Z;
         Eigen::VectorXd                                                     mu0;
         Eigen::MatrixXd*                                                    originalData;
         ParameterTree*                                                      treeParam;

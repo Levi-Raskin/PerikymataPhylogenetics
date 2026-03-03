@@ -3,7 +3,6 @@
 
 #include "Eigen/Dense"
 #include "Parameter.hpp"
-#include "ParameterDouble.hpp"
 #include "ParameterMatrix.hpp"
 #include <string>
 #include <vector>

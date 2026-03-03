@@ -2,7 +2,6 @@
 #include "MultivariateBrownianMotionV2.hpp"
 #include "Node.hpp"
 #include "Parameter.hpp"
-#include "ParameterDouble.hpp"
 #include "ParameterIntraspecificMean.hpp"
 #include "ParameterTree.hpp"
 #include "PerikymataHSPv4.hpp"

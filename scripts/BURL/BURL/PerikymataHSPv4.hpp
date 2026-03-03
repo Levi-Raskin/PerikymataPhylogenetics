@@ -5,7 +5,6 @@
 #include "MultivariateBrownianMotionV2.hpp"
 #include <string>
 
-class ParameterDouble;
 class ParameterMatrix;
 class ParameterRates;
 class ParameterVectorDouble;
@@ -30,14 +29,14 @@ class PerikymataHSPv4 : public MultivariateBrownianMotionV2{
         void                                                                        calculateTipMeans(void);
         void                                                                        updatePkGibbs(void);
         //objects in order of memory footprint
-        Eigen::MatrixXd                                                             scratch;
-        Eigen::MatrixXd                                                             tipMeansConcat;
         std::unordered_map<std::string, TipModelV2*>                                tipModels;
         std::unordered_map<std::string, int>                                        tipIdxs;
-        TipModelV2*                                                                 updatedTipModel;
         std::vector<std::string>                                                    tipNames;
         std::vector<double>                                                         parmValues;
         std::vector<double>                                                         scratchVec;
+        TipModelV2*                                                                 updatedTipModel;
+        Eigen::MatrixXd                                                             scratch;
+        Eigen::MatrixXd                                                             tipMeansConcat;
         Tree                                                                        fixedTree;
         bool                                                                        tipUpdate;
         bool                                                                        updateTipsOn;
