@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 
+#include "ThreadPool.hpp"
 #include "WriteTSV.hpp"
 
 class PhylogeneticModel;
@@ -31,6 +32,7 @@ class MetropolisCoupledMcmc {
         std::vector<double>                 lnPriorRatio;
         std::vector<double>                 lnAcceptanceProbabilities;
         std::vector<int>                    indices;
+        ThreadPool                          threadPool;
         std::string                         tracerFileName;
         WriteTSV                            w;
         unsigned long                       numCycles;

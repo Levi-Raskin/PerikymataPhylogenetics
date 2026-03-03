@@ -4,14 +4,23 @@
 #include "PhylogeneticModel.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
+#include "ThreadPool.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 #include "WriteTSV.hpp"
 
+#include <future>
 #include <iomanip>
 #include <iostream>
 
-MetropolisCoupledMcmc::MetropolisCoupledMcmc(unsigned long ng, int pf, int sf, std::vector<PhylogeneticModel*> m) : numCycles(ng), printFrequency(pf), sampleFrequency(sf), models(m), numModels(models.size()), coldModelIdx(-1), numSwapsCold(0), deltaT(0.2){
+MetropolisCoupledMcmc::MetropolisCoupledMcmc(unsigned long ng, int pf, int sf, std::vector<PhylogeneticModel*> m) : numCycles(ng), printFrequency(pf),
+    sampleFrequency(sf),
+    models(m),
+    numModels(models.size()),
+    coldModelIdx(-1),
+    numSwapsCold(0),
+    deltaT(0.2),
+    threadPool(models.size()){
     currLnL.reserve(numModels); //needs to be reserve for pushback
     newLnL.resize(numModels);
     currLnP.reserve(numModels); //needs to be reserve for pushback
@@ -51,19 +60,34 @@ void MetropolisCoupledMcmc::run(void) {
         if(n < 10000 && n % 50 == 0)
             updateDeltaT();
         
-        #pragma omp parallel for num_threads(10) schedule(static)
+        std::vector<std::future<void>> futures;
+        futures.reserve(numModels);
+
         for(int i = 0; i < numModels; i++){
-            lnProposalRatio[i] = models[i]->update();
-            newLnL[i] = models[i]->lnLikelihood();
-            newLnP[i] = models[i]->lnPriorProbability();
-            
-            lnLikelihoodRatio[i] = newLnL[i] - currLnL[i];
-            lnPriorRatio[i] = newLnP[i]- currLnP[i];
-            
-            int idx = indices[i];
-            double heat = (idx == 0) ? 1.0 : calcHeating(idx);
-            lnAcceptanceProbabilities[i] = heat * (lnLikelihoodRatio[i] + lnPriorRatio[i]) + lnProposalRatio[i];
+            auto promise = std::make_shared<std::promise<void>>();
+            futures.push_back(promise->get_future());
+
+            threadPool.enqueue([this, i, promise]() {
+                lnProposalRatio[i] = models[i]->update();
+                newLnL[i]          = models[i]->lnLikelihood();
+                newLnP[i]          = models[i]->lnPriorProbability();
+
+                lnLikelihoodRatio[i] = newLnL[i] - currLnL[i];
+                lnPriorRatio[i]      = newLnP[i] - currLnP[i];
+
+                int    chainIdx = indices[i];
+                double heat     = (chainIdx == 0) ? 1.0 : calcHeating(chainIdx);
+                lnAcceptanceProbabilities[i] = heat * (lnLikelihoodRatio[i] + lnPriorRatio[i])
+                                               + lnProposalRatio[i];
+
+                promise->set_value();
+            });
         }
+
+        // Wait for all chain updates to complete before proceeding
+        for(auto& f : futures)
+            f.get();
+
 
         // accept or reject the proposed state
         coldModelIdx = -1;

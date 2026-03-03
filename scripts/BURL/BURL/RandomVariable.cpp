@@ -11,11 +11,12 @@
 RandomVariable::RandomVariable(void) {
 
     static std::atomic<uint64_t> seed_counter{0};
-    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count() + seed_counter.fetch_add(1, std::memory_order_relaxed);
-    thread_local std::mt19937 mersenne(std::random_device{}());
-    int maxNumThreads = std::thread::hardware_concurrency();
-    seed ^= std::uniform_int_distribution<int>(1, 2*maxNumThreads)(mersenne);
-    initialize(seed);
+    
+    uint64_t seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    seed += seed_counter.fetch_add(1, std::memory_order_relaxed);
+    seed ^= std::hash<std::thread::id>{}(std::this_thread::get_id());
+    uint32_t seed32 = static_cast<uint32_t>(seed ^ (seed >> 32));
+    initialize(seed32);
 }
 
 RandomVariable::RandomVariable(uint32_t seed) {
