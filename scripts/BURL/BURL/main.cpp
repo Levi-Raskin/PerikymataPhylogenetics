@@ -68,7 +68,7 @@ int main(int argc, const char* argv[]) {
         std::cout << "Running standard MCMC \n";
         std::cout << "-----------------------------------------------------------------------" << std::endl;
         PhylogeneticModel* perikymataModel = new PerikymataHSPv4(&tree, rawReadDatNames, &readDat);
-        Mcmc mcmc(1000000, 1000, 1000, perikymataModel);
+        Mcmc mcmc(numCycles, pf, sf, perikymataModel);
         mcmc.run();
     }
     
