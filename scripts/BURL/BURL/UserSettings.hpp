@@ -25,6 +25,7 @@ class UserSettings {
         std::string                 getReadDataType(void) { checkSettings(); return readDatDatatype; }
         int                         getSampleFrequency(void) { checkSettings(); return sampleFrequency; }
         void                        print(void);
+        void                        printHelp(void);
 
     private:
                                     UserSettings(void) { settingsInitialized = false; }
