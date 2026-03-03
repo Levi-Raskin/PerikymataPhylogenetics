@@ -55,7 +55,7 @@ int main(int argc, const char* argv[]) {
     int pf = settings.getPrintFrequency();
     int sf = settings.getSampleFrequency();
     if(numChains > 1){
-        std::cout << "Running Metropolis-coupled MCMC with " << numChains << " chains parallelized across " << settings.getNumThreads() << "threads \n";
+        std::cout << "Running Metropolis-coupled MCMC with " << numChains << " chains parallelized across " << settings.getNumThreads() << " threads \n";
         std::cout << "-----------------------------------------------------------------------" << std::endl;
         std::vector<PhylogeneticModel*> perikymataModels;
         perikymataModels.resize(numChains);
