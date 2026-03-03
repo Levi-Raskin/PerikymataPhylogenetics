@@ -11,6 +11,10 @@ make -j$(sysctl -n hw.ncpu)
 ```
 
 And run from command line:
+```{bash}
 ./build/burl -i /Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv -it /Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt -o /Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/out.tsv -n 100000000 -p 1000 -s 1000 -c 10 -nt 10
+```
 
+```{bash}
 ./build/burl -h for help
+```
