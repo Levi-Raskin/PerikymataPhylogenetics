@@ -39,12 +39,23 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
     std::string arg = "";
     for (int i=1; i<arguments.size(); i++)
         {
-        if (arg == "")
-            {
+        if (arg == ""){
             arg = arguments[i];
+            if (arg == "-help" || arg == "-h"){
+                std::cout << "Usage: BURL [options]\n";
+                std::cout << "Options:\n";
+                std::cout << "  -i  <file>    Input file        (expecting TSV or CSV)\n";
+                std::cout << "                  *Input file requires rownames labeling species and colnames labeling traits\n";
+                std::cout << "  -it <file>    Input tree file   (expecting .txt file)\n";
+                std::cout << "  -o  <file>    Output file       (Outputs TSV only)\n";
+                std::cout << "  -n  <int>     Chain length\n";
+                std::cout << "  -p  <int>     Print frequency\n";
+                std::cout << "  -s  <int>     Sample frequency\n";
+                std::cout << "  -c  <int>     Number of chains  (1 for MCMC, 2+ for Metropolis-coupled MCMC)\n";
+                std::cout << "  -nt <int>     Number of threads\n";
             }
-        else
-            {
+        }
+        else{
             if (arg == "-i"){
                 inputFile = arguments[i];
                 readDatDatatype = inputFile.substr(inputFile.length() - 3);
@@ -62,19 +73,6 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
                 numChains = atoi(arguments[i].c_str());
             else if (arg == "-nt")
                 numThreads = atoi(arguments[i].c_str());
-            else if (arg == "-help"){
-                std::cout << "Usage: BURL [options]\n";
-                std::cout << "Options:\n";
-                std::cout << "  -i  <file>    Input file        (expecting TSV or CSV)\n";
-                std::cout << "                  *Input file requires rownames labeling species and colnames labeling traits\n";
-                std::cout << "  -it <file>    Input tree file   (expecting .txt file)\n";
-                std::cout << "  -o  <file>    Output file       (Outputs TSV only)\n";
-                std::cout << "  -n  <int>     Chain length\n";
-                std::cout << "  -p  <int>     Print frequency\n";
-                std::cout << "  -s  <int>     Sample frequency\n";
-                std::cout << "  -c  <int>     Number of chains  (1 for MCMC, 2+ for Metropolis-coupled MCMC)\n";
-                std::cout << "  -nt <int>     Number of threads\n";
-            }
             else
                 Msg::error("Unknown argument \"" + arg + "\"");
             arg = "";
