@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include </usr/local/include/omp.h>
+#include <thread>
 
 #include "Msg.hpp"
 #include "UserSettings.hpp"
@@ -111,7 +111,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
         std::cout << "Adjusted number of threads to " << numThreads << ".\n";
     }
     
-    int maxNumThreads = omp_get_max_threads();
+    int maxNumThreads = std::thread::hardware_concurrency();
     if(numThreads >= maxNumThreads){
         std::cout << "Requested " << numThreads << " threads but you only have available " << maxNumThreads << "\n";
         numThreads = maxNumThreads - 1;

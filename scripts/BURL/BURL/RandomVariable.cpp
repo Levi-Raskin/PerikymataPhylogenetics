@@ -1,6 +1,8 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <random>
+#include <thread>
 #include </usr/local/include/omp.h>
 #include "RandomVariable.hpp"
 
@@ -10,7 +12,9 @@ RandomVariable::RandomVariable(void) {
 
     static std::atomic<uint64_t> seed_counter{0};
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count() + seed_counter.fetch_add(1, std::memory_order_relaxed);
-    seed ^= omp_get_thread_num();
+    thread_local std::mt19937 mersenne(std::random_device{}());
+    int maxNumThreads = std::thread::hardware_concurrency();
+    seed ^= std::uniform_int_distribution<int>(1, 2*maxNumThreads)(mersenne);
     initialize(seed);
 }
 

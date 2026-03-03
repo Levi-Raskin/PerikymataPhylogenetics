@@ -6,7 +6,6 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include </usr/local/include/omp.h>
 
 ParameterDouble::ParameterDouble(double prob, std::string n, MultivariateNormalPhylogeneticModel* m) : Parameter(prob, n), lowerBound(std::numeric_limits<double>::lowest() / 2), upperBound(std::numeric_limits<double>::max() / 2), numRejections(0), numAcceptances(0), numAdaptive(10000){
     adaptiveProposalActive = true;

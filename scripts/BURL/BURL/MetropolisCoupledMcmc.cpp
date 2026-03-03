@@ -10,8 +10,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include </usr/local/include/omp.h>
-
 
 MetropolisCoupledMcmc::MetropolisCoupledMcmc(unsigned long ng, int pf, int sf, std::vector<PhylogeneticModel*> m) : numCycles(ng), printFrequency(pf), sampleFrequency(sf), models(m), numModels(models.size()), coldModelIdx(-1), numSwapsCold(0), deltaT(0.2){
     currLnL.reserve(numModels); //needs to be reserve for pushback
@@ -89,7 +87,7 @@ void MetropolisCoupledMcmc::run(void) {
             const double acceptanceRate = static_cast<double>(numAccepted) / recentAcceptRej.size();
             std::cout << n << " -- "
                 << currLnL[coldModelIdx] << " -> " << newLnL[coldModelIdx]
-                << " | Chain swap rate: " << acceptanceRate << "\n";
+                << " | Chain swap a/r: " << acceptanceRate << "\n";
             models[coldModelIdx]->print();
         }
             
