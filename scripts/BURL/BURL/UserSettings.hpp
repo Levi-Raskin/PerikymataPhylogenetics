@@ -18,6 +18,7 @@ class UserSettings {
         unsigned long               getChainLength(void) { checkSettings(); return chainLength; }
         std::string                 getInputFile(void) { checkSettings(); return inputFile; }
         std::string                 getInputTree(void) { checkSettings(); return inputTree; }
+        bool                        getLogTransformData(void) { checkSettings(); return logTransformData; }
         int                         getNumChains(void) { return numChains; }
         int                         getNumThreads(void) { return numThreads; }
         std::string                 getOutputFile(void) { checkSettings(); return outputFile; }
@@ -43,6 +44,7 @@ class UserSettings {
         int                         printFrequency;
         int                         sampleFrequency;
         bool                        settingsInitialized;
+        bool                        logTransformData;
 };
 
 #endif

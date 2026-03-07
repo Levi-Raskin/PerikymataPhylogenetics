@@ -9,6 +9,7 @@
 #include "RandomVariable.hpp"
 #include "TipModelV2.hpp"
 #include "Tree.hpp"
+#include "UserSettings.hpp"
 
 #include <iostream>
 #include <string>
@@ -74,12 +75,12 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
             tipDat.row(tipDat.rows() - 1) = datRow;
         }
     }
-            
-//    for(auto& s : tipMatrices){
-//        Msg::warning("these data are log transformed");
-//        s.second = s.second.array().log(); //log transforming pk/mm so that I don't have to worry about boudning
-//    }
-    
+     
+    UserSettings& settings = UserSettings::userSettings();
+    if(settings.getLogTransformData() == true)
+        for(auto& s : tipMatrices)
+            s.second = s.second.array().log();
+
     for(auto&s : tipMatrices){
         tipNames.push_back(s.first);
         TipModelV2* newTipModel = new TipModelV2(s.first, s.second, this);

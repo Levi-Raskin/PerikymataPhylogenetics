@@ -29,6 +29,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
     numThreads      = 4;
     printFrequency  = 1;
     sampleFrequency = 1;
+    logTransformData = false;
 
     std::vector<std::string> arguments;
     for (int i = 0; i < argc; i++)
@@ -38,10 +39,10 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     // Known flags and whether they take a value
     std::set<std::string> knownFlags = {
-        "-i", "-it", "-o", "-n", "-p", "-s", "-c", "-nt", "-help", "-h"
+        "-i", "-it", "-o", "-n", "-p", "-s", "-c", "-nt", "-log", "-help", "-h"
     };
     std::set<std::string> valueFlags = {
-        "-i", "-it", "-o", "-n", "-p", "-s", "-c", "-nt"
+        "-i", "-it", "-o", "-n", "-p", "-s", "-c", "-nt", "-log"
     };
 
     for (int i = 1; i < (int)arguments.size(); i++) {
@@ -86,6 +87,14 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
             } else if (arg == "-o") {
                 outputFile = val;
+
+            }else if (arg == "-log") {
+                if (val == "T" || val == "true")
+                    logTransformData = true;
+                else if (val == "F" || val == "false")
+                    logTransformData = false;
+                else
+                    Msg::error("Flag \"-log\" expects T/true or F/false, but got \"" + val + "\".");
 
             } else {
                 // Integer-valued flags
@@ -191,4 +200,5 @@ void UserSettings::printHelp(void){
     std::cout << "  -s  <int>     Sample frequency\n";
     std::cout << "  -c  <int>     Number of chains  (1 for MCMC, 2+ for Metropolis-coupled MCMC)\n";
     std::cout << "  -nt <int>     Number of threads\n";
+    std::cout << "  -log <T/F>    Log-transform data (T/true or F/false)\n";
 }

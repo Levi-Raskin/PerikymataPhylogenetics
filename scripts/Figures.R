@@ -1,23 +1,78 @@
 library(ggplot2)
 library(tidyverse)
 library(RColorBrewer)
+library(MASS)
+library(ggridges)
+library(dplyr)
+library(tidyr)
+library(parallel)
 
-plotdat <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/LC_prelim/out0gelmanRubin2.tsv")
-plotdat2 <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/LC_prelim/out0gelmanRubin0.tsv")
-plotdat3 <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/LC_prelim/out0gelmanRubin1.tsv")
-plotdat4 <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/LC_prelim/out0gelmanRubin3.tsv")
+
+plotdat <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
 
 plotdat <- plotdat[round(0.1 * nrow(plotdat)) : nrow(plotdat), ] #apply burnin
-plotdat2 <- plotdat[round(0.1 * nrow(plotdat)) : nrow(plotdat), ] #apply burnin
-plotdat3 <- plotdat[round(0.1 * nrow(plotdat)) : nrow(plotdat), ] #apply burnin
-plotdat4 <- plotdat[round(0.1 * nrow(plotdat)) : nrow(plotdat), ] #apply burnin
 
-plotdat <- rbind(
-  plotdat,
-  plotdat2,
-  plotdat3,
-  plotdat4
-)
+# Posterior predictive differences between modern humans and neanderthals
+n_samples <- nrow(plotdat)
+n_traits <- 8
+trait_labels <- paste0("Decile ", 3:10)
+
+get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
+  
+  mean_cols <- paste0(species, "_mean_", 0:(n_traits - 1))
+  mu_samples <- as.matrix(posterior[, mean_cols])
+  
+  vcv_cols <- outer(0:(n_traits - 1), 0:(n_traits - 1),
+                    FUN = function(i, j) paste0(species, "_vcv_.", i, ".", j, "."))
+  vcv_mat <- as.matrix(posterior[, as.vector(vcv_cols)])
+  
+  draw_one <- function(s) {
+    Sigma <- matrix(vcv_mat[s, ], nrow = n_traits, ncol = n_traits)
+    Sigma <- (Sigma + t(Sigma)) / 2
+    Sigma <- Sigma + diag(1e-6, n_traits)
+    mvrnorm(n = 1, mu = mu_samples[s, ], Sigma = Sigma)
+  }
+  
+  preds <- do.call(rbind, mclapply(1:n_samples, draw_one, mc.cores = detectCores() - 1))
+  
+  colnames(preds) <- trait_labels
+  as.data.frame(preds) |>
+    mutate(species = species)
+}
+
+
+# Generate posterior predictives for both species
+hs_preds <- get_posterior_predictive(plotdat, "Homo_sapiens", n_traits, n_samples)
+ne_preds <- get_posterior_predictive(plotdat, "Neanderthal", n_traits, n_samples)
+
+# Combine and reshape to long format
+plot_data <- bind_rows(hs_preds, ne_preds) |>
+  pivot_longer(cols = all_of(trait_labels),
+               names_to = "trait",
+               values_to = "value") |>
+  mutate(
+    trait = factor(trait, levels = rev(trait_labels)),  # reverse so decile 1 is on top
+    species = recode(species,
+                     "Homo_sapiens" = "Modern Human",
+                     "Neanderthal"  = "Neanderthal")
+  )
+
+# Plot
+ggplot(plot_data, aes(x = value, y = trait, fill = species, color = species)) +
+  geom_density_ridges(alpha = 0.4, scale = 0.9, rel_min_height = 0.01) +
+  scale_fill_manual(values = c("Modern Human" = "#2166AC", "Neanderthal" = "#D6604D")) +
+  scale_color_manual(values = c("Modern Human" = "#2166AC", "Neanderthal" = "#D6604D")) +
+  labs(
+    x = "Perikymata Count",
+    y = NULL,
+    fill = "Species",
+    color = "Species"
+  ) +
+  theme_ridges(grid = FALSE) +
+  theme(
+    legend.position = "top",
+    axis.text.y = element_text(size = 10)
+  )
 
 
 # Estimated mean values ---------------------------------------------------
