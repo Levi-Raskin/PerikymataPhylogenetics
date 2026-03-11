@@ -1,22 +1,143 @@
-library(ggplot2)
-library(tidyverse)
-library(RColorBrewer)
+library(ape)
+library(dplyr)
 library(MASS)
 library(ggridges)
-library(dplyr)
-library(tidyr)
+library(ggplot2)
+library(ggtree)
+library(gghalves)
+library(overlapping)
 library(parallel)
+library(patchwork)
+library(RColorBrewer)
+library(tidyr)
+library(tidyverse)
+
+output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
+
+posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
+posterior <- posterior[round(0.1 * nrow(posterior)) : nrow(posterior), ] #apply burnin
+
+# Figure 1: evo VCV, tree, tipmeans ---------------------------------------
+map_estimate <- function(x) {
+  d <- density(x)
+  d$x[which.max(d$y)]
+}
+
+#evo VCV MAP
+evo_vcv_cols <- paste0("evo_vcv_.", rep(0:7, each = 8), ".", rep(0:7, times = 8), ".")
+
+evo_map <- dplyr::select(posterior, all_of(evo_vcv_cols)) |>
+  summarise(across(everything(), map_estimate)) |>
+  pivot_longer(everything(), names_to = "element", values_to = "map") |>
+  mutate(
+    row = as.integer(sub("evo_vcv_\\.(\\d+)\\.(\\d+)\\.", "\\1", element)) + 1,
+    col = as.integer(sub("evo_vcv_\\.\\d+\\.(\\d+)\\.", "\\1", element)) + 1
+  )
+
+decile_labels <- paste0("Decile ", 3:10)
+
+evo_map <- evo_map |>
+  mutate(
+    row_label = factor(decile_labels[row], levels = decile_labels),
+    col_label = factor(decile_labels[col], levels = decile_labels)
+  )
+
+evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  geom_tile() +
+  geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+  scale_fill_gradient(
+    low  = "white",
+    high = "#a31e22"
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "MAP"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+evoVCV
+
+#tree
+plottree <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
+plottree$tip.label <- gsub("_", " ", plottree$tip.label)
+plottree$tip.label <- gsub("Homo sapiens", "Modern humans", plottree$tip.label)
+treeplot <- ggtree(plottree) + 
+              geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
+              hexpand(0.1)
+treeplot <- ggtree::rotate(treeplot, 12)
+treeplot
+
+#heatmap at tips
+# heatmap at tips
+species_map <- c(
+  "Pongo abelii"     = "Pongo_abelii",
+  "Pongo pygmaeus"   = "Pongo_pygmaeus",
+  "Pan troglodytes"  = "Pan_troglodytes",
+  "Pan paniscus"     = "Pan_paniscus",
+  "Gorilla beringei" = "Gorilla_beringei",
+  "Gorilla gorilla"  = "Gorilla_gorilla",
+  "Modern humans"    = "Homo_sapiens",
+  "Neanderthal"      = "Neanderthal"
+)
+
+mean_map <- lapply(names(species_map), function(tip_label) {
+  sp <- species_map[tip_label]
+  mean_cols <- paste0(sp, "_mean_", 0:7)
+  vals <- dplyr::select(posterior, all_of(mean_cols)) |>
+    summarise(across(everything(), map_estimate))
+  data.frame(
+    tip_label = tip_label,
+    decile    = paste0("Decile ", 3:10),
+    map       = as.numeric(vals)
+  )
+}) |> bind_rows() |>
+  mutate(decile = factor(decile, levels = paste0("Decile ", 3:10)))
+# Attach heatmap
+heatmap_data <- pivot_wider(mean_map,
+                            id_cols     = tip_label,
+                            names_from  = decile,
+                            values_from = map) |>
+  tibble::column_to_rownames("tip_label")
+
+p <- gheatmap(treeplot,
+              heatmap_data,
+              offset            = 6,
+              width             = 0.8,
+              colnames          = TRUE,
+              colnames_angle    = 45,
+              colnames_offset_y = 0.25,
+              font.size         = 3,
+              custom_column_labels = colnames(heatmap_data)) +
+  scale_fill_gradient2(
+    low  = "white",
+    high = "#09539c",
+    name = "MAP mean"
+  )
+
+tile_data <- p$layers[[which(sapply(p$layers, function(l) inherits(l$geom, "GeomTile")))]]$data
+
+treeAndHeatmap <- p + 
+  geom_text(data = tile_data,
+            aes(x = x, y = y, label = round(value, 1)),
+            inherit.aes = FALSE,
+            size   = 3.5,
+            color  = "black",
+            family = "Georgia")+
+  theme(legend.position = "none")
+
+combinedPlot <- evoVCV + treeAndHeatmap + 
+  plot_layout(widths = c(1, 2))
+combinedPlot
+
+ggsave(paste0(output, "treeMAP.svg"), width = 14, height = 8)
 
 
-plotdat <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
-
-plotdat <- plotdat[round(0.1 * nrow(plotdat)) : nrow(plotdat), ] #apply burnin
-
-# Posterior predictive differences between modern humans and neanderthals
-n_samples <- nrow(plotdat)
-n_traits <- 8
-trait_labels <- paste0("Decile ", 3:10)
-
+# Posterior predictive differences between modern humans and neand --------
 get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
   
   mean_cols <- paste0(species, "_mean_", 0:(n_traits - 1))
@@ -40,188 +161,152 @@ get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
     mutate(species = species)
 }
 
+n_samples <- nrow(posterior)
+n_traits <- 8
+trait_labels <- paste0("Decile ", 3:10)
 
-# Generate posterior predictives for both species
-hs_preds <- get_posterior_predictive(plotdat, "Homo_sapiens", n_traits, n_samples)
-ne_preds <- get_posterior_predictive(plotdat, "Neanderthal", n_traits, n_samples)
-
-# Combine and reshape to long format
-plot_data <- bind_rows(hs_preds, ne_preds) |>
-  pivot_longer(cols = all_of(trait_labels),
-               names_to = "trait",
-               values_to = "value") |>
-  mutate(
-    trait = factor(trait, levels = rev(trait_labels)),  # reverse so decile 1 is on top
-    species = recode(species,
-                     "Homo_sapiens" = "Modern Human",
-                     "Neanderthal"  = "Neanderthal")
-  )
-
-# Plot
-ggplot(plot_data, aes(x = value, y = trait, fill = species, color = species)) +
-  geom_density_ridges(alpha = 0.4, scale = 0.9, rel_min_height = 0.01) +
-  scale_fill_manual(values = c("Modern Human" = "#2166AC", "Neanderthal" = "#D6604D")) +
-  scale_color_manual(values = c("Modern Human" = "#2166AC", "Neanderthal" = "#D6604D")) +
-  labs(
-    x = "Perikymata Count",
-    y = NULL,
-    fill = "Species",
-    color = "Species"
-  ) +
-  theme_ridges(grid = FALSE) +
-  theme(
-    legend.position = "top",
-    axis.text.y = element_text(size = 10)
-  )
+# species_colors <- c(
+#   "Modern humans"    = "#2166AC",
+#   "Neanderthals"     = "#AB6621",
+#   
+#   "Pan paniscus"     = "#623A04",
+#   "Pan troglodytes"  = "#042C62",
+#   
+#   "Gorilla beringei" = "#650109",
+#   "Gorilla gorilla"  = "#01665E",
+#   
+#   "Pongo abelii"     = "#762A83",
+#   "Pongo pygmaeus"   = "#37832A"
+# )
 
 
-# Estimated mean values ---------------------------------------------------
+# Generate posterior predictives
+# hs_preds <- get_posterior_predictive(posterior, "Homo_sapiens", n_traits, n_samples)
+# ne_preds <- get_posterior_predictive(posterior, "Neanderthal", n_traits, n_samples)
+# pp_preds <- get_posterior_predictive(posterior, "Pan_paniscus", n_traits, n_samples)
+# pt_preds <- get_posterior_predictive(posterior, "Pan_troglodytes", n_traits, n_samples)
+# gb_preds <- get_posterior_predictive(posterior, "Gorilla_beringei", n_traits, n_samples)
+# gg_preds <- get_posterior_predictive(posterior, "Gorilla_gorilla", n_traits, n_samples)
+# pa_preds <- get_posterior_predictive(posterior, "Pongo_abelii", n_traits, n_samples)
+# ppyg_preds <- get_posterior_predictive(posterior, "Pongo_pygmaeus", n_traits, n_samples)
+# saveRDS(hs_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
+# saveRDS(ne_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/neanderthalPostPred.rds")
+# saveRDS(pp_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/panpaniscusPostPred.rds")
+# saveRDS(pt_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pantroglodytesPostPred.rds")
+# saveRDS(gb_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorrillaberingeiPostPred.rds")
+# saveRDS(gg_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorillagorillaPostPred.rds")
+# saveRDS(pa_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongoabeliiPostPred.rds")
+# saveRDS(ppyg_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongopygmaeusPostPred.rds")
+hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
+ne_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/neanderthalPostPred.rds")
+pp_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/panpaniscusPostPred.rds")
+pt_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pantroglodytesPostPred.rds")
+gb_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorrillaberingeiPostPred.rds")
+gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorillagorillaPostPred.rds")
+pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongoabeliiPostPred.rds")
+ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongopygmaeusPostPred.rds")
 
-#to estimate MAP
-posterior_mode <- function(x) {
-  d <- density(x)
-  d$x[which.max(d$y)]
+
+plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
+  recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
+  color_vec  <- setNames(c(color1, color2), c(plotName1, plotName2))
+  
+  plot_data <- bind_rows(pred1, pred2) |>
+    pivot_longer(cols = all_of(trait_labels),
+                 names_to = "trait",
+                 values_to = "value") |>
+    mutate(
+      trait   = factor(trait, levels = trait_labels),
+      species = recode(species, !!!recode_vec)
+    )
+  
+  overlap_data <- plot_data |>
+    group_by(trait) |>
+    summarise(
+      overlap = overlap(
+        list(
+          value[species == plotName1],
+          value[species == plotName2]
+        )
+      )$OV,
+      .groups = "drop"
+    ) |>
+    mutate(
+      trait = factor(trait, levels = trait_labels),
+      label = paste0(round(overlap * 100, 1), "%")
+    )
+  
+  pt <- ggplot(plot_data, aes(x = trait, y = value, fill = species)) +
+    geom_half_violin(data = filter(plot_data, species == plotName1),
+                     aes(fill = species),
+                     alpha = 0.6, scale = "width", side = "l") +
+    geom_half_violin(data = filter(plot_data, species == plotName2),
+                     aes(fill = species),
+                     alpha = 0.6, scale = "width", side = "r") +
+    geom_half_boxplot(data = filter(plot_data, species == plotName1),
+                     alpha = 0.6, scale = "width", side = "l", outlier.shape = NA) +
+    geom_half_boxplot(data = filter(plot_data, species == plotName2),
+                     alpha = 0.6, scale = "width", side = "r", outlier.shape = NA) +
+    geom_text(data = overlap_data,
+              aes(x = trait, y = Inf, label = label),
+              inherit.aes = FALSE,
+              vjust = 1.5, size = 3, color = "grey30") +
+    scale_fill_manual(values = color_vec) +
+    scale_y_continuous(limits = c(0, 50)) +
+    labs(
+      x    = "Decile",
+      y    = "Perikymata count per millimeter",
+      fill = "Species"
+    ) +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      legend.position = "right",
+      axis.text.x = element_text(size = 10, angle = 45, hjust = 1)
+    )
+  return(pt)
 }
 
-plotMeans <- plotdat %>%
-  select(matches("^intraspecificMean")) %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = c("taxon", "trait"),
-    names_pattern = "intraspecificMean(.+)(\\d+)$"
-  ) %>%
-  mutate(trait = paste0("Decile ", as.integer(trait) + 3)) %>%
-  group_by(taxon, trait) %>%
-  summarise(mean_value = mean(value), .groups = "drop")
+colors <- brewer.pal(8, "Paired")
 
-plotMeans$trait <- factor(plotMeans$trait, 
-                          levels = c("Decile 3", 
-                                     "Decile 4",
-                                     "Decile 5",
-                                     "Decile 6", 
-                                     "Decile 7",
-                                     "Decile 8", 
-                                     "Decile 9",
-                                     "Decile 10"
-                                     ))
+species_colors <- c(
+  "Modern humans"    = colors[1],
+  "Neanderthals"     = colors[2],
+  
+  "Pan paniscus"     = colors[3],
+  "Pan troglodytes"  = colors[4],
+  
+  "Gorilla beringei" = colors[5],
+  "Gorilla gorilla"  = colors[6],
+  
+  "Pongo abelii"     = colors[7],
+  "Pongo pygmaeus"   = colors[8]
+)
 
-plotMeans$taxon <- gsub("_", plotMeans$taxon, replacement = " ")
+homo <- plotRidgePlot(hs_preds, ne_preds, 
+                      "Homo_sapiens", "Neanderthal", 
+                      "Modern humans", "Neanderthals", 
+                      species_colors["Modern humans"], species_colors["Neanderthals"])
+homo
 
+pan <- plotRidgePlot(pp_preds, pt_preds, 
+                     "Pan_paniscus", "Pan_troglodytes", 
+                     "Pan paniscus", "Pan troglodytes", 
+                     species_colors["Pan paniscus"], species_colors["Pan troglodytes"])
+pan
 
-plotmeansSister <- filter(plotMeans, taxon %in% c("Gorilla beringei", "Gorilla gorilla"))
-p <- ggplot(plotmeansSister, aes(x = trait, y = mean_value, color = taxon, group = taxon)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Trait",
-    y = "Mean inferred posterior mean value",
-    color = "Taxon"
-  ) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_y_continuous(limits = c(10, 17), breaks = 10:18) +
-  theme_minimal()
-p
-ggsave("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/gorillasMeanDeciles.svg", p, width = 8, height = 5)
+gorilla <- plotRidgePlot(gb_preds, gg_preds,
+                         "Gorilla_beringei", "Gorilla_gorilla", 
+                         "Gorilla beringei", "Gorilla gorilla", 
+                         species_colors["Gorilla beringei"], species_colors["Gorilla gorilla"])
+gorilla
 
-plotmeansSister <- filter(plotMeans, taxon %in% c("Pongo abelii", "Pongo pygmaeus"))
-p <- ggplot(plotmeansSister, aes(x = trait, y = mean_value, color = taxon, group = taxon)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Trait",
-    y = "Mean inferred posterior mean value",
-    color = "Taxon"
-  ) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_y_continuous(limits = c(10, 17), breaks = 10:18) +
-  theme_minimal()
-p
-ggsave("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/pongosMeanDeciles.svg", p, width = 8, height = 5)
+pongo <- plotRidgePlot(ppyg_preds, pa_preds, 
+                     "Pongo_abelii", "Pongo_pygmaeus", 
+                     "Pongo abelii", "Pongo pygmaeus", 
+                     species_colors["Pongo abelii"], species_colors["Pongo pygmaeus"])
+pongo
 
-
-plotmeansSister <- filter(plotMeans, taxon %in% c("Pan troglodytes", "Pan paniscus"))
-p <- ggplot(plotmeansSister, aes(x = trait, y = mean_value, color = taxon, group = taxon)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Trait",
-    y = "Mean inferred posterior mean value",
-    color = "Taxon"
-  ) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_y_continuous(limits = c(10, 17), breaks = 10:18) +
-  theme_minimal()
-p
-ggsave("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/pansMeanDeciles.svg", p, width = 8, height = 5)
-
-
-plotmeansSister <- filter(plotMeans, taxon %in% c("Homo sapiens", "Neanderthal"))
-p <- ggplot(plotmeansSister, aes(x = trait, y = mean_value, color = taxon, group = taxon)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Trait",
-    y = "Mean inferred posterior mean value",
-    color = "Taxon"
-  ) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_y_continuous(limits = c(10, 17), breaks = 10:18) +
-  theme_minimal()
-p
-ggsave("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/homininsMeanDeciles.svg", p, width = 8, height = 5)
-
-
-p <- ggplot(plotMeans, aes(x = trait, y = mean_value, color = taxon, group = taxon)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Trait",
-    y = "Mean inferred posterior mean value",
-    color = "Taxon"
-  ) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_y_continuous(limits = c(10, 17), breaks = 10:18) +
-  theme_minimal()
-p
-ggsave("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/allMeanDeciles.svg", p, width = 8, height = 5)
-
-
-# estimated variances -----------------------------------------------------
-
-plotVCV <- plotdat %>%
-  select(matches("^intraspecificVCV")) %>%
-  select(matches("(\\d+)\\.\\1$")) %>%  # keep only diagonals (0.0, 1.1, 2.2, ...)
-  pivot_longer(
-    cols = everything(),
-    names_to = c("taxon", "trait"),
-    names_pattern = "intraspecificVCV(.+)(\\d+)\\.\\d+$"
-  ) %>%
-  mutate(trait = paste0("Decile ", as.integer(trait) + 3)) %>%
-  group_by(taxon, trait) %>%
-  summarise(mean_value = posterior_mode(value), .groups = "drop")
-
-plotVCV$trait <- factor(plotVCV$trait, 
-                        levels = c("Decile 3", 
-                                   "Decile 4",
-                                   "Decile 5",
-                                   "Decile 6", 
-                                   "Decile 7",
-                                   "Decile 8", 
-                                   "Decile 9",
-                                   "Decile 10"))
-
-plotVCV$taxon <- gsub("_", plotMeans$taxon, replacement = " ")
-
-p <- ggplot(plotVCV, aes(x = trait, y = mean_value, color = taxon, group = taxon)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Trait",
-    y = "Mean inferred variance",
-    color = "Taxon"
-  ) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal()
-p
-ggsave("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/allVariances.svg", p, width = 8, height = 5)
+combined <- homo + pan + gorilla + pongo
+combined
+ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
