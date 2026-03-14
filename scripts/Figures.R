@@ -310,3 +310,10 @@ combined <- homo + pan + gorilla + pongo
 combined
 ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
+
+
+# LC KL divergence --------------------------------------------------------
+kl_evo_vcv <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_evoVCV_KL_div.rds")
+kl_vcv_raw <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_tipVCV_KL_div.rds")
+
+

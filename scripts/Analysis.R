@@ -156,3 +156,25 @@ kl_evo_vcv <- data.frame(
 kl_evo_vcv
 saveRDS(kl_evo_vcv, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_evoVCV_KL_div.rds")
 
+
+
+# Analyses on the posterior predictive distributions ----------------------------------------------
+
+hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
+ne_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/neanderthalPostPred.rds")
+pp_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/panpaniscusPostPred.rds")
+pt_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pantroglodytesPostPred.rds")
+gb_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorrillaberingeiPostPred.rds")
+gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorillagorillaPostPred.rds")
+pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongoabeliiPostPred.rds")
+ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongopygmaeusPostPred.rds")
+
+### variance in the posterior predictive
+for(i in 1:8){
+  print(colnames(hs_preds)[i])
+  print("Modern human var: ")
+  print(var(hs_preds[,i]))
+  print("Neanderthal var: ")
+  print(var(ne_preds[,i]))
+  print("=======")
+}
