@@ -1,356 +1,196 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1008 576">
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 988.52 432">
   <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->
   <defs>
     <style>
-      .st0 {
-        fill: #eab5ae;
-      }
-
-      .st1 {
-        fill: #90a0cb;
-      }
-
-      .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12, .st13, .st14, .st15, .st16, .st17, .st18, .st19, .st20, .st21, .st22, .st23, .st24, .st25, .st26, .st27, .st28, .st29, .st30, .st31, .st32, .st33, .st34, .st35, .st36, .st37, .st38, .st39, .st40, .st41, .st42, .st43, .st44, .st45, .st46, .st47, .st48, .st49, .st50, .st51, .st52 {
-        stroke: #fff;
-        stroke-miterlimit: 10;
-        stroke-width: .21px;
+      .st0, .st1 {
+        fill: none;
       }
 
       .st2 {
-        fill: #94a3cd;
-      }
-
-      .st53 {
-        fill: #b84a42;
-      }
-
-      .st54 {
-        fill: #ecbcb5;
+        fill: #4368aa;
       }
 
       .st3 {
-        fill: #8d9dc9;
+        fill: #bf584f;
       }
 
       .st4 {
-        fill: #3c64a7;
-      }
-
-      .st55 {
-        fill: #df9b91;
+        fill: #8a9bc8;
       }
 
       .st5 {
-        fill: #3a63a7;
+        fill: #f2cec9;
       }
 
       .st6 {
-        fill: #8093c3;
-      }
-
-      .st56 {
-        fill: #edbfb8;
+        fill: #5e79b4;
       }
 
       .st7 {
-        fill: #8899c7;
+        fill: #efc5be;
       }
 
       .st8 {
-        fill: #6e85bb;
+        fill: #df9a90;
       }
 
       .st9 {
-        fill: #95a3cd;
+        fill: #f0c8c2;
       }
 
       .st10 {
-        fill: #7d91c2;
+        fill: #6981b9;
       }
 
       .st11 {
-        fill: #91a0cb;
+        fill: #b6473f;
       }
 
-      .st57 {
+      .st12 {
+        fill: #90a0cb;
+      }
+
+      .st13 {
+        fill: #94a3cd;
+      }
+
+      .st14 {
+        fill: #95a4cd;
+      }
+
+      .st15 {
+        fill: #3360a5;
+      }
+
+      .st16 {
+        fill: #f0c6c0;
+      }
+
+      .st17 {
+        fill: #3a64a7;
+      }
+
+      .st18 {
+        fill: #e9b4ac;
+      }
+
+      .st19 {
+        fill: #7c8fc1;
+      }
+
+      .st20 {
         font-family: Georgia-BoldItalic, Georgia;
         font-style: italic;
       }
 
-      .st57, .st58, .st59, .st60, .st61, .st62 {
-        isolation: isolate;
-      }
-
-      .st57, .st59 {
+      .st20, .st21 {
         font-size: 11.04px;
         font-weight: 700;
       }
 
-      .st63 {
-        fill: #edbeb7;
-      }
-
-      .st12 {
-        fill: #7086bc;
-      }
-
-      .st64 {
-        fill: #e2a399;
-      }
-
-      .st58 {
-        fill: #231f20;
-        font-size: 8.8px;
-      }
-
-      .st58, .st62 {
-        font-family: Georgia, Georgia;
-      }
-
-      .st13 {
-        fill: #7288bd;
-      }
-
-      .st65 {
-        fill: #f6dcd8;
-      }
-
-      .st66 {
-        fill: #c25d53;
-      }
-
-      .st67 {
-        fill: #e8b2ab;
-      }
-
-      .st14 {
-        fill: #486bab;
-      }
-
-      .st59 {
-        font-family: Georgia-Bold, Georgia;
-      }
-
-      .st60 {
-        font-family: ArialMT, Arial;
-        font-size: 8.54px;
-      }
-
-      .st15 {
-        fill: #6a82ba;
-      }
-
-      .st68 {
-        fill: #f5d8d4;
-      }
-
-      .st69 {
-        fill: #ebbab3;
-      }
-
-      .st70 {
-        fill: #d98c82;
-      }
-
-      .st71 {
-        fill: #e3a39a;
-      }
-
-      .st16 {
-        fill: #8a9bc8;
-      }
-
-      .st72 {
-        fill: #d6867c;
-      }
-
-      .st62 {
-        font-size: 9.96px;
-      }
-
-      .st17 {
-        fill: #8496c5;
-      }
-
-      .st73 {
-        fill: #efc4bd;
-      }
-
-      .st18 {
-        fill: #617cb6;
-      }
-
-      .st19 {
-        fill: #6880b8;
-      }
-
-      .st74 {
-        fill: #e6aca4;
-      }
-
-      .st20 {
-        fill: #8697c6;
-      }
-
-      .st75 {
-        fill: #fff;
-      }
-
-      .st21 {
-        fill: #a0acd2;
-      }
-
-      .st76 {
-        fill: #edc0b9;
-      }
-
-      .st77 {
-        fill: #f6dbd7;
-      }
-
-      .st22 {
-        fill: #92a1cb;
-      }
-
-      .st78 {
-        fill: #f1cbc5;
-      }
-
-      .st79 {
-        fill: #c56358;
-      }
-
-      .st80 {
-        fill: #e4a69d;
-      }
-
-      .st23 {
-        fill: #2a5ca2;
-      }
-
-      .st24 {
-        fill: #2f5ea3;
+      .st20, .st21, .st22, .st23, .st24 {
+        isolation: isolate;
       }
 
       .st25 {
-        fill: #09539c;
-      }
-
-      .st81 {
-        fill: none;
-        stroke: #000;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 1.07px;
-      }
-
-      .st82 {
-        fill: #dd968c;
-      }
-
-      .st83 {
-        fill: #e8b2aa;
+        fill: #f1cac4;
       }
 
       .st26 {
-        fill: #a2aed3;
-      }
-
-      .st27 {
-        fill: #7c8fc1;
-      }
-
-      .st28 {
-        fill: #8f9fca;
-      }
-
-      .st29 {
-        fill: #768bbf;
-      }
-
-      .st30 {
         fill: #93a2cc;
       }
 
+      .st27 {
+        fill: #8496c5;
+      }
+
+      .st28 {
+        fill: #b34039;
+      }
+
+      .st29 {
+        fill: #dc948a;
+      }
+
+      .st30 {
+        fill: #788dc0;
+      }
+
       .st31 {
-        fill: #627cb6;
+        fill: #c15b51;
+      }
+
+      .st21 {
+        font-family: Georgia-Bold, Georgia;
       }
 
       .st32 {
-        fill: #9facd2;
+        fill: #2f5ea3;
       }
 
       .st33 {
-        fill: #637db7;
+        fill: #92a1cc;
       }
 
-      .st84 {
-        fill: #f2cdc7;
+      .st22 {
+        font-size: 8.54px;
+      }
+
+      .st22, .st23, .st24 {
+        font-family: Georgia, Georgia;
       }
 
       .st34 {
-        fill: #7489be;
+        fill: #8697c6;
       }
 
       .st35 {
-        fill: #7c90c2;
-      }
-
-      .st85 {
-        fill: #f3d1cb;
-      }
-
-      .st86 {
-        fill: #d48277;
+        fill: #e2a299;
       }
 
       .st36 {
-        fill: #1b579f;
+        fill: #91a0cb;
       }
 
       .st37 {
-        fill: #778cbf;
+        fill: #d98c82;
       }
 
       .st38 {
         fill: #8c9cc9;
       }
 
-      .st87 {
-        fill: #f3d0cb;
-      }
-
       .st39 {
-        fill: #7b8fc1;
+        fill: #476bab;
       }
 
       .st40 {
-        fill: #5e79b4;
+        fill: #768bbf;
       }
 
       .st41 {
-        fill: #3360a4;
+        clip-path: url(#clippath-1);
       }
 
       .st42 {
-        fill: #758abe;
+        clip-path: url(#clippath-2);
       }
 
       .st43 {
-        fill: #315fa4;
+        fill: #e5a9a0;
+      }
+
+      .st23 {
+        font-size: 9.96px;
       }
 
       .st44 {
-        fill: #6c84bb;
-      }
-
-      .st88 {
-        fill: #c96b60;
+        fill: #9facd2;
       }
 
       .st45 {
-        fill: #9ca9d0;
+        fill: #315fa4;
       }
 
       .st46 {
@@ -358,702 +198,564 @@
       }
 
       .st47 {
-        fill: #4368aa;
-      }
-
-      .st89 {
-        fill: #a31e22;
+        fill: #da8f85;
       }
 
       .st48 {
-        fill: #7f92c3;
-      }
-
-      .st90 {
-        fill: #b03b35;
+        fill: #c6655b;
       }
 
       .st49 {
-        fill: #6981b9;
+        fill: #7288bd;
       }
 
       .st50 {
-        fill: #486bac;
+        fill: #fff;
       }
 
       .st51 {
-        fill: #92a1cc;
+        fill: #778cbf;
       }
 
       .st52 {
+        fill: #efc5bf;
+      }
+
+      .st53 {
+        fill: #617cb6;
+      }
+
+      .st54 {
+        fill: #6a82ba;
+      }
+
+      .st55 {
+        fill: #7e91c2;
+      }
+
+      .st56 {
+        fill: #8093c3;
+      }
+
+      .st57 {
+        fill: #a0acd2;
+      }
+
+      .st58 {
+        fill: #8f9fca;
+      }
+
+      .st59 {
+        fill: #df9b92;
+      }
+
+      .st1 {
+        stroke: #000;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.07px;
+      }
+
+      .st60 {
+        fill: #2a5ca2;
+      }
+
+      .st61 {
+        fill: #7f92c3;
+      }
+
+      .st62 {
+        fill: #7b8fc1;
+      }
+
+      .st63 {
+        fill: #09539c;
+      }
+
+      .st64 {
+        fill: #bf574e;
+      }
+
+      .st24 {
+        fill: #4d4d4d;
+        font-size: 8.8px;
+      }
+
+      .st65 {
+        fill: #3c64a7;
+      }
+
+      .st66 {
+        fill: #fae9e6;
+      }
+
+      .st67 {
+        fill: #6c84bb;
+      }
+
+      .st68 {
+        fill: #486bac;
+      }
+
+      .st69 {
         fill: #1e589f;
       }
 
+      .st70 {
+        fill: #ebb8b1;
+      }
+
+      .st71 {
+        fill: #eec2bc;
+      }
+
+      .st72 {
+        fill: #7087bc;
+      }
+
+      .st73 {
+        fill: #6880b9;
+      }
+
+      .st74 {
+        fill: #1c579f;
+      }
+
+      .st75 {
+        fill: #fefafa;
+      }
+
+      .st76 {
+        fill: #627cb6;
+      }
+
+      .st77 {
+        fill: #8193c4;
+      }
+
+      .st78 {
+        fill: #647eb7;
+      }
+
+      .st79 {
+        fill: #f6ddd9;
+      }
+
+      .st80 {
+        fill: #92a1cb;
+      }
+
+      .st81 {
+        fill: #a2aed3;
+      }
+
+      .st82 {
+        fill: #e1a097;
+      }
+
+      .st83 {
+        fill: #b23e38;
+      }
+
+      .st84 {
+        fill: #e4a89f;
+      }
+
+      .st85 {
+        fill: #6e85bb;
+      }
+
+      .st86 {
+        fill: #758abe;
+      }
+
+      .st87 {
+        fill: #7d91c2;
+      }
+
+      .st88 {
+        fill: #a31e22;
+      }
+
+      .st89 {
+        fill: #8d9dc9;
+      }
+
+      .st90 {
+        fill: #d27e73;
+      }
+
       .st91 {
+        fill: #eab6af;
+      }
+
+      .st92 {
+        fill: #8899c7;
+      }
+
+      .st93 {
+        fill: #e5a9a1;
+      }
+
+      .st94 {
+        clip-path: url(#clippath);
+      }
+
+      .st95 {
+        fill: #efc4be;
+      }
+
+      .st96 {
+        fill: #9daad1;
+      }
+
+      .st97 {
         fill: #c96c61;
       }
     </style>
+    <clipPath id="clippath">
+      <rect class="st0" x="5.48" y="5.48" width="359.3" height="421.04"/>
+    </clipPath>
+    <clipPath id="clippath-1">
+      <rect class="st0" x="51.39" y="10.96" width="307.91" height="374.39"/>
+    </clipPath>
+    <clipPath id="clippath-2">
+      <rect class="st0" x="668.13" y="10.96" width="307.91" height="374.39"/>
+    </clipPath>
   </defs>
-  <g>
+  <g class="st94">
+    <rect class="st50" x="5.48" y="5.48" width="359.3" height="421.04"/>
+  </g>
+  <g class="st41">
     <g>
-      <rect class="st54" x="46.53" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st56" x="84.42" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st85" x="122.3" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st63" x="160.19" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st87" x="198.07" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st77" x="235.96" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st75" x="273.84" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st65" x="311.73" y="136.46" width="37.88" height="37.89"/>
-      <rect class="st56" x="46.53" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st70" x="84.42" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st74" x="122.3" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st67" x="160.19" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st78" x="198.07" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st68" x="235.96" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st84" x="273.84" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st73" x="311.73" y="174.35" width="37.88" height="37.89"/>
-      <rect class="st85" x="46.53" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st74" x="84.42" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st0" x="122.3" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st69" x="160.19" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st55" x="198.07" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st76" x="235.96" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st63" x="273.84" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st78" x="311.73" y="212.23" width="37.88" height="37.89"/>
-      <rect class="st63" x="46.53" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st67" x="84.42" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st69" x="122.3" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st64" x="160.19" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st80" x="198.07" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st83" x="235.96" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st82" x="273.84" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st71" x="311.73" y="250.12" width="37.88" height="37.89"/>
-      <rect class="st87" x="46.53" y="288" width="37.88" height="37.89"/>
-      <rect class="st78" x="84.42" y="288" width="37.88" height="37.89"/>
-      <rect class="st55" x="122.3" y="288" width="37.88" height="37.89"/>
-      <rect class="st80" x="160.19" y="288" width="37.88" height="37.89"/>
-      <rect class="st91" x="198.07" y="288" width="37.88" height="37.89"/>
-      <rect class="st72" x="235.96" y="288" width="37.88" height="37.89"/>
-      <rect class="st79" x="273.84" y="288" width="37.88" height="37.89"/>
-      <rect class="st86" x="311.73" y="288" width="37.88" height="37.89"/>
-      <rect class="st77" x="46.53" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st68" x="84.42" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st76" x="122.3" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st83" x="160.19" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st72" x="198.07" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st53" x="235.96" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st88" x="273.84" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st66" x="311.73" y="325.88" width="37.88" height="37.89"/>
-      <rect class="st75" x="46.53" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st84" x="84.42" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st63" x="122.3" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st82" x="160.19" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st79" x="198.07" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st88" x="235.96" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st89" x="273.84" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st66" x="311.73" y="363.77" width="37.88" height="37.89"/>
-      <rect class="st65" x="46.53" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st73" x="84.42" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st78" x="122.3" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st71" x="160.19" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st86" x="198.07" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st66" x="235.96" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st66" x="273.84" y="401.65" width="37.88" height="37.89"/>
-      <rect class="st90" x="311.73" y="401.65" width="37.88" height="37.89"/>
+      <rect class="st93" x="55.14" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st71" x="92.69" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st7" x="130.24" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st52" x="167.79" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st79" x="205.34" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st66" x="242.89" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st50" x="280.44" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st75" x="317.99" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st71" x="55.14" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st29" x="92.69" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st43" x="130.24" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st18" x="167.79" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st70" x="205.34" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st9" x="242.89" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st5" x="280.44" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st95" x="317.99" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st7" x="55.14" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st43" x="92.69" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st8" x="130.24" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st82" x="167.79" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st84" x="205.34" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st91" x="242.89" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st25" x="280.44" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st16" x="317.99" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st52" x="55.14" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st18" x="92.69" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st82" x="130.24" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st90" x="167.79" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st59" x="205.34" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st35" x="242.89" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st47" x="280.44" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st37" x="317.99" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st79" x="55.14" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st70" x="92.69" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st84" x="130.24" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st59" x="167.79" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st48" x="205.34" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st3" x="242.89" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st31" x="280.44" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st97" x="317.99" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st66" x="55.14" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st9" x="92.69" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st91" x="130.24" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st35" x="167.79" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st3" x="205.34" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st11" x="242.89" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st11" x="280.44" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st64" x="317.99" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st50" x="55.14" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st5" x="92.69" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st25" x="130.24" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st47" x="167.79" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st31" x="205.34" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st11" x="242.89" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st88" x="280.44" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st28" x="317.99" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st75" x="55.14" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st95" x="92.69" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st16" x="130.24" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st37" x="167.79" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st97" x="205.34" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st64" x="242.89" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st28" x="280.44" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st83" x="317.99" y="335.13" width="37.55" height="45.66"/>
+      <text class="st22" transform="translate(66.19 41.31)"><tspan x="0" y="0">1.32</tspan></text>
+      <text class="st22" transform="translate(103.48 41.31)"><tspan x="0" y="0">1.02</tspan></text>
+      <text class="st22" transform="translate(140.42 41.31)"><tspan x="0" y="0">0.99</tspan></text>
+      <text class="st22" transform="translate(177.84 41.31)"><tspan x="0" y="0">0.98</tspan></text>
+      <text class="st22" transform="translate(218.2 41.31)"><tspan x="0" y="0">0.7</tspan></text>
+      <text class="st22" transform="translate(253.23 41.31)"><tspan x="0" y="0">0.56</tspan></text>
+      <text class="st22" transform="translate(293.09 41.31)"><tspan x="0" y="0">0.3</tspan></text>
+      <text class="st22" transform="translate(328.39 41.31)"><tspan x="0" y="0">0.35</tspan></text>
+      <text class="st22" transform="translate(65.93 86.97)"><tspan x="0" y="0">1.02</tspan></text>
+      <text class="st22" transform="translate(104.08 86.97)"><tspan x="0" y="0">1.57</tspan></text>
+      <text class="st22" transform="translate(141.29 86.97)"><tspan x="0" y="0">1.32</tspan></text>
+      <text class="st22" transform="translate(179.33 86.97)"><tspan x="0" y="0">1.19</tspan></text>
+      <text class="st22" transform="translate(216.89 86.97)"><tspan x="0" y="0">1.14</tspan></text>
+      <text class="st22" transform="translate(253.23 86.97)"><tspan x="0" y="0">0.95</tspan></text>
+      <text class="st22" transform="translate(290.76 86.97)"><tspan x="0" y="0">0.87</tspan></text>
+      <text class="st22" transform="translate(328.17 86.97)"><tspan x="0" y="0">0.99</tspan></text>
+      <text class="st22" transform="translate(65.32 132.62)"><tspan x="0" y="0">0.99</tspan></text>
+      <text class="st22" transform="translate(103.74 132.62)"><tspan x="0" y="0">1.32</tspan></text>
+      <text class="st22" transform="translate(143.78 132.62)"><tspan x="0" y="0">1.5</tspan></text>
+      <text class="st22" transform="translate(178.82 132.62)"><tspan x="0" y="0">1.43</tspan></text>
+      <text class="st22" transform="translate(216.42 132.62)"><tspan x="0" y="0">1.33</tspan></text>
+      <text class="st22" transform="translate(254.43 132.62)"><tspan x="0" y="0">1.16</tspan></text>
+      <text class="st22" transform="translate(290.65 132.62)"><tspan x="0" y="0">0.92</tspan></text>
+      <text class="st22" transform="translate(328.44 132.62)"><tspan x="0" y="0">0.97</tspan></text>
+      <text class="st22" transform="translate(65.19 178.28)"><tspan x="0" y="0">0.98</tspan></text>
+      <text class="st22" transform="translate(104.23 178.28)"><tspan x="0" y="0">1.19</tspan></text>
+      <text class="st22" transform="translate(141.27 178.28)"><tspan x="0" y="0">1.43</tspan></text>
+      <text class="st22" transform="translate(178.78 178.28)"><tspan x="0" y="0">1.85</tspan></text>
+      <text class="st22" transform="translate(216.31 178.28)"><tspan x="0" y="0">1.49</tspan></text>
+      <text class="st22" transform="translate(256.27 178.28)"><tspan x="0" y="0">1.4</tspan></text>
+      <text class="st22" transform="translate(291.46 178.28)"><tspan x="0" y="0">1.63</tspan></text>
+      <text class="st22" transform="translate(329.22 178.28)"><tspan x="0" y="0">1.67</tspan></text>
+      <text class="st22" transform="translate(68 223.94)"><tspan x="0" y="0">0.7</tspan></text>
+      <text class="st22" transform="translate(104.24 223.94)"><tspan x="0" y="0">1.14</tspan></text>
+      <text class="st22" transform="translate(141.32 223.94)"><tspan x="0" y="0">1.33</tspan></text>
+      <text class="st22" transform="translate(178.76 223.94)"><tspan x="0" y="0">1.49</tspan></text>
+      <text class="st22" transform="translate(216.34 223.94)"><tspan x="0" y="0">2.14</tspan></text>
+      <text class="st22" transform="translate(253.33 223.94)"><tspan x="0" y="0">2.29</tspan></text>
+      <text class="st22" transform="translate(290.88 223.94)"><tspan x="0" y="0">2.26</tspan></text>
+      <text class="st22" transform="translate(328.2 223.94)"><tspan x="0" y="0">2.06</tspan></text>
+      <text class="st22" transform="translate(65.48 269.6)"><tspan x="0" y="0">0.56</tspan></text>
+      <text class="st22" transform="translate(103.03 269.6)"><tspan x="0" y="0">0.95</tspan></text>
+      <text class="st22" transform="translate(141.78 269.6)"><tspan x="0" y="0">1.16</tspan></text>
+      <text class="st22" transform="translate(181.17 269.6)"><tspan x="0" y="0">1.4</tspan></text>
+      <text class="st22" transform="translate(215.78 269.6)"><tspan x="0" y="0">2.29</tspan></text>
+      <text class="st22" transform="translate(253.31 269.6)"><tspan x="0" y="0">2.49</tspan></text>
+      <text class="st22" transform="translate(290.86 269.6)"><tspan x="0" y="0">2.49</tspan></text>
+      <text class="st22" transform="translate(330.88 269.6)"><tspan x="0" y="0">2.3</tspan></text>
+      <text class="st22" transform="translate(67.79 315.25)"><tspan x="0" y="0">0.3</tspan></text>
+      <text class="st22" transform="translate(103.01 315.25)"><tspan x="0" y="0">0.87</tspan></text>
+      <text class="st22" transform="translate(140.45 315.25)"><tspan x="0" y="0">0.92</tspan></text>
+      <text class="st22" transform="translate(178.81 315.25)"><tspan x="0" y="0">1.63</tspan></text>
+      <text class="st22" transform="translate(215.78 315.25)"><tspan x="0" y="0">2.26</tspan></text>
+      <text class="st22" transform="translate(253.31 315.25)"><tspan x="0" y="0">2.49</tspan></text>
+      <text class="st22" transform="translate(290.59 315.25)"><tspan x="0" y="0">2.88</tspan></text>
+      <text class="st22" transform="translate(328.83 315.25)"><tspan x="0" y="0">2.57</tspan></text>
+      <text class="st22" transform="translate(65.54 360.91)"><tspan x="0" y="0">0.35</tspan></text>
+      <text class="st22" transform="translate(102.87 360.91)"><tspan x="0" y="0">0.99</tspan></text>
+      <text class="st22" transform="translate(140.69 360.91)"><tspan x="0" y="0">0.97</tspan></text>
+      <text class="st22" transform="translate(179.02 360.91)"><tspan x="0" y="0">1.67</tspan></text>
+      <text class="st22" transform="translate(215.55 360.91)"><tspan x="0" y="0">2.06</tspan></text>
+      <text class="st22" transform="translate(255.78 360.91)"><tspan x="0" y="0">2.3</tspan></text>
+      <text class="st22" transform="translate(291.28 360.91)"><tspan x="0" y="0">2.57</tspan></text>
+      <text class="st22" transform="translate(328.56 360.91)"><tspan x="0" y="0">2.59</tspan></text>
     </g>
+  </g>
+  <g>
+    <text class="st24" transform="translate(10.95 361)"><tspan x="0" y="0">Decile 10</tspan></text>
+    <text class="st24" transform="translate(15.16 315.35)"><tspan x="0" y="0">Decile 9</tspan></text>
+    <text class="st24" transform="translate(14.89 269.69)"><tspan x="0" y="0">Decile 8</tspan></text>
+    <text class="st24" transform="translate(15.71 224.03)"><tspan x="0" y="0">Decile 7</tspan></text>
+    <text class="st24" transform="translate(15.16 178.37)"><tspan x="0" y="0">Decile 6</tspan></text>
+    <text class="st24" transform="translate(15.49 132.72)"><tspan x="0" y="0">Decile 5</tspan></text>
+    <text class="st24" transform="translate(15.16 87.06)"><tspan x="0" y="0">Decile 4</tspan></text>
+    <text class="st24" transform="translate(15.28 41.4)"><tspan x="0" y="0">Decile 3</tspan></text>
+    <text class="st24" transform="translate(56.19 416.63) rotate(-45)"><tspan x="0" y="0">Decile 3</tspan></text>
+    <text class="st24" transform="translate(93.66 416.71) rotate(-45)"><tspan x="0" y="0">Decile 4</tspan></text>
+    <text class="st24" transform="translate(131.44 416.48) rotate(-45)"><tspan x="0" y="0">Decile 5</tspan></text>
+    <text class="st24" transform="translate(168.75 416.72) rotate(-45)"><tspan x="0" y="0">Decile 6</tspan></text>
+    <text class="st24" transform="translate(206.7 416.32) rotate(-45)"><tspan x="0" y="0">Decile 7</tspan></text>
+    <text class="st24" transform="translate(243.66 416.91) rotate(-45)"><tspan x="0" y="0">Decile 8</tspan></text>
+    <text class="st24" transform="translate(281.4 416.72) rotate(-45)"><tspan x="0" y="0">Decile 9</tspan></text>
+    <text class="st24" transform="translate(315.98 419.69) rotate(-45)"><tspan x="0" y="0">Decile 10</tspan></text>
+  </g>
+  <g>
+    <line class="st1" x1="524.09" y1="266.64" x2="552.55" y2="266.64"/>
+    <line class="st1" x1="524.09" y1="220.98" x2="552.55" y2="220.98"/>
+    <line class="st1" x1="546.22" y1="38.35" x2="552.55" y2="38.35"/>
+    <line class="st1" x1="546.22" y1="84.01" x2="552.21" y2="84.01"/>
+    <line class="st1" x1="526.6" y1="129.67" x2="552.55" y2="129.67"/>
+    <line class="st1" x1="526.6" y1="175.33" x2="552.55" y2="175.33"/>
+    <line class="st1" x1="510" y1="357.95" x2="552.55" y2="357.95"/>
+    <line class="st1" x1="510" y1="312.3" x2="552.55" y2="312.3"/>
+    <line class="st1" x1="384.25" y1="255.23" x2="384.25" y2="255.23"/>
+    <line class="st1" x1="384.25" y1="175.33" x2="456.32" y2="175.33"/>
+    <line class="st1" x1="456.32" y1="243.81" x2="524.09" y2="243.81"/>
+    <line class="st1" x1="456.32" y1="106.84" x2="483.86" y2="106.84"/>
+    <line class="st1" x1="483.86" y1="61.18" x2="546.22" y2="61.18"/>
+    <line class="st1" x1="483.86" y1="152.5" x2="526.6" y2="152.5"/>
+    <line class="st1" x1="384.25" y1="335.13" x2="510" y2="335.13"/>
+    <line class="st1" x1="524.09" y1="243.81" x2="524.09" y2="266.64"/>
+    <line class="st1" x1="524.09" y1="243.81" x2="524.09" y2="220.98"/>
+    <line class="st1" x1="546.22" y1="61.18" x2="546.22" y2="38.35"/>
+    <line class="st1" x1="546.22" y1="61.18" x2="546.22" y2="84.01"/>
+    <line class="st1" x1="526.6" y1="152.5" x2="526.6" y2="129.67"/>
+    <line class="st1" x1="526.6" y1="152.5" x2="526.6" y2="175.33"/>
+    <line class="st1" x1="510" y1="335.13" x2="510" y2="357.95"/>
+    <line class="st1" x1="510" y1="335.13" x2="510" y2="312.3"/>
+    <line class="st1" x1="384.25" y1="255.23" x2="384.25" y2="255.23"/>
+    <line class="st1" x1="384.25" y1="255.23" x2="384.25" y2="175.33"/>
+    <line class="st1" x1="456.32" y1="175.33" x2="456.32" y2="243.81"/>
+    <line class="st1" x1="456.32" y1="175.33" x2="456.32" y2="106.84"/>
+    <line class="st1" x1="483.86" y1="106.84" x2="483.86" y2="61.18"/>
+    <line class="st1" x1="483.86" y1="106.84" x2="483.86" y2="152.5"/>
+    <line class="st1" x1="384.25" y1="255.23" x2="384.25" y2="335.13"/>
+    <text class="st20" transform="translate(553.39 270.46)"><tspan x="0" y="0">Gorilla beringei</tspan></text>
+    <text class="st20" transform="translate(553.39 224.8)"><tspan x="0" y="0">Gorilla gorilla</tspan></text>
+    <text class="st21" transform="translate(553.39 42.17)"><tspan x="0" y="0">Modern humans</tspan></text>
+    <text class="st21" transform="translate(553.06 87.83)"><tspan x="0" y="0">Neanderthal</tspan></text>
+    <text class="st20" transform="translate(553.39 133.49)"><tspan x="0" y="0">Pan paniscus</tspan></text>
+    <text class="st20" transform="translate(553.39 179.14)"><tspan x="0" y="0">Pan troglodytes</tspan></text>
+    <text class="st20" transform="translate(553.39 361.77)"><tspan x="0" y="0">Pongo abelii</tspan></text>
+    <text class="st20" transform="translate(553.39 316.12)"><tspan x="0" y="0">Pongo pygmaeus</tspan></text>
+  </g>
+  <g class="st42">
     <g>
-      <line class="st81" x1="601.42" y1="355.07" x2="643.93" y2="355.07"/>
-      <line class="st81" x1="601.42" y1="300.21" x2="643.93" y2="300.21"/>
-      <line class="st81" x1="634.48" y1="80.79" x2="643.93" y2="80.79"/>
-      <line class="st81" x1="634.48" y1="135.65" x2="643.43" y2="135.65"/>
-      <line class="st81" x1="605.16" y1="190.5" x2="643.93" y2="190.5"/>
-      <line class="st81" x1="605.16" y1="245.36" x2="643.93" y2="245.36"/>
-      <line class="st81" x1="580.37" y1="464.78" x2="643.93" y2="464.78"/>
-      <line class="st81" x1="580.37" y1="409.93" x2="643.93" y2="409.93"/>
-      <line class="st81" x1="392.51" y1="341.36" x2="392.51" y2="341.36"/>
-      <line class="st81" x1="392.51" y1="245.36" x2="500.18" y2="245.36"/>
-      <line class="st81" x1="500.18" y1="327.64" x2="601.42" y2="327.64"/>
-      <line class="st81" x1="500.18" y1="163.07" x2="541.32" y2="163.07"/>
-      <line class="st81" x1="541.32" y1="108.22" x2="634.48" y2="108.22"/>
-      <line class="st81" x1="541.32" y1="217.93" x2="605.16" y2="217.93"/>
-      <line class="st81" x1="392.51" y1="437.36" x2="580.37" y2="437.36"/>
-      <line class="st81" x1="601.42" y1="327.64" x2="601.42" y2="355.07"/>
-      <line class="st81" x1="601.42" y1="327.64" x2="601.42" y2="300.21"/>
-      <line class="st81" x1="634.48" y1="108.22" x2="634.48" y2="80.79"/>
-      <line class="st81" x1="634.48" y1="108.22" x2="634.48" y2="135.65"/>
-      <line class="st81" x1="605.16" y1="217.93" x2="605.16" y2="190.5"/>
-      <line class="st81" x1="605.16" y1="217.93" x2="605.16" y2="245.36"/>
-      <line class="st81" x1="580.37" y1="437.36" x2="580.37" y2="464.78"/>
-      <line class="st81" x1="580.37" y1="437.36" x2="580.37" y2="409.93"/>
-      <line class="st81" x1="392.51" y1="341.36" x2="392.51" y2="341.36"/>
-      <line class="st81" x1="392.51" y1="341.36" x2="392.51" y2="245.36"/>
-      <line class="st81" x1="500.18" y1="245.36" x2="500.18" y2="327.64"/>
-      <line class="st81" x1="500.18" y1="245.36" x2="500.18" y2="163.07"/>
-      <line class="st81" x1="541.32" y1="163.07" x2="541.32" y2="108.22"/>
-      <line class="st81" x1="541.32" y1="163.07" x2="541.32" y2="217.93"/>
-      <line class="st81" x1="392.51" y1="341.36" x2="392.51" y2="437.36"/>
-      <g class="st61">
-        <text class="st57" transform="translate(645.19 358.89)"><tspan x="0" y="0">Gorilla beringei</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st57" transform="translate(645.19 304.03)"><tspan x="0" y="0">Gorilla gorilla</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st59" transform="translate(645.19 84.61)"><tspan x="0" y="0">Modern humans</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st59" transform="translate(644.69 139.47)"><tspan x="0" y="0">Neanderthal</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st57" transform="translate(645.19 194.32)"><tspan x="0" y="0">Pan paniscus</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st57" transform="translate(645.19 249.18)"><tspan x="0" y="0">Pan troglodytes</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st57" transform="translate(645.19 468.6)"><tspan x="0" y="0">Pongo abelii</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st57" transform="translate(645.19 413.75)"><tspan x="0" y="0">Pongo pygmaeus</tspan></text>
-      </g>
-      <rect class="st45" x="756.19" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st1" x="756.19" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st3" x="756.19" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st32" x="756.19" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st15" x="756.19" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st50" x="756.19" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st21" x="756.19" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st26" x="756.19" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st6" x="781.33" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st30" x="781.33" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st28" x="781.33" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st38" x="781.33" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st8" x="781.33" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st41" x="781.33" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st9" x="781.33" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st51" x="781.33" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st35" x="806.48" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st42" x="806.48" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st2" x="806.48" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st2" x="806.48" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st18" x="806.48" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st43" x="806.48" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st38" x="806.48" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st6" x="806.48" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st27" x="831.62" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st42" x="831.62" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st11" x="831.62" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st17" x="831.62" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st31" x="831.62" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st52" x="831.62" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st48" x="831.62" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st49" x="831.62" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st34" x="856.76" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st44" x="856.76" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st28" x="856.76" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st38" x="856.76" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st19" x="856.76" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st36" x="856.76" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st8" x="856.76" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st14" x="856.76" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st37" x="881.9" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st40" x="881.9" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st16" x="881.9" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st7" x="881.9" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st12" x="881.9" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st24" x="881.9" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st15" x="881.9" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st23" x="881.9" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st29" x="907.05" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st37" x="907.05" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st38" x="907.05" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st20" x="907.05" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st46" x="907.05" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st4" x="907.05" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st33" x="907.05" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st25" x="907.05" y="53.36" width="25.14" height="54.86"/>
-      <rect class="st37" x="932.19" y="437.36" width="25.14" height="54.86"/>
-      <rect class="st39" x="932.19" y="382.5" width="25.14" height="54.86"/>
-      <rect class="st10" x="932.19" y="327.64" width="25.14" height="54.86"/>
-      <rect class="st48" x="932.19" y="272.79" width="25.14" height="54.86"/>
-      <rect class="st22" x="932.19" y="217.93" width="25.14" height="54.86"/>
-      <rect class="st47" x="932.19" y="163.07" width="25.14" height="54.86"/>
-      <rect class="st13" x="932.19" y="108.22" width="25.14" height="54.86"/>
-      <rect class="st5" x="932.19" y="53.36" width="25.14" height="54.86"/>
-      <g class="st61">
-        <text class="st60" transform="translate(760.02 519) rotate(-45)"><tspan x="0" y="0">Decile 3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(785.16 519) rotate(-45)"><tspan x="0" y="0">Decile 4</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(810.3 519) rotate(-45)"><tspan x="0" y="0">Decile 5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(835.44 519) rotate(-45)"><tspan x="0" y="0">Decile 6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(860.59 519) rotate(-45)"><tspan x="0" y="0">Decile 7</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(885.73 519) rotate(-45)"><tspan x="0" y="0">Decile 8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(910.87 519) rotate(-45)"><tspan x="0" y="0">Decile 9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st60" transform="translate(934.33 520.68) rotate(-45)"><tspan x="0" y="0">Decile 10</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(760.32 468.23)"><tspan x="0" y="0">11.4</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(759.53 413.38)"><tspan x="0" y="0">12.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(759.75 358.52)"><tspan x="0" y="0">13.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(761 303.66)"><tspan x="0" y="0">11.1</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(764.12 248.81)"><tspan x="0" y="0">17</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(758.77 193.95)"><tspan x="0" y="0">20.4</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(764.48 139.1)"><tspan x="0" y="0">11</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(759.25 84.24)"><tspan x="0" y="0">10.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(784.79 468.23)"><tspan x="0" y="0">14.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(785.01 413.38)"><tspan x="0" y="0">12.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(784.82 358.52)"><tspan x="0" y="0">12.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(784.92 303.66)"><tspan x="0" y="0">13.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(784.78 248.81)"><tspan x="0" y="0">16.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(784.21 193.95)"><tspan x="0" y="0">22.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(784.85 139.1)"><tspan x="0" y="0">12.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(785.01 84.24)"><tspan x="0" y="0">12.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(814.28 468.23)"><tspan x="0" y="0">15</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(809.97 413.38)"><tspan x="0" y="0">15.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(810.04 358.52)"><tspan x="0" y="0">12.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(810.04 303.66)"><tspan x="0" y="0">12.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(810.25 248.81)"><tspan x="0" y="0">17.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(809.4 193.95)"><tspan x="0" y="0">22.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(810.07 139.1)"><tspan x="0" y="0">13.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(809.94 84.24)"><tspan x="0" y="0">14.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(835.94 468.23)"><tspan x="0" y="0">15.1</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(835.26 413.38)"><tspan x="0" y="0">15.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(835.42 358.52)"><tspan x="0" y="0">12.7</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(835.11 303.66)"><tspan x="0" y="0">14.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(835.39 248.81)"><tspan x="0" y="0">17.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(834.69 193.95)"><tspan x="0" y="0">23.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(834.93 139.1)"><tspan x="0" y="0">14.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(835.42 84.24)"><tspan x="0" y="0">17.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(864.37 468.23)"><tspan x="0" y="0">16</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(860.06 413.38)"><tspan x="0" y="0">16.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(860.25 358.52)"><tspan x="0" y="0">12.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(860.32 303.66)"><tspan x="0" y="0">13.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(860.6 248.81)"><tspan x="0" y="0">17.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(859.64 193.95)"><tspan x="0" y="0">23.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(860.21 139.1)"><tspan x="0" y="0">16.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(859.52 84.24)"><tspan x="0" y="0">20.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(885.54 468.23)"><tspan x="0" y="0">15.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(885.27 413.38)"><tspan x="0" y="0">18.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(885.61 358.52)"><tspan x="0" y="0">13.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(885.74 303.66)"><tspan x="0" y="0">13.7</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(885.36 248.81)"><tspan x="0" y="0">16.4</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(884.93 193.95)"><tspan x="0" y="0">22.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(889.83 139.1)"><tspan x="0" y="0">17</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(884.6 84.24)"><tspan x="0" y="0">22.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(911 468.23)"><tspan x="0" y="0">15.7</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(910.69 413.38)"><tspan x="0" y="0">15.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(910.61 358.52)"><tspan x="0" y="0">13.2</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(914.67 303.66)"><tspan x="0" y="0">14</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(910.69 248.81)"><tspan x="0" y="0">14.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(910.73 193.95)"><tspan x="0" y="0">21.5</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(911.13 139.1)"><tspan x="0" y="0">17.7</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(909.93 84.24)"><tspan x="0" y="0">24.3</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(935.83 468.23)"><tspan x="0" y="0">15.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(936.51 413.38)"><tspan x="0" y="0">15.1</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(935.65 358.52)"><tspan x="0" y="0">14.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(935.5 303.66)"><tspan x="0" y="0">14.8</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(935.68 248.81)"><tspan x="0" y="0">12.6</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(934.76 193.95)"><tspan x="0" y="0">20.9</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(936.32 139.1)"><tspan x="0" y="0">16.1</tspan></text>
-      </g>
-      <g class="st61">
-        <text class="st62" transform="translate(935.99 84.24)"><tspan x="0" y="0">21.7</tspan></text>
-      </g>
+      <rect class="st96" x="671.88" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st77" x="709.43" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st87" x="746.98" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st19" x="784.53" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st86" x="822.08" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st30" x="859.64" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st40" x="897.19" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st40" x="934.74" y="335.13" width="37.55" height="45.66"/>
+      <rect class="st12" x="671.88" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st26" x="709.43" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st86" x="746.98" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st86" x="784.53" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st67" x="822.08" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st6" x="859.64" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st51" x="897.19" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st62" x="934.74" y="289.47" width="37.55" height="45.66"/>
+      <rect class="st54" x="671.88" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st85" x="709.43" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st53" x="746.98" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st76" x="784.53" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st73" x="822.08" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st72" x="859.64" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st46" x="897.19" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st80" x="934.74" y="152.5" width="37.55" height="45.66"/>
+      <rect class="st68" x="671.88" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st15" x="709.43" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st45" x="746.98" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st69" x="784.53" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st74" x="822.08" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st32" x="859.64" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st65" x="897.19" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st2" x="934.74" y="106.84" width="37.55" height="45.66"/>
+      <rect class="st89" x="671.88" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st58" x="709.43" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st13" x="746.98" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st36" x="784.53" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st58" x="822.08" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st4" x="859.64" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st38" x="897.19" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st55" x="934.74" y="243.81" width="37.55" height="45.66"/>
+      <rect class="st44" x="671.88" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st38" x="709.43" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st13" x="746.98" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st27" x="784.53" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st38" x="822.08" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st92" x="859.64" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st34" x="897.19" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st61" x="934.74" y="198.15" width="37.55" height="45.66"/>
+      <rect class="st81" x="671.88" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st33" x="709.43" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st56" x="746.98" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st10" x="784.53" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st39" x="822.08" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st60" x="859.64" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st63" x="897.19" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st17" x="934.74" y="15.52" width="37.55" height="45.66"/>
+      <rect class="st57" x="671.88" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st14" x="709.43" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st38" x="746.98" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st61" x="784.53" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st85" x="822.08" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st54" x="859.64" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st78" x="897.19" y="61.18" width="37.55" height="45.66"/>
+      <rect class="st49" x="934.74" y="61.18" width="37.55" height="45.66"/>
+      <text class="st23" transform="translate(682.29 361.4)"><tspan x="0" y="0">11.3</tspan></text>
+      <text class="st23" transform="translate(719.28 361.4)"><tspan x="0" y="0">14.5</tspan></text>
+      <text class="st23" transform="translate(756.65 361.4)"><tspan x="0" y="0">14.9</tspan></text>
+      <text class="st23" transform="translate(795.06 361.4)"><tspan x="0" y="0">15.1</tspan></text>
+      <text class="st23" transform="translate(831.93 361.4)"><tspan x="0" y="0">15.9</tspan></text>
+      <text class="st23" transform="translate(869.67 361.4)"><tspan x="0" y="0">15.5</tspan></text>
+      <text class="st23" transform="translate(907.34 361.4)"><tspan x="0" y="0">15.7</tspan></text>
+      <text class="st23" transform="translate(944.89 361.4)"><tspan x="0" y="0">15.7</tspan></text>
+      <text class="st23" transform="translate(681.43 315.75)"><tspan x="0" y="0">12.8</tspan></text>
+      <text class="st23" transform="translate(719.32 315.75)"><tspan x="0" y="0">12.5</tspan></text>
+      <text class="st23" transform="translate(756.83 315.75)"><tspan x="0" y="0">15.9</tspan></text>
+      <text class="st23" transform="translate(794.38 315.75)"><tspan x="0" y="0">15.9</tspan></text>
+      <text class="st23" transform="translate(831.59 315.75)"><tspan x="0" y="0">16.8</tspan></text>
+      <text class="st23" transform="translate(869.21 315.75)"><tspan x="0" y="0">18.3</tspan></text>
+      <text class="st23" transform="translate(907.03 315.75)"><tspan x="0" y="0">15.6</tspan></text>
+      <text class="st23" transform="translate(944.62 315.75)"><tspan x="0" y="0">15.2</tspan></text>
+      <text class="st23" transform="translate(686.02 178.77)"><tspan x="0" y="0">17</tspan></text>
+      <text class="st23" transform="translate(719.09 178.77)"><tspan x="0" y="0">16.6</tspan></text>
+      <text class="st23" transform="translate(760.65 178.77)"><tspan x="0" y="0">18</tspan></text>
+      <text class="st23" transform="translate(794.51 178.77)"><tspan x="0" y="0">17.9</tspan></text>
+      <text class="st23" transform="translate(832.13 178.77)"><tspan x="0" y="0">17.3</tspan></text>
+      <text class="st23" transform="translate(869.3 178.77)"><tspan x="0" y="0">16.4</tspan></text>
+      <text class="st23" transform="translate(907.03 178.77)"><tspan x="0" y="0">14.5</tspan></text>
+      <text class="st23" transform="translate(944.43 178.77)"><tspan x="0" y="0">12.6</tspan></text>
+      <text class="st23" transform="translate(680.67 133.12)"><tspan x="0" y="0">20.4</tspan></text>
+      <text class="st23" transform="translate(718.52 133.12)"><tspan x="0" y="0">22.2</tspan></text>
+      <text class="st23" transform="translate(756.11 133.12)"><tspan x="0" y="0">22.3</tspan></text>
+      <text class="st23" transform="translate(793.81 133.12)"><tspan x="0" y="0">23.5</tspan></text>
+      <text class="st23" transform="translate(831.17 133.12)"><tspan x="0" y="0">23.6</tspan></text>
+      <text class="st23" transform="translate(868.87 133.12)"><tspan x="0" y="0">22.5</tspan></text>
+      <text class="st23" transform="translate(907.07 133.12)"><tspan x="0" y="0">21.5</tspan></text>
+      <text class="st23" transform="translate(943.51 133.12)"><tspan x="0" y="0">20.9</tspan></text>
+      <text class="st23" transform="translate(681.65 270.09)"><tspan x="0" y="0">13.2</tspan></text>
+      <text class="st23" transform="translate(719.13 270.09)"><tspan x="0" y="0">12.9</tspan></text>
+      <text class="st23" transform="translate(756.75 270.09)"><tspan x="0" y="0">12.3</tspan></text>
+      <text class="st23" transform="translate(794.54 270.09)"><tspan x="0" y="0">12.7</tspan></text>
+      <text class="st23" transform="translate(831.78 270.09)"><tspan x="0" y="0">12.9</tspan></text>
+      <text class="st23" transform="translate(869.55 270.09)"><tspan x="0" y="0">13.5</tspan></text>
+      <text class="st23" transform="translate(906.95 270.09)"><tspan x="0" y="0">13.2</tspan></text>
+      <text class="st23" transform="translate(944.4 270.09)"><tspan x="0" y="0">14.9</tspan></text>
+      <text class="st23" transform="translate(682.9 224.43)"><tspan x="0" y="0">11.1</tspan></text>
+      <text class="st23" transform="translate(719.23 224.43)"><tspan x="0" y="0">13.3</tspan></text>
+      <text class="st23" transform="translate(756.75 224.43)"><tspan x="0" y="0">12.3</tspan></text>
+      <text class="st23" transform="translate(794.23 224.43)"><tspan x="0" y="0">14.2</tspan></text>
+      <text class="st23" transform="translate(831.88 224.43)"><tspan x="0" y="0">13.3</tspan></text>
+      <text class="st23" transform="translate(869.68 224.43)"><tspan x="0" y="0">13.7</tspan></text>
+      <text class="st23" transform="translate(911.01 224.43)"><tspan x="0" y="0">14</tspan></text>
+      <text class="st23" transform="translate(944.25 224.43)"><tspan x="0" y="0">14.8</tspan></text>
+      <text class="st23" transform="translate(681.15 41.8)"><tspan x="0" y="0">10.8</tspan></text>
+      <text class="st23" transform="translate(719.32 41.8)"><tspan x="0" y="0">12.5</tspan></text>
+      <text class="st23" transform="translate(756.65 41.8)"><tspan x="0" y="0">14.6</tspan></text>
+      <text class="st23" transform="translate(795.19 41.8)"><tspan x="0" y="0">17.1</tspan></text>
+      <text class="st23" transform="translate(831.05 41.8)"><tspan x="0" y="0">20.5</tspan></text>
+      <text class="st23" transform="translate(868.54 41.8)"><tspan x="0" y="0">22.8</tspan></text>
+      <text class="st23" transform="translate(906.27 41.8)"><tspan x="0" y="0">24.3</tspan></text>
+      <text class="st23" transform="translate(944.43 41.8)"><tspan x="0" y="0">21.6</tspan></text>
+      <text class="st23" transform="translate(686.38 87.46)"><tspan x="0" y="0">11</tspan></text>
+      <text class="st23" transform="translate(719.16 87.46)"><tspan x="0" y="0">12.2</tspan></text>
+      <text class="st23" transform="translate(756.78 87.46)"><tspan x="0" y="0">13.3</tspan></text>
+      <text class="st23" transform="translate(794.05 87.46)"><tspan x="0" y="0">14.8</tspan></text>
+      <text class="st23" transform="translate(831.74 87.46)"><tspan x="0" y="0">16.6</tspan></text>
+      <text class="st23" transform="translate(873.77 87.46)"><tspan x="0" y="0">17</tspan></text>
+      <text class="st23" transform="translate(907.47 87.46)"><tspan x="0" y="0">17.7</tspan></text>
+      <text class="st23" transform="translate(945.07 87.46)"><tspan x="0" y="0">16.1</tspan></text>
     </g>
   </g>
   <g>
-    <g class="st61">
-      <text class="st60" transform="translate(57.56 159.64)"><tspan x="0" y="0">1.19</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(95.44 159.64)"><tspan x="0" y="0">1.15</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(133.33 159.64)"><tspan x="0" y="0">0.88</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(171.21 159.64)"><tspan x="0" y="0">1.16</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(209.09 159.64)"><tspan x="0" y="0">0.89</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(246.98 159.64)"><tspan x="0" y="0">0.71</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(284.86 159.64)"><tspan x="0" y="0">0.17</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(325.13 159.64)"><tspan x="0" y="0">0.7</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(56.38 235.83)"><tspan x="0" y="0">1.15</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(94.26 235.83)"><tspan x="0" y="0">1.94</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(132.15 235.83)"><tspan x="0" y="0">1.43</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(170.03 235.83)"><tspan x="0" y="0">1.34</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(207.91 235.83)"><tspan x="0" y="0">0.96</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(245.8 235.83)"><tspan x="0" y="0">0.76</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(283.68 235.83)"><tspan x="0" y="0">0.94</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(321.57 235.83)"><tspan x="0" y="0">1.07</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(56.38 197.71)"><tspan x="0" y="0">0.88</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(94.26 197.71)"><tspan x="0" y="0">1.43</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(134.52 197.71)"><tspan x="0" y="0">1.3</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(170.03 197.71)"><tspan x="0" y="0">1.22</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(207.91 197.71)"><tspan x="0" y="0">1.71</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(245.8 197.71)"><tspan x="0" y="0">1.13</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(283.68 197.71)"><tspan x="0" y="0">1.16</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(321.57 197.71)"><tspan x="0" y="0">0.96</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(56.38 273.94)"><tspan x="0" y="0">1.16</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(94.26 273.94)"><tspan x="0" y="0">1.34</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(132.15 273.94)"><tspan x="0" y="0">1.22</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(170.03 273.94)"><tspan x="0" y="0">1.59</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(207.91 273.94)"><tspan x="0" y="0">1.53</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(245.8 273.94)"><tspan x="0" y="0">1.35</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(283.68 273.94)"><tspan x="0" y="0">1.79</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(321.57 273.94)"><tspan x="0" y="0">1.58</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(57.56 312.05)"><tspan x="0" y="0">0.89</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(95.44 312.05)"><tspan x="0" y="0">0.96</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(133.33 312.05)"><tspan x="0" y="0">1.71</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(171.21 312.05)"><tspan x="0" y="0">1.53</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(209.09 312.05)"><tspan x="0" y="0">2.44</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(246.98 312.05)"><tspan x="0" y="0">2.03</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(284.86 312.05)"><tspan x="0" y="0">2.58</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(325.13 312.05)"><tspan x="0" y="0">2.1</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(56.38 350.17)"><tspan x="0" y="0">0.71</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(94.26 350.17)"><tspan x="0" y="0">0.76</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(132.15 350.17)"><tspan x="0" y="0">1.13</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(170.03 350.17)"><tspan x="0" y="0">1.35</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(207.91 350.17)"><tspan x="0" y="0">2.03</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(245.8 350.17)"><tspan x="0" y="0">2.94</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(283.68 350.17)"><tspan x="0" y="0">2.45</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(321.57 350.17)"><tspan x="0" y="0">2.67</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(56.38 388.28)"><tspan x="0" y="0">0.17</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(94.26 388.28)"><tspan x="0" y="0">0.94</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(132.15 388.28)"><tspan x="0" y="0">1.16</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(170.03 388.28)"><tspan x="0" y="0">1.79</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(207.91 388.28)"><tspan x="0" y="0">2.58</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(245.8 388.28)"><tspan x="0" y="0">2.45</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(283.68 388.28)"><tspan x="0" y="0">3.49</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(321.57 388.28)"><tspan x="0" y="0">2.67</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st60" transform="translate(58.49 426.39)"><tspan x="0" y="0">0.7</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(93.99 426.39)"><tspan x="0" y="0">1.07</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(131.88 426.39)"><tspan x="0" y="0">0.96</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(169.76 426.39)"><tspan x="0" y="0">1.58</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(210.02 426.39)"><tspan x="0" y="0">2.1</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(245.53 426.39)"><tspan x="0" y="0">2.67</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(283.41 426.39)"><tspan x="0" y="0">2.67</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st60" transform="translate(321.3 426.39)"><tspan x="0" y="0">3.16</tspan></text>
-    </g>
-  </g>
-  <g>
-    <g class="st61">
-      <text class="st58" transform="translate(56.15 471.44) rotate(-45)"><tspan x="0" y="0">Decile 3</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(93.94 471.52) rotate(-45)"><tspan x="0" y="0">Decile 4</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(132.06 471.29) rotate(-45)"><tspan x="0" y="0">Decile 5</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(169.71 471.52) rotate(-45)"><tspan x="0" y="0">Decile 6</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(207.99 471.13) rotate(-45)"><tspan x="0" y="0">Decile 7</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(245.29 471.71) rotate(-45)"><tspan x="0" y="0">Decile 8</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(283.37 471.52) rotate(-45)"><tspan x="0" y="0">Decile 9</tspan></text>
-    </g>
-    <g class="st61">
-      <text class="st58" transform="translate(318.27 474.49) rotate(-45)"><tspan x="0" y="0">Decile 10</tspan></text>
-    </g>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.69 159.75)"><tspan x="0" y="0">Decile 3</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.69 197.71)"><tspan x="0" y="0">Decile 4</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.7 235.67)"><tspan x="0" y="0">Decile 5</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.69 273.63)"><tspan x="0" y="0">Decile 6</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.7 311.59)"><tspan x="0" y="0">Decile 7</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.69 349.55)"><tspan x="0" y="0">Decile 8</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.69 387.51)"><tspan x="0" y="0">Decile 9</tspan></text>
-  </g>
-  <g class="st61">
-    <text class="st58" transform="translate(9.7 425.47)"><tspan x="0" y="0">Decile 10</tspan></text>
+    <text class="st24" transform="translate(672.93 416.63) rotate(-45)"><tspan x="0" y="0">Decile 3</tspan></text>
+    <text class="st24" transform="translate(710.4 416.71) rotate(-45)"><tspan x="0" y="0">Decile 4</tspan></text>
+    <text class="st24" transform="translate(748.18 416.48) rotate(-45)"><tspan x="0" y="0">Decile 5</tspan></text>
+    <text class="st24" transform="translate(785.49 416.72) rotate(-45)"><tspan x="0" y="0">Decile 6</tspan></text>
+    <text class="st24" transform="translate(823.44 416.32) rotate(-45)"><tspan x="0" y="0">Decile 7</tspan></text>
+    <text class="st24" transform="translate(860.4 416.91) rotate(-45)"><tspan x="0" y="0">Decile 8</tspan></text>
+    <text class="st24" transform="translate(898.14 416.72) rotate(-45)"><tspan x="0" y="0">Decile 9</tspan></text>
+    <text class="st24" transform="translate(932.72 419.69) rotate(-45)"><tspan x="0" y="0">Decile 10</tspan></text>
   </g>
 </svg>

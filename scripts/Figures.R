@@ -1,4 +1,5 @@
 library(ape)
+library(bayestestR)
 library(dplyr)
 library(MASS)
 library(ggridges)
@@ -19,8 +20,7 @@ posterior <- posterior[round(0.1 * nrow(posterior)) : nrow(posterior), ] #apply 
 
 # Figure 1: evo VCV, tree, tipmeans ---------------------------------------
 map_estimate <- function(x) {
-  d <- density(x)
-  d$x[which.max(d$y)]
+  as.numeric(bayestestR::map_estimate(x))
 }
 
 #evo VCV MAP
@@ -68,27 +68,20 @@ plottree$tip.label <- gsub("_", " ", plottree$tip.label)
 plottree$tip.label <- gsub("Homo sapiens", "Modern humans", plottree$tip.label)
 treeplot <- ggtree(plottree) + 
               geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
-              hexpand(0.1)
+              hexpand(0.55)
 treeplot <- ggtree::rotate(treeplot, 12)
 treeplot
 
 #heatmap at tips
-# heatmap at tips
-species_map <- c(
-  "Pongo abelii"     = "Pongo_abelii",
-  "Pongo pygmaeus"   = "Pongo_pygmaeus",
-  "Pan troglodytes"  = "Pan_troglodytes",
-  "Pan paniscus"     = "Pan_paniscus",
-  "Gorilla beringei" = "Gorilla_beringei",
-  "Gorilla gorilla"  = "Gorilla_gorilla",
-  "Modern humans"    = "Homo_sapiens",
-  "Neanderthal"      = "Neanderthal"
-)
+tip_order <- treeplot$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
 
 mean_map <- lapply(names(species_map), function(tip_label) {
-  sp <- species_map[tip_label]
+  sp        <- unname(species_map[tip_label])
   mean_cols <- paste0(sp, "_mean_", 0:7)
-  vals <- dplyr::select(posterior, all_of(mean_cols)) |>
+  vals      <- dplyr::select(posterior, all_of(mean_cols)) |>
     summarise(across(everything(), map_estimate))
   data.frame(
     tip_label = tip_label,
@@ -96,46 +89,39 @@ mean_map <- lapply(names(species_map), function(tip_label) {
     map       = as.numeric(vals)
   )
 }) |> bind_rows() |>
-  mutate(decile = factor(decile, levels = paste0("Decile ", 3:10)))
-# Attach heatmap
-heatmap_data <- pivot_wider(mean_map,
-                            id_cols     = tip_label,
-                            names_from  = decile,
-                            values_from = map) |>
-  tibble::column_to_rownames("tip_label")
+  mutate(
+    decile    = factor(decile, levels = paste0("Decile ", 3:10)),
+    tip_label = factor(tip_label, levels = tip_order)
+  )
 
-p <- gheatmap(treeplot,
-              heatmap_data,
-              offset            = 6,
-              width             = 0.8,
-              colnames          = TRUE,
-              colnames_angle    = 45,
-              colnames_offset_y = 0.25,
-              font.size         = 3,
-              custom_column_labels = colnames(heatmap_data)) +
+italic_face <- ifelse(tip_order %in% c("Modern humans", "Neanderthal"), 
+                      "plain", "italic")
+
+tipplot <- ggplot(mean_map, aes(x = decile, y = tip_label, fill = map)) +
+  geom_tile() +
+  geom_text(aes(label = round(map, 1)),
+            size   = 3.5,
+            color  = "black",
+            family = "Georgia") +
   scale_fill_gradient2(
     low  = "white",
     high = "#09539c",
     name = "MAP mean"
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, family = "Georgia"),
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    panel.grid = element_blank()
   )
+tipplot
 
-tile_data <- p$layers[[which(sapply(p$layers, function(l) inherits(l$geom, "GeomTile")))]]$data
 
-treeAndHeatmap <- p + 
-  geom_text(data = tile_data,
-            aes(x = x, y = y, label = round(value, 1)),
-            inherit.aes = FALSE,
-            size   = 3.5,
-            color  = "black",
-            family = "Georgia")+
-  theme(legend.position = "none")
-
-combinedPlot <- evoVCV + treeAndHeatmap + 
-  plot_layout(widths = c(1, 2))
-combinedPlot
-
-ggsave(paste0(output, "treeMAP.svg"), width = 14, height = 8)
-
+p1 <- evoVCV + treeplot + tipplot
+p1
+ggsave(paste0(output, "treeMAP.svg"), plot = p1, width = 14, height = 6)
 
 # Posterior predictive differences between modern humans and neand --------
 get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
@@ -310,10 +296,5 @@ combined <- homo + pan + gorilla + pongo
 combined
 ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
-
-
-# LC KL divergence --------------------------------------------------------
-kl_evo_vcv <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_evoVCV_KL_div.rds")
-kl_vcv_raw <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_tipVCV_KL_div.rds")
 
 
