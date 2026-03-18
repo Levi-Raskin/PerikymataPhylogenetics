@@ -209,7 +209,7 @@ plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotNam
   overlap_data <- plot_data |>
     group_by(trait) |>
     summarise(
-      overlap = overlap(
+      overlap = overlapping::overlap(
         list(
           value[species == plotName1],
           value[species == plotName2]

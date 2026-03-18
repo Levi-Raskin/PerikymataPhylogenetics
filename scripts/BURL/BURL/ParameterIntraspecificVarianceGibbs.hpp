@@ -26,12 +26,10 @@ class ParameterIntraspecificVarianceGibbs : public ParameterMatrix {
         //Objects ordered by memory footprint
         std::vector<Eigen::MatrixXd>                    value;
         Eigen::MatrixXd                                 psi;
-        Eigen::VectorXd                                 mu0;
         PhylogeneticModel*                              model;
         ParameterIntraspecificMean*                     mean;
         Eigen::MatrixXd*                                tipData;
         double                                          dof;
-        double                                          lambda;
         double                                          cachedlnP;
         bool                                            useCachedLnP;
         int                                             numAcceptances;

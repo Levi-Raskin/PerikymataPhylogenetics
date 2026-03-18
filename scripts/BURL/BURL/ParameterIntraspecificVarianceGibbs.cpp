@@ -13,8 +13,6 @@ ParameterIntraspecificVarianceGibbs::ParameterIntraspecificVarianceGibbs(double 
     RandomVariable& rng = RandomVariable::randomVariableInstance();
     
     dof = numtraits + 2; //such that the mean is the scale matrix
-    lambda = dof - numtraits - 1;
-    mu0 = Eigen::VectorXd::Zero(numtraits);
     psi = Eigen::MatrixXd::Constant(numtraits, numtraits, 1e-6);
     psi.diagonal().array() = 1.0;
     psi = Eigen::VectorXd::Ones(numtraits).asDiagonal() * psi * Eigen::VectorXd::Ones(numtraits).asDiagonal();
@@ -58,8 +56,7 @@ double ParameterIntraspecificVarianceGibbs::update(void){
         datScatter += ydiff * ydiff.transpose();
     }
     
-    Eigen::VectorXd diff = mu_current - mu0;
-    Eigen::MatrixXd prior_scatter = lambda * (diff * diff.transpose());
+    Eigen::MatrixXd prior_scatter = mu_current * mu_current.transpose();
     Eigen::MatrixXd psiN = psi + datScatter + prior_scatter;
     Eigen::MatrixXd psiNInvLower = psiN.inverse().llt().matrixL();
     
