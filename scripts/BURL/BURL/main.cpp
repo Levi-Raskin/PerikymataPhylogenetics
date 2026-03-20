@@ -17,6 +17,7 @@ int main(int argc, const char* argv[]) {
     settings.initializeSettings(argc, argv);
     settings.print();
     std::string readDatType = settings.getReadDataType();
+    settings.writeLog();
 
     //read in raw data
     std::vector<std::string> rawReadDatNames;
@@ -50,6 +51,7 @@ int main(int argc, const char* argv[]) {
     file.close();
     Tree tree = Tree(treeNewick);
     
+    settings.startTiming();
     int numChains = settings.getNumChains();
     unsigned long numCycles = settings.getChainLength();
     int pf = settings.getPrintFrequency();
@@ -71,7 +73,7 @@ int main(int argc, const char* argv[]) {
         Mcmc mcmc(numCycles, pf, sf, perikymataModel);
         mcmc.run();
     }
-    
+    settings.endTiming();
     return 0;
 }
 

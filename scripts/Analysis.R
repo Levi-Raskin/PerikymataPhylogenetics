@@ -42,8 +42,8 @@ print(ess)
 summary(ess)
 
 ### Gelman Rubin
-folder_path <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/GR_test_chains"  # adjust to your path
-file_prefix <- "chain"
+folder_path <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/GR_test_chains_longer/"  # adjust to your path
+file_prefix <- "out"
 file_suffix <- ".tsv"
 n_chains <- 4
 chain_files <- file.path(folder_path, paste0(file_prefix, 0:(n_chains - 1), file_suffix))

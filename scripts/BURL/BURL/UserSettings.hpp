@@ -1,8 +1,8 @@
 #ifndef UserSettings_hpp
 #define UserSettings_hpp
 
+#include <chrono>
 #include <string>
-
 
 
 class UserSettings {
@@ -27,15 +27,20 @@ class UserSettings {
         int                         getSampleFrequency(void) { checkSettings(); return sampleFrequency; }
         void                        print(void);
         void                        printHelp(void);
+        void                        startTiming(void);
+        void                        endTiming(void);
+        void                        writeLog(void);
 
     private:
                                     UserSettings(void) { settingsInitialized = false; }
                                     UserSettings(const UserSettings& u);
         UserSettings&               operator=(const UserSettings&);
         void                        checkSettings(void);
+        std::chrono::steady_clock::time_point startTime;
         std::string                 executablePath;
         std::string                 inputFile;
         std::string                 inputTree;
+        std::string                 logFile;
         std::string                 outputFile;
         std::string                 readDatDatatype;
         unsigned long               chainLength;

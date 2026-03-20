@@ -1,8 +1,9 @@
 #include <iostream>
+#include <fstream>
+#include <set>
 #include <string>
 #include <vector>
 #include <thread>
-#include <set>
 
 #include "Msg.hpp"
 #include "UserSettings.hpp"
@@ -201,4 +202,40 @@ void UserSettings::printHelp(void){
     std::cout << "  -c  <int>     Number of chains  (1 for MCMC, 2+ for Metropolis-coupled MCMC)\n";
     std::cout << "  -nt <int>     Number of threads\n";
     std::cout << "  -log <T/F>    Log-transform data (T/true or F/false)\n";
+}
+
+void UserSettings::writeLog(void){
+    const std::string tsv = ".tsv";
+    const std::string txt = "Log.txt";
+    logFile = outputFile;
+    logFile.replace(outputFile.size() - tsv.size(), tsv.size(), txt);
+    
+    std::ofstream log(logFile);
+    if (!log.is_open())
+        Msg::error("Could not open log file: " + logFile);
+
+    log << "Input file name:                       " << inputFile << "\n";
+    log << "Input tree file name:                  " << inputTree << "\n";
+    log << "Output file name:                      " << outputFile << "\n";
+    log << "Chain length:                          " << chainLength << "\n";
+    log << "Number of chains:                      " << numChains << "\n";
+    log << "Number of threads:                     " << numThreads << "\n";
+    log << "Print-to-screen frequency:             " << printFrequency << "\n";
+    log << "Chain sampling frequency:              " << sampleFrequency << "\n";
+    log << "Log-transform data:                    " << (logTransformData ? "true" : "false") << "\n";
+
+    log.close();
+
+}
+
+void UserSettings::startTiming(void){
+    startTime = std::chrono::steady_clock::now();
+}
+
+void UserSettings::endTiming(void){
+    std::ofstream log(logFile, std::ios::app);
+    auto endTime = std::chrono::steady_clock::now();
+    double elapsedMinutes = std::chrono::duration<double, std::ratio<60>>(endTime - startTime).count();
+    log << "Time elapsed (minutes):                " << std::fixed << std::setprecision(4) << elapsedMinutes << "\n";
+    log.close();
 }
