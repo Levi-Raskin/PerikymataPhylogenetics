@@ -18,10 +18,10 @@ print(ess)
 summary(ess)
 
 ### Gelman Rubin
-folder_path <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/GR_test_chains"  # adjust to your path
+folder_path <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/GR_test_chains/"  # adjust to your path
 file_prefix <- "out"
 file_suffix <- ".tsv"
-n_chains <- 4
+n_chains <- 3
 chain_files <- file.path(folder_path, paste0(file_prefix, 0:(n_chains - 1), file_suffix))
 chains <- lapply(chain_files, function(file) {
   if (!file.exists(file)) stop(paste("File not found:", file))
@@ -114,43 +114,76 @@ summary(gr$psrf)
 # saveRDS(vcv_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
 vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
 
-
-# draw samples from the prior
+p <- 8
 dof <- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
-scale <- matrix(1e-6, 8, 8)
+scale <- matrix(1e-6, p, p)
 diag(scale) <- 1.0
 
-prior <- mclapply(
-  1:nrow(lc_posterior),
-  function(x){
-    MCMCpack::riwish(dof, scale)
-  },
-  mc.cores = detectCores() - 2
-)
-
-priorRepack <- matrix(data = NA, nrow = length(prior), ncol = 64)
-for(i in 1:length(prior)){
-  priorRepack[i, ] <- as.vector(prior[[i]])
+lnl <- function(dat, S, nu){
+  res <- mclapply(
+    dat,
+    FUN = function(x) {
+      LaplacesDemon::dinvwishart(x, nu, S, log = TRUE)
+    },
+    mc.cores = detectCores() - 1
+  )
+  vals <- unlist(res)
+  if (any(!is.finite(vals))) return(-Inf)
+  sum(vals)
 }
 
-posteriorRepack <- matrix(data = NA, nrow = length(vcv_list$evolutionary), ncol = 64)
-for(i in 1:length(vcv_list$evolutionary)){
-  posteriorRepack[i, ] <- as.vector(vcv_list$Neanderthal[[i]])
-}
-
-#calculate element-wise overlap
-for(i in 1:ncol(posteriorRepack)){
-  print(
-    overlapping::overlap(
-      list(
-        priorRepack[,i],
-        posteriorRepack[,i]
-      ),
-      type = "2"
-    )
+posteriorFits <- list()
+for(i in 1:length(vcv_list)){
+  post <- vcv_list[[i]]
+  
+  nu_0 <- dof
+  S_0  <- scale
+  L_0  <- t(chol(S_0 + diag(1e-6, p)))
+  
+  init <- c(log(nu_0 - p - 1), L_0[lower.tri(L_0, diag = TRUE)])
+  
+  neg_lnl <- function(params) {
+    nu <- exp(params[1]) + p + 1
+    
+    L <- matrix(0, p, p)
+    L[lower.tri(L, diag = TRUE)] <- params[2:(p*(p+1)/2 + 1)]
+    S <- L %*% t(L)
+    
+    eig <- eigen(S, only.values = TRUE)$values
+    if (any(eig <= 1e-10)) return(.Machine$double.xmax)
+    
+    ll <- lnl(post, S, nu)
+    if (!is.finite(ll)) return(.Machine$double.xmax)
+    -ll
+  }
+  
+  cat("Initial neg log-lik:", neg_lnl(init), "\n")
+  
+  tictoc::tic("Optimization")
+  fit <- optim(
+    par     = init,
+    fn      = neg_lnl,
+    method  = "BFGS",
+    control = list(maxit = 1000, reltol = 1e-8, trace = 1)
+  )
+  tictoc::toc()
+  
+  nu_hat <- exp(fit$par[1]) + p + 1
+  L_hat  <- matrix(0, p, p)
+  L_hat[lower.tri(L_hat, diag = TRUE)] <- fit$par[2:(p*(p+1)/2 + 1)]
+  S_hat  <- L_hat %*% t(L_hat)
+  
+  posteriorFits[[i]] <- list(
+    nu = nu_hat,
+    scale = S_hat
   )
 }
+names(posteriorFits) <- names(vcv_list)
+saveRDS(posteriorFits, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_posterior_fits.rds")
 
+calcKLDivergence <- function(scalePost, dofPost, scalePrior, dofPrior){
+  
+}
 
 
 # Analyses on the posterior predictive distributions ----------------------------------------------

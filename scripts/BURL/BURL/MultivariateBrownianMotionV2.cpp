@@ -89,28 +89,28 @@ std::vector<double> MultivariateBrownianMotionV2::getParameterString(void){
 }
 
 double MultivariateBrownianMotionV2::lnLikelihood(void){
-    Eigen::MatrixXd SigmaInv = varianceCovarianceMatrix.inverse();
-    double logDetSigma = std::log(varianceCovarianceMatrix.determinant());
-    
-    cachedLnL = -0.5 * numberOfInternalNodes * (numberOfTraits * log2Pi + logDetSigma);
-    for(const Eigen::VectorXd& c : contrasts)
-        cachedLnL -= 0.5 * c.dot(SigmaInv * c);
-
-    return cachedLnL;
-//    Eigen::LLT<Eigen::MatrixXd> llt(varianceCovarianceMatrix);
-//    const Eigen::MatrixXd& L = llt.matrixL();
+//    Eigen::MatrixXd SigmaInv = varianceCovarianceMatrix.inverse();
+//    double logDetSigma = std::log(varianceCovarianceMatrix.determinant());
+//    
+//    cachedLnL = -0.5 * numberOfInternalNodes * (numberOfTraits * log2Pi + logDetSigma);
+//    for(const Eigen::VectorXd& c : contrasts)
+//        cachedLnL -= 0.5 * c.dot(SigmaInv * c);
 //
-//    double logDetSigma = 2.0 * L.diagonal().array().log().sum();
-//
-//    Eigen::MatrixXd C(numberOfTraits, contrasts.size());
-//    for(int i = 0; i < (int)contrasts.size(); i++)
-//        C.col(i) = contrasts[i];
-//
-//    Eigen::MatrixXd Z = llt.matrixL().solve(C);
-//    double traceSum = Z.squaredNorm();
-//
-//    cachedLnL = -0.5 * numberOfInternalNodes * (numberOfTraits * log2Pi + logDetSigma) - 0.5 * traceSum;
 //    return cachedLnL;
+    Eigen::LLT<Eigen::MatrixXd> llt(varianceCovarianceMatrix);
+    const Eigen::MatrixXd& L = llt.matrixL();
+
+    double logDetSigma = 2.0 * L.diagonal().array().log().sum();
+
+    Eigen::MatrixXd C(numberOfTraits, contrasts.size());
+    for(int i = 0; i < (int)contrasts.size(); i++)
+        C.col(i) = contrasts[i];
+
+    Eigen::MatrixXd Z = llt.matrixL().solve(C);
+    double traceSum = Z.squaredNorm();
+
+    cachedLnL = -0.5 * numberOfInternalNodes * (numberOfTraits * log2Pi + logDetSigma) - 0.5 * traceSum;
+    return cachedLnL;
 }
 
 void MultivariateBrownianMotionV2::instantiateIndependentContrasts(void){
