@@ -7,7 +7,7 @@ lc_posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetic
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
 ui2_posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_dec3_8.tsv")
-ui2_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
+ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
 
 
 # ESS/GR ------------------------------------------------------------------
@@ -61,7 +61,8 @@ summary(gr$psrf)
 
 # KL divergence -------------------------------------------------
 
-#data wrangling
+###data wrangling
+
 # extract_vcv <- function(row, prefix, p = 8) {
 #   mat <- matrix(NA, p, p)
 #   for (i in 0:(p-1)) {
@@ -74,6 +75,8 @@ summary(gr$psrf)
 #   }
 #   mat
 # }
+
+# # LC
 # 
 # species_list <- c(
 #   "evolutionary",
@@ -112,79 +115,230 @@ summary(gr$psrf)
 # names(vcv_list) <- species_list
 # 
 # saveRDS(vcv_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
-vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
+# 
+# UI2
+# species_list <- c(
+#   "evolutionary",
+#   "Pan_troglodytes",
+#   "Pan_paniscus",
+#   "Homo_sapiens",
+#   "Neanderthal"
+# )
+# 
+# prefix_map <- c(
+#   evolutionary    = "evo_",
+#   Pan_troglodytes = "Pan_troglodytes_",
+#   Pan_paniscus    = "Pan_paniscus_",
+#   Homo_sapiens     = "Homo_sapiens_",
+#   Neanderthal      = "Neanderthal_"
+# )
+# 
+# n_samples <- nrow(ui2_posterior)
+# 
+# vcv_list <- mclapply(species_list, function(sp) {
+#   prefix <- prefix_map[sp]
+#   lapply(seq_len(n_samples), function(i) {
+#     extract_vcv(ui2_posterior[i, ], prefix, p = 8)
+#   })
+# },
+# mc.cores = detectCores() -1)
+# 
+# names(vcv_list) <- species_list
+# 
+# saveRDS(vcv_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_VCVs_extracted.rds")
+
+#### Lower Canine ####
+
+lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
 
 p <- 8
-dof <- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
-scale <- matrix(1e-6, p, p)
-diag(scale) <- 1.0
 
-lnl <- function(dat, S, nu){
-  res <- mclapply(
-    dat,
-    FUN = function(x) {
-      LaplacesDemon::dinvwishart(x, nu, S, log = TRUE)
-    },
-    mc.cores = detectCores() - 1
-  )
-  vals <- unlist(res)
-  if (any(!is.finite(vals))) return(-Inf)
-  sum(vals)
-}
-
+### MLE fitting to posterior VCV distributions
 posteriorFits <- list()
-for(i in 1:length(vcv_list)){
-  post <- vcv_list[[i]]
+for (i in 1:length(lc_vcv_list)) {
+  post <- lc_vcv_list[[i]]
+  N <- length(post)
   
-  nu_0 <- dof
-  S_0  <- scale
-  L_0  <- t(chol(S_0 + diag(1e-6, p)))
+  M <- Reduce("+", lapply(post, solve)) / N
+  m <- mean(sapply(post, function(x) determinant(x, logarithm = T)$modulus))
   
-  init <- c(log(nu_0 - p - 1), L_0[lower.tri(L_0, diag = TRUE)])
-  
-  neg_lnl <- function(params) {
-    nu <- exp(params[1]) + p + 1
-    
-    L <- matrix(0, p, p)
-    L[lower.tri(L, diag = TRUE)] <- params[2:(p*(p+1)/2 + 1)]
-    S <- L %*% t(L)
-    
-    eig <- eigen(S, only.values = TRUE)$values
-    if (any(eig <= 1e-10)) return(.Machine$double.xmax)
-    
-    ll <- lnl(post, S, nu)
-    if (!is.finite(ll)) return(.Machine$double.xmax)
-    -ll
+  f <- function(nu) {
+      determinant(M, logarithm = T)$modulus - p * log(nu / 2) +
+      sum(digamma((nu - 0:(p - 1)) / 2)) -
+      mean(sapply(post, function(x) determinant(solve(x), logarithm = T)$modulus))
   }
   
-  cat("Initial neg log-lik:", neg_lnl(init), "\n")
+  f_prime <- function(nu) {
+    -p / nu + 0.5 * sum(trigamma((nu - 0:(p - 1)) / 2))
+  }
   
-  tictoc::tic("Optimization")
-  fit <- optim(
-    par     = init,
-    fn      = neg_lnl,
-    method  = "BFGS",
-    control = list(maxit = 1000, reltol = 1e-8, trace = 1)
-  )
-  tictoc::toc()
+  nu <- p + 2
+  while (f(nu) >= 0) nu <- p - 1 + (nu - p - 1) / 2 #min for nu is p-1
   
-  nu_hat <- exp(fit$par[1]) + p + 1
-  L_hat  <- matrix(0, p, p)
-  L_hat[lower.tri(L_hat, diag = TRUE)] <- fit$par[2:(p*(p+1)/2 + 1)]
-  S_hat  <- L_hat %*% t(L_hat)
+  for (iter in 1:100) {
+    step <- f(nu) / f_prime(nu)
+    nu <- nu - step
+    if (abs(step) < 1e-12) break
+  }
+  
+  S <- nu * solve(M)
   
   posteriorFits[[i]] <- list(
-    nu = nu_hat,
-    scale = S_hat
+    nu = nu,
+    scale = S
   )
 }
-names(posteriorFits) <- names(vcv_list)
+names(posteriorFits) <- names(lc_vcv_list)
 saveRDS(posteriorFits, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_posterior_fits.rds")
+posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_posterior_fits.rds")
 
-calcKLDivergence <- function(scalePost, dofPost, scalePrior, dofPrior){
+### calc KL divergence
+calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPrior){
+  # Following: https://statproofbook.github.io/P/wish-kl.html
+  V1 = MASS::ginv(scalePost)
+  n1 = dofPost
+  V2 = MASS::ginv(scalePrior)
+  n2 = dofPrior
   
+  result = 0.0
+  
+  #term 1
+  result = n2 * (determinant(V2, logarithm = T)$modulus - determinant(V1, logarithm = T)$modulus)
+  result = as.numeric(result)
+  
+  #term 2
+  result = result + n1 * sum(diag( scalePost %*% V1 ))
+  
+  #term 3
+  result = result + 2 * (CholWishart::lmvgamma(n2/2, p) - CholWishart::lmvgamma(n1/2, p))
+  
+  #term 4
+  result = result + (n1 - n2) * CholWishart::mvdigamma(n1/2, p) - n1*p
+  
+  return (0.5 * result)
 }
 
+priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
+priorScale <- matrix(1e-6, p, p)
+diag(priorScale) <- 1.0
+
+for(i in 1:length(posteriorFits)){
+  print("================")
+  print(names(posteriorFits)[i])
+  print(
+    calcKLDivergenceInverseWishart(
+      scalePost = posteriorFits[[i]]$scale,
+      dofPost = posteriorFits[[i]]$nu,
+      scalePrior = priorScale,
+      dofPrior = priorDOF
+    )
+  )
+}
+
+
+#### Upper second incisor ####
+ui2_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_VCVs_extracted.rds")
+
+p <- 8
+
+### MLE fitting to posterior VCV distributions
+posteriorFits <- list()
+for (i in 1:length(ui2_vcv_list)) {
+  post <- ui2_vcv_list[[i]]
+  N <- length(post)
+  
+  M <- Reduce("+", lapply(post, solve)) / N
+  m <- mean(sapply(post, function(x) determinant(x, logarithm = T)$modulus))
+  
+  f <- function(nu) {
+    determinant(M, logarithm = T)$modulus - p * log(nu / 2) +
+      sum(digamma((nu - 0:(p - 1)) / 2)) -
+      mean(sapply(post, function(x) determinant(solve(x), logarithm = T)$modulus))
+  }
+  
+  f_prime <- function(nu) {
+    -p / nu + 0.5 * sum(trigamma((nu - 0:(p - 1)) / 2))
+  }
+  
+  nu <- p + 2
+  it = 0
+  converged <- TRUE
+  while (f(nu) >= 0){
+    nu <- p - 1 + (nu - p - 1) / 2 #min for nu is p-1
+    it = it+1
+    if(it == 100){
+      warning("DOF search did not converge for species ", names(ui2_vcv_list)[i])
+      converged <- FALSE
+      break
+    }
+  } 
+  
+  if (!converged) next
+  
+  for (iter in 1:100) {
+    step <- f(nu) / f_prime(nu)
+    nu <- nu - step
+    if (abs(step) < 1e-12) break
+    
+    if(iter == 100) print("iter hit maxit, need to increase iterations")
+  }
+  
+  S <- nu * solve(M)
+  
+  posteriorFits[[i]] <- list(
+    nu = nu,
+    scale = S
+  )
+}
+names(posteriorFits) <- names(ui2_vcv_list)
+saveRDS(posteriorFits, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_posterior_fits.rds")
+posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_posterior_fits.rds")
+  
+  
+### calc KL divergence
+calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPrior){
+  # Following: https://statproofbook.github.io/P/wish-kl.html
+  V1 = MASS::ginv(scalePost)
+  n1 = dofPost
+  V2 = MASS::ginv(scalePrior)
+  n2 = dofPrior
+  
+  result = 0.0
+  
+  #term 1
+  result = n2 * (determinant(V2, logarithm = T)$modulus - determinant(V1, logarithm = T)$modulus)
+  result = as.numeric(result)
+  
+  #term 2
+  result = result + n1 * sum(diag( scalePost %*% V1 ))
+  
+  #term 3
+  result = result + 2 * (CholWishart::lmvgamma(n2/2, p) - CholWishart::lmvgamma(n1/2, p))
+  
+  #term 4
+  result = result + (n1 - n2) * CholWishart::mvdigamma(n1/2, p) - n1*p
+  
+  return (0.5 * result)
+}
+
+priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
+priorScale <- matrix(1e-6, p, p)
+diag(priorScale) <- 1.0
+
+for(i in 1:length(posteriorFits)){
+  print("================")
+  print(names(posteriorFits)[i])
+  try(
+    print(
+      calcKLDivergenceInverseWishart(
+        scalePost = posteriorFits[[i]]$scale,
+        dofPost = posteriorFits[[i]]$nu,
+        scalePrior = priorScale,
+        dofPrior = priorDOF
+      )
+    ) 
+  )
+}
 
 # Analyses on the posterior predictive distributions ----------------------------------------------
 
