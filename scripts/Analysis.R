@@ -148,13 +148,13 @@ summary(gr$psrf)
 # saveRDS(vcv_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_VCVs_extracted.rds")
 
 #### Lower Canine ####
-
 lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
 
 p <- 8
 
 ### MLE fitting to posterior VCV distributions
 posteriorFits <- list()
+#moment matching
 for (i in 1:length(lc_vcv_list)) {
   post <- lc_vcv_list[[i]]
   N <- length(post)
@@ -173,7 +173,7 @@ for (i in 1:length(lc_vcv_list)) {
   }
   
   nu <- p + 2
-  while (f(nu) >= 0) nu <- p - 1 + (nu - p - 1) / 2 #min for nu is p-1
+  while (f(nu) >= 0) nu <- p + 1 + (nu - p - 1) / 2
   
   for (iter in 1:100) {
     step <- f(nu) / f_prime(nu)
@@ -184,7 +184,7 @@ for (i in 1:length(lc_vcv_list)) {
   S <- nu * solve(M)
   
   posteriorFits[[i]] <- list(
-    nu = nu,
+    nu = as.numeric(nu),
     scale = S
   )
 }
@@ -194,30 +194,22 @@ posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/
 
 ### calc KL divergence
 calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPrior){
-  # Following: https://statproofbook.github.io/P/wish-kl.html
-  V1 = MASS::ginv(scalePost)
-  n1 = dofPost
-  V2 = MASS::ginv(scalePrior)
-  n2 = dofPrior
+  V1 <- solve(scalePost)
+  V2 <- solve(scalePrior)
+  n1 <- dofPost
+  n2 <- dofPrior
+  term1 <- n2 * as.numeric(
+    determinant(V2, logarithm = TRUE)$modulus - 
+      determinant(V1, logarithm = TRUE)$modulus
+  )
+  term2 <- n1 * sum(diag(solve(V2) %*% V1))
+  term3 <- 2 * (CholWishart::lmvgamma(n2/2, p) - CholWishart::lmvgamma(n1/2, p))
+  term4 <- (n1 - n2) * CholWishart::mvdigamma(n1/2, p)
+  term5 <- -n1 * p
   
-  result = 0.0
-  
-  #term 1
-  result = n2 * (determinant(V2, logarithm = T)$modulus - determinant(V1, logarithm = T)$modulus)
-  result = as.numeric(result)
-  
-  #term 2
-  result = result + n1 * sum(diag( scalePost %*% V1 ))
-  
-  #term 3
-  result = result + 2 * (CholWishart::lmvgamma(n2/2, p) - CholWishart::lmvgamma(n1/2, p))
-  
-  #term 4
-  result = result + (n1 - n2) * CholWishart::mvdigamma(n1/2, p) - n1*p
-  
-  return (0.5 * result)
+  result <- 0.5 * (term1 + term2 + term3 + term4 + term5)
+  return(as.numeric(result))
 }
-
 priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
 priorScale <- matrix(1e-6, p, p)
 diag(priorScale) <- 1.0
@@ -239,88 +231,53 @@ for(i in 1:length(posteriorFits)){
 #### Upper second incisor ####
 ui2_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_VCVs_extracted.rds")
 
-p <- 8
-
 ### MLE fitting to posterior VCV distributions
 posteriorFits <- list()
+
 for (i in 1:length(ui2_vcv_list)) {
   post <- ui2_vcv_list[[i]]
   N <- length(post)
   
-  M <- Reduce("+", lapply(post, solve)) / N
-  m <- mean(sapply(post, function(x) determinant(x, logarithm = T)$modulus))
+  P <- lapply(post, solve)
+  m_P <- Reduce("+", P) / N
+  m_log_det_P <- mean(sapply(P, function(x) as.numeric(determinant(x, logarithm = T)$modulus)))
+  log_det_m_P <- as.numeric(determinant(m_P, logarithm = T)$modulus)
   
   f <- function(nu) {
-    determinant(M, logarithm = T)$modulus - p * log(nu / 2) +
-      sum(digamma((nu - 0:(p - 1)) / 2)) -
-      mean(sapply(post, function(x) determinant(solve(x), logarithm = T)$modulus))
+    p * log(2) + log_det_m_P - p * log(nu) +
+      sum(digamma((nu + 1 - 1:p) / 2)) - m_log_det_P
   }
   
   f_prime <- function(nu) {
-    -p / nu + 0.5 * sum(trigamma((nu - 0:(p - 1)) / 2))
+    -p / nu + 0.5 * sum(trigamma((nu + 1 - 1:p) / 2))
   }
   
   nu <- p + 2
-  it = 0
-  converged <- TRUE
-  while (f(nu) >= 0){
-    nu <- p - 1 + (nu - p - 1) / 2 #min for nu is p-1
-    it = it+1
-    if(it == 100){
-      warning("DOF search did not converge for species ", names(ui2_vcv_list)[i])
-      converged <- FALSE
-      break
-    }
-  } 
+  epsilon <- 1e-8
   
-  if (!converged) next
+  lb <- p - 1 + epsilon
   
   for (iter in 1:100) {
     step <- f(nu) / f_prime(nu)
-    nu <- nu - step
-    if (abs(step) < 1e-12) break
-    
-    if(iter == 100) print("iter hit maxit, need to increase iterations")
+    nu_s <- nu - step
+    if (nu_s <= lb) nu_s <- lb + (nu - lb) / 2
+    if (abs(nu_s - nu) < 1e-12) { nu <- nu_s; break }
+    nu <- nu_s
   }
   
-  S <- nu * solve(M)
+  V <- m_P/ nu
   
   posteriorFits[[i]] <- list(
-    nu = nu,
-    scale = S
+    nu = nu, 
+    scale = V
   )
 }
+
 names(posteriorFits) <- names(ui2_vcv_list)
 saveRDS(posteriorFits, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_posterior_fits.rds")
 posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/ui2/ui2_posterior_fits.rds")
   
-  
 ### calc KL divergence
-calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPrior){
-  # Following: https://statproofbook.github.io/P/wish-kl.html
-  V1 = MASS::ginv(scalePost)
-  n1 = dofPost
-  V2 = MASS::ginv(scalePrior)
-  n2 = dofPrior
-  
-  result = 0.0
-  
-  #term 1
-  result = n2 * (determinant(V2, logarithm = T)$modulus - determinant(V1, logarithm = T)$modulus)
-  result = as.numeric(result)
-  
-  #term 2
-  result = result + n1 * sum(diag( scalePost %*% V1 ))
-  
-  #term 3
-  result = result + 2 * (CholWishart::lmvgamma(n2/2, p) - CholWishart::lmvgamma(n1/2, p))
-  
-  #term 4
-  result = result + (n1 - n2) * CholWishart::mvdigamma(n1/2, p) - n1*p
-  
-  return (0.5 * result)
-}
-
 priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
 priorScale <- matrix(1e-6, p, p)
 diag(priorScale) <- 1.0
