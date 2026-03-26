@@ -33,53 +33,66 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
         }
     }
     updatedImpPkDoubles.reserve(parameters.size()); // avoiding memory shuffling overhead later
+    
+    if(numRows == 1)
+        Msg::warning("One observation given for " + tn + " | treating as species mean known without uncertainty");
+    if(numRows == 1 && updatedImpPkDoubles.size() != 0)
+        Msg::error("Imputation of species mean missing data not yet supported; coming soon");
+    
     updateTipDataComplete();
     
-
-    taxonVariance = new ParameterIntraspecificVarianceGibbs(1.0, tipName + "_vcv", &tipDataComplete, this);
-    taxonVariance->setParmPrintConsole(false);
-    taxonMean = new ParameterIntraspecificMean(10.0, tipName + "_mean", &tipDataComplete, m);
-    parameters.push_back(taxonMean);
-    parameters.push_back(taxonVariance);
-    taxonMean->setVarianceCovarianceMatrix(taxonVariance);
-    taxonVariance->setMean(taxonMean);
-    
-    taxonVariance->update();
-    taxonVariance->updateForAcceptance();
-    
-    hasMissingData = tipDataIncomplete.array().isNaN().any();
-    
-    double sum = 0.0;
-    for (Parameter* p : parameters)
-        sum += p->getProposalProbability();
-    for (Parameter* p : parameters)
-        p->setProposalProbability(p->getProposalProbability()/sum);
-    
-    
-    //preallocs
-    mu = taxonMean->getValue();
-    sigma = taxonVariance->getValue();
-    sigmaChol = sigma.llt();
-    L = sigmaChol.matrixL();
-    sigmaLogDet = L.diagonal().array().log().sum();
-    
-    xDiff.resize(numRows);
-    scratchVec.resize(taxonMean->getValue().size());
-    scratchMat.resize(taxonVariance->getValue().rows(), taxonVariance->getValue().cols());
-    
-    log2pi = std::log(2 * PI);
-    numCnumR = numCols * numRows;
-    term1 = -numCnumR / 2 * log2pi;
+    if(numRows > 1){
+        taxonVariance = new ParameterIntraspecificVarianceGibbs(1.0, tipName + "_vcv", &tipDataComplete, this);
+        taxonVariance->setParmPrintConsole(false);
+        taxonMean = new ParameterIntraspecificMean(10.0, tipName + "_mean", &tipDataComplete, m);
+        parameters.push_back(taxonMean);
+        parameters.push_back(taxonVariance);
+        taxonMean->setVarianceCovarianceMatrix(taxonVariance);
+        taxonVariance->setMean(taxonMean);
+        
+        taxonVariance->update();
+        taxonVariance->updateForAcceptance();
+        
+        hasMissingData = tipDataIncomplete.array().isNaN().any();
+        
+        double sum = 0.0;
+        for (Parameter* p : parameters)
+            sum += p->getProposalProbability();
+        for (Parameter* p : parameters)
+            p->setProposalProbability(p->getProposalProbability()/sum);
+        
+        
+        //preallocs
+        mu = taxonMean->getValue();
+        sigma = taxonVariance->getValue();
+        sigmaChol = sigma.llt();
+        L = sigmaChol.matrixL();
+        sigmaLogDet = L.diagonal().array().log().sum();
+        
+        xDiff.resize(numRows);
+        scratchVec.resize(taxonMean->getValue().size());
+        scratchMat.resize(taxonVariance->getValue().rows(), taxonVariance->getValue().cols());
+        
+        log2pi = std::log(2 * PI);
+        numCnumR = numCols * numRows;
+        term1 = -numCnumR / 2 * log2pi;
+    }else{
+        mu = tipDataIncomplete.row(0);
+    }
 }
 
 TipModelV2::~TipModelV2(void){
-    for(auto& s : missingPkVals)
-        delete s.second;
-    delete taxonMean;
-    delete taxonVariance;
+    if(numRows > 1){
+        for(auto& s : missingPkVals)
+            delete s.second;
+        delete taxonMean;
+        delete taxonVariance;
+    }
 }
 
 const Eigen::VectorXd& TipModelV2::getTipMean(void){
+    if(numRows == 1)
+        return mu;
     return taxonMean->getValue();
 }
 
@@ -127,6 +140,8 @@ std::vector<double> TipModelV2::getParameterString(void){
 }
 
 double TipModelV2::computeLnLikelihood(void){
+    if(numRows == 1)
+        return 0.0;
     mu = taxonMean->getValue();
     sigma = taxonVariance->getValue();
     sigmaChol = sigma.llt();
@@ -146,6 +161,8 @@ double TipModelV2::computeLnLikelihood(void){
 }
 
 double TipModelV2::computeLnPriorProbability(void){
+    if(numRows == 1)
+        return 0.0;
     double lnp = 0.0;
     for(auto p : parameters)
         lnp += p->lnProbability();
@@ -169,16 +186,20 @@ double TipModelV2::lnPriorProbability(void){
 }
 
 void TipModelV2::print(void){
-    std::cout << " -- ";
-    for(Parameter* p : parameters)
-        if(p->getParmPrintConsole() == true)
-            std::cout << p->getName() << " a/r: " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive();
-    if(hasMissingData == true)
-        std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
-    std::cout << "\n";
+    if(numRows > 1){
+        std::cout << " -- ";
+        for(Parameter* p : parameters)
+            if(p->getParmPrintConsole() == true)
+                std::cout << p->getName() << " a/r: " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive();
+        if(hasMissingData == true)
+            std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
+        std::cout << "\n";
+    }
 }
 
 double TipModelV2::update(void){
+    if(numRows == 1)
+        return 0.0;
     RandomVariable& rng = RandomVariable::randomVariableInstance();
     if(hasMissingData == true && rng.uniformRv() < 0.1){
         gibbsPkUpdate = true;
@@ -209,29 +230,33 @@ double TipModelV2::update(void){
 }
 
 void TipModelV2::updateForAcceptance(void){
-    if(gibbsPkUpdate == true){
-        //tipDataComplete is already updated; no need to calculate tip data again
-        numImputationAcceptances++;
-        for(ParameterDouble* p : updatedImpPkDoubles)
-            p->updateForAcceptance();
-        updateTipDataComplete();
-    }else{
-        updatedParameter->updateForAcceptance();
+    if(numRows > 1){
+        if(gibbsPkUpdate == true){
+            //tipDataComplete is already updated; no need to calculate tip data again
+            numImputationAcceptances++;
+            for(ParameterDouble* p : updatedImpPkDoubles)
+                p->updateForAcceptance();
+            updateTipDataComplete();
+        }else{
+            updatedParameter->updateForAcceptance();
+        }
     }
 }
 
 void TipModelV2::updateForRejection(void){
-    if(gibbsPkUpdate == true){
-        numImputationRejections++;
-        for(ParameterDouble* p : updatedImpPkDoubles)
-            p->updateForRejection();
-        updateTipDataComplete();
-        lnLDirty = true;
-        lnPDirty = true;
-    }else{
-        updatedParameter->updateForRejection();
-        lnLDirty = true;
-        lnPDirty = true;
+    if(numRows > 1){
+        if(gibbsPkUpdate == true){
+            numImputationRejections++;
+            for(ParameterDouble* p : updatedImpPkDoubles)
+                p->updateForRejection();
+            updateTipDataComplete();
+            lnLDirty = true;
+            lnPDirty = true;
+        }else{
+            updatedParameter->updateForRejection();
+            lnLDirty = true;
+            lnPDirty = true;
+        }
     }
 }
 

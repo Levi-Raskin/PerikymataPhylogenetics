@@ -18,7 +18,54 @@ output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
 posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
 posterior <- posterior[round(0.1 * nrow(posterior)) : nrow(posterior), ] #apply burnin
 
-# Figure 1: evo VCV, tree, tipmeans ---------------------------------------
+
+# modern human line dat ---------------------------------------------------
+lcDat <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
+mh <- filter(
+  lcDat,
+  genus == "Homo_sapiens"
+)
+
+df_long <- mh %>%
+  mutate(id = row_number()) %>%
+  pivot_longer(
+    cols = c(Decile.3, Decile.4, Decile.5, Decile.6,
+             Decile.7, Decile.8, Decile.9,
+             `Buccal.decile.10..cervical.`),
+    names_to  = "decile",
+    values_to = "value"
+  ) %>%
+  mutate(
+    decile_num = case_when(
+      decile == "Decile.3"                    ~ "Decile 3",
+      decile == "Decile.4"                    ~ "Decile 4",
+      decile == "Decile.5"                    ~ "Decile 5",
+      decile == "Decile.6"                    ~ "Decile 6",
+      decile == "Decile.7"                    ~ "Decile 7",
+      decile == "Decile.8"                    ~ "Decile 8",
+      decile == "Decile.9"                    ~ "Decile 9",
+      decile == "Buccal.decile.10..cervical." ~ "Decile 10"
+    )
+  )
+df_long <- df_long %>%
+  mutate(decile_num = factor(decile_num, levels = paste("Decile", 3:10)))
+
+p1 <- ggplot(df_long, aes(x = decile_num, y = value, group = id)) +
+  geom_line(alpha = 1.0, linewidth = 0.5, color = "black") +
+  geom_point(alpha = 1.0, size = 0.8, color = "black") +
+  labs(
+    x = NULL,
+    y = "Perikymata per millimeter",
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+p1
+ggsave(paste0(output, "homoData.svg"), plot = p1, width = 7, height = 6)
+  
+# evo VCV, tree, tipmeans ---------------------------------------
 map_estimate <- function(x) {
   as.numeric(bayestestR::map_estimate(x))
 }
