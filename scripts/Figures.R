@@ -354,4 +354,108 @@ ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
 # LC intraspecific means vs. MLE ------------------------------------------
 
+plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
+  
+  decile_map <- c(
+    "mean_0" = "Decile.3",
+    "mean_1" = "Decile.4",
+    "mean_2" = "Decile.5",
+    "mean_3" = "Decile.6",
+    "mean_4" = "Decile.7",
+    "mean_5" = "Decile.8",
+    "mean_6" = "Decile.9",
+    "mean_7" = "Decile.10"
+  )
+  
+  decile_levels <- paste0("Decile.", 3:10)
+  cols          <- paste0(species, "_mean_", 0:7)
+  
+  missing_cols <- setdiff(cols, colnames(lc_posterior))
+  if (length(missing_cols) > 0) {
+    stop(sprintf(
+      "Species '%s' not found in lc_posterior. Missing columns: %s",
+      species, paste(missing_cols, collapse = ", ")
+    ))
+  }
+  
+  if (!species %in% lc_mle$genus) {
+    stop(sprintf(
+      "Species '%s' not found in lc_mle$genus. Available species: %s",
+      species, paste(unique(lc_mle$genus), collapse = ", ")
+    ))
+  }
+  
+  sp_long <- lc_posterior[, cols, drop = FALSE] %>%
+    setNames(names(decile_map)) %>%
+    pivot_longer(cols     = everything(),
+                 names_to  = "mean_col",
+                 values_to = "value") %>%
+    mutate(decile = factor(decile_map[mean_col], levels = decile_levels))
+  
+  sp_quantiles <- sp_long %>%
+    group_by(decile) %>%
+    summarise(q_lo = quantile(value, 0.025),
+              q_hi = quantile(value, 0.975),
+              .groups = "drop")
+  
+  sp_long <- sp_long %>%
+    left_join(sp_quantiles, by = "decile") %>%
+    mutate(
+      fill_color = case_when(
+        value <= q_lo ~ "tail",
+        value >= q_hi ~ "tail",
+        TRUE          ~ "middle"
+      )
+    )
+  
+  mle_sp <- lc_mle %>%
+    filter(genus == species) %>%
+    pivot_longer(cols      = starts_with("Decile."),
+                 names_to  = "decile",
+                 values_to = "mle_mean") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  species_label <- gsub("_", " ", species)
+  
+  ggplot(sp_long, aes(x = value, fill = fill_color)) +
+    geom_histogram(bins = bins, color = NA, alpha = 0.6) +
+    geom_vline(
+      data      = mle_sp,
+      aes(xintercept = mle_mean),
+      color     = "blue",
+      linewidth = 0.8,
+      linetype  = "solid",
+      alpha = 0.5
+    ) +
+    scale_x_continuous(limits = c(0,50))+
+    scale_fill_manual(
+      values = c("tail" = "red", "middle" = "black"),
+      labels = c("tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
+      name   = NULL
+    ) +
+    facet_wrap(
+      ~ decile, ncol = 4, scales = "free",
+      labeller = labeller(decile = setNames(paste0("Decile ", 3:10), decile_levels))
+    ) +
+    labs(
+      x       = "Inferred mean perikymata per millimeter",
+      y       = "Posterior sample count",
+      title   = bquote(italic(.(species_label)))
+    ) +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      panel.grid.minor = element_blank(),
+      legend.position  = "right"
+    )
+}
+
+for(i in unique(mle_long$species)){
+  p <- plot_species_posteriors(lc_posterior, lc_mle, i)
+  print(p)
+  ggsave(
+    paste0(output, "/meanPosteriorHists/",i,".svg"), 
+    plot = p, 
+    width = 10, height = 8
+    )
+}
 
