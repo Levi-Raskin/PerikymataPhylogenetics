@@ -15,11 +15,16 @@ library(tidyverse)
 
 output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
 
-posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
-posterior <- posterior[round(0.1 * nrow(posterior)) : nrow(posterior), ] #apply burnin
+lc_posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
+lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
+lc_posterior_no_hominin <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8_no_hominin.tsv")
+lc_posterior_no_hominin  <- lc_posterior_no_hominin[round(0.1 * nrow(lc_posterior_no_hominin)) : nrow(lc_posterior_no_hominin), ] #apply burnin
 
-# modern human line dat ---------------------------------------------------
+lc_posterior_species_means <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8_species_means.tsv")
+lc_posterior_species_means  <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)) : nrow(lc_posterior_species_means), ] #apply burnin
+
+# modern human line drawing ---------------------------------------------------
 lcDat <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
 mh <- filter(
   lcDat,
@@ -73,7 +78,7 @@ map_estimate <- function(x) {
 #evo VCV MAP
 evo_vcv_cols <- paste0("evo_vcv_.", rep(0:7, each = 8), ".", rep(0:7, times = 8), ".")
 
-evo_map <- dplyr::select(posterior, all_of(evo_vcv_cols)) |>
+evo_map <- dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |>
   summarise(across(everything(), map_estimate)) |>
   pivot_longer(everything(), names_to = "element", values_to = "map") |>
   mutate(
@@ -128,7 +133,7 @@ tip_order <- treeplot$data |>
 mean_map <- lapply(names(species_map), function(tip_label) {
   sp        <- unname(species_map[tip_label])
   mean_cols <- paste0(sp, "_mean_", 0:7)
-  vals      <- dplyr::select(posterior, all_of(mean_cols)) |>
+  vals      <- dplyr::select(lc_posterior, all_of(mean_cols)) |>
     summarise(across(everything(), map_estimate))
   data.frame(
     tip_label = tip_label,
@@ -194,7 +199,7 @@ get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
     mutate(species = species)
 }
 
-n_samples <- nrow(posterior)
+n_samples <- nrow(lc_posterior)
 n_traits <- 8
 trait_labels <- paste0("Decile ", 3:10)
 
@@ -214,14 +219,14 @@ trait_labels <- paste0("Decile ", 3:10)
 
 
 # Generate posterior predictives
-# hs_preds <- get_posterior_predictive(posterior, "Homo_sapiens", n_traits, n_samples)
-# ne_preds <- get_posterior_predictive(posterior, "Neanderthal", n_traits, n_samples)
-# pp_preds <- get_posterior_predictive(posterior, "Pan_paniscus", n_traits, n_samples)
-# pt_preds <- get_posterior_predictive(posterior, "Pan_troglodytes", n_traits, n_samples)
-# gb_preds <- get_posterior_predictive(posterior, "Gorilla_beringei", n_traits, n_samples)
-# gg_preds <- get_posterior_predictive(posterior, "Gorilla_gorilla", n_traits, n_samples)
-# pa_preds <- get_posterior_predictive(posterior, "Pongo_abelii", n_traits, n_samples)
-# ppyg_preds <- get_posterior_predictive(posterior, "Pongo_pygmaeus", n_traits, n_samples)
+# hs_preds <- get_posterior_predictive(lc_posterior, "Homo_sapiens", n_traits, n_samples)
+# ne_preds <- get_posterior_predictive(lc_posterior, "Neanderthal", n_traits, n_samples)
+# pp_preds <- get_posterior_predictive(lc_posterior, "Pan_paniscus", n_traits, n_samples)
+# pt_preds <- get_posterior_predictive(lc_posterior, "Pan_troglodytes", n_traits, n_samples)
+# gb_preds <- get_posterior_predictive(lc_posterior, "Gorilla_beringei", n_traits, n_samples)
+# gg_preds <- get_posterior_predictive(lc_posterior, "Gorilla_gorilla", n_traits, n_samples)
+# pa_preds <- get_posterior_predictive(lc_posterior, "Pongo_abelii", n_traits, n_samples)
+# ppyg_preds <- get_posterior_predictive(lc_posterior, "Pongo_pygmaeus", n_traits, n_samples)
 # saveRDS(hs_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
 # saveRDS(ne_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/neanderthalPostPred.rds")
 # saveRDS(pp_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/panpaniscusPostPred.rds")
@@ -343,5 +348,10 @@ combined <- homo + pan + gorilla + pongo
 combined
 ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
+
+
+
+
+# LC intraspecific means vs. MLE ------------------------------------------
 
 

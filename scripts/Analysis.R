@@ -14,6 +14,7 @@ ui2_posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogeneti
 ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
 
 
+
 # Functions ---------------------------------------------------------------
 convertLatexTable <- function(vec){
   string <- ""
