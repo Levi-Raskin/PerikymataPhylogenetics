@@ -418,14 +418,13 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
   species_label <- gsub("_", " ", species)
   
   ggplot(sp_long, aes(x = value, fill = fill_color)) +
-    geom_histogram(bins = bins, color = NA, alpha = 0.6) +
+    geom_histogram(bins = bins, color = NA) +
     geom_vline(
       data      = mle_sp,
       aes(xintercept = mle_mean),
       color     = "blue",
       linewidth = 0.8,
-      linetype  = "solid",
-      alpha = 0.5
+      linetype  = "solid"
     ) +
     scale_x_continuous(limits = c(0,50))+
     scale_fill_manual(
@@ -449,7 +448,20 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
     )
 }
 
-for(i in unique(mle_long$species)){
+species<- c(
+  "Homo_sapiens",
+  "Neanderthal",
+  "Pan_paniscus",
+  "Pan_troglodytes",
+  "Gorilla_beringei",
+  "Gorilla_gorilla",
+  "Pongo_abelii",
+  "Pongo_pygmaeus"
+)
+
+lc_mle <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10_species_means.csv")
+
+for(i in species){
   p <- plot_species_posteriors(lc_posterior, lc_mle, i)
   print(p)
   ggsave(
@@ -459,3 +471,128 @@ for(i in unique(mle_long$species)){
     )
 }
 
+
+
+# missing data imputation -------------------------------------------------
+
+lc_dat <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
+species <- "Pongo_abelii"
+pan_pan_lc <- filter(lc_dat, genus == species)
+
+decile_cols <- c("Decile.3", "Decile.4", "Decile.5", "Decile.6",
+                 "Decile.7", "Decile.8", "Decile.9", "Buccal.decile.10..cervical.")
+
+decile_label_map <- c(
+  "Decile.3"                    = "Decile 3",
+  "Decile.4"                    = "Decile 4",
+  "Decile.5"                    = "Decile 5",
+  "Decile.6"                    = "Decile 6",
+  "Decile.7"                    = "Decile 7",
+  "Decile.8"                    = "Decile 8",
+  "Decile.9"                    = "Decile 9",
+  "Buccal.decile.10..cervical." = "Decile 10"
+)
+
+decile_levels <- paste("Decile", 3:10)
+
+df_long <- pan_pan_lc %>%
+  mutate(id = row_number()) %>%
+  pivot_longer(
+    cols      = all_of(decile_cols),
+    names_to  = "decile",
+    values_to = "value"
+  ) %>%
+  mutate(
+    decile_num = factor(decile_label_map[decile], levels = decile_levels),
+    is_missing = is.na(value)
+  )
+
+y_to_decile  <- paste("Decile", 3:10)
+missing_vars <- grep(paste0("^missing_", species, "_"), names(lc_posterior), value = TRUE)
+rows         <- vector("list", length(missing_vars))
+
+for (i in seq_along(missing_vars)) {
+  vname   <- missing_vars[i]
+  nums    <- as.integer(regmatches(vname, gregexpr("[0-9]+", vname))[[1]])
+  obs_idx <- nums[length(nums) - 1]
+  dec_idx <- nums[length(nums)]
+  
+  samps   <- as.numeric(lc_posterior[[vname]])
+  map_est <- as.numeric(bayestestR::map_estimate(samps))
+  
+  rows[[i]] <- data.frame(
+    varname    = vname,
+    id         = obs_idx + 1L,
+    dec_idx    = dec_idx,
+    map_est    = map_est,
+    post_value = samps
+  )
+}
+
+posterior_samples_long <- bind_rows(rows) %>%
+  mutate(
+    decile_num = factor(y_to_decile[dec_idx + 1L], levels = decile_levels),
+    id_char    = as.character(id)
+  )
+
+map_lookup <- posterior_samples_long %>%
+  distinct(id, decile_num, map_est)
+
+missing_ids <- sort(unique(map_lookup$id))
+id_colors   <- setNames(
+  c("blue"),
+  as.character(missing_ids)
+)
+
+posterior_samples_long <- posterior_samples_long %>%
+  mutate(fill_color = id_colors[as.character(id)])
+
+df_plot <- df_long %>%
+  left_join(map_lookup, by = c("id", "decile_num")) %>%
+  mutate(
+    plot_value = if_else(is_missing, map_est, value),
+    line_color = if_else(id %in% missing_ids, as.character(id), "black")
+  )
+
+all_levels  <- unique(df_plot$line_color)
+color_scale <- ifelse(all_levels == "black", "black", id_colors[all_levels])
+names(color_scale) <- all_levels
+
+p1 <- ggplot() +
+  geom_violin(
+    data     = posterior_samples_long,
+    aes(x    = decile_num, y = post_value,
+        group = interaction(id, decile_num),
+        fill  = id_char),
+    alpha    = 0.4,
+    color    = NA,
+    scale    = "width",
+    position = position_identity()
+  ) +
+  scale_fill_manual(values = id_colors) +
+  geom_line(
+    data      = df_plot,
+    aes(x = decile_num, y = plot_value, group = id, color = line_color),
+    linewidth = 0.5
+  ) +
+  geom_point(
+    data  = filter(df_plot, !is_missing),
+    aes(x = decile_num, y = plot_value, group = id, color = line_color),
+    size  = 0.8
+  ) +
+  geom_point(
+    data  = filter(df_plot, is_missing),
+    aes(x = decile_num, y = plot_value, group = id, color = line_color),
+    shape = 21,
+    size  = 0.8,
+    fill  = "white"
+  ) +
+  scale_color_manual(values = color_scale) +
+  labs(x = NULL, y = "Perikymata per millimeter") +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x     = element_text(angle = 45, hjust = 1)
+  )
+p1
+ggsave(paste0(output, "pongoAbeliiPred.svg"), plot = p1, width = 7, height = 6)
