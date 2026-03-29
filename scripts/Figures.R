@@ -596,3 +596,172 @@ p1 <- ggplot() +
   )
 p1
 ggsave(paste0(output, "pongoAbeliiPred.svg"), plot = p1, width = 7, height = 6)
+
+# simulated data posteriors ----------------------------------------------------------
+
+sim_post <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulatedData/simulatedDataResults.tsv")
+#sim_post <- sim_post[round(0.1 * nrow(sim_post)) : nrow(sim_post), ] #apply burnin
+true_missing_val <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/exampleSimulatedData/trueMissingValue.tsv", header = FALSE)[1,1]
+
+#### simulated missing vla trace plot ####
+missing_trace <- data.frame(
+  idx = sim_post$n,
+  post = sim_post$missing_Pan_paniscus_.7.5.)
+
+burnin_cutoff <- 0.1 * max(missing_trace$idx)
+
+p1 <- ggplot(data = missing_trace) +
+  geom_point(
+    aes(x = idx, 
+        y = post,
+        color = case_when(
+          idx <= burnin_cutoff                ~ "burnin",
+          post <= quantile(post, 0.025)       ~ "tail",
+          post >= quantile(post, 0.975)       ~ "tail",
+          TRUE                               ~ "middle"
+        )),
+    alpha = 0.05
+  ) +
+  geom_line(
+    aes(x = idx, y = post,
+        color = case_when(
+          idx <= burnin_cutoff ~ "burnin",
+          TRUE                 ~ "middle"
+        )),
+    alpha = 0.1
+  ) +
+  geom_hline(
+    yintercept = true_missing_val,
+    color      = "blue",
+    linewidth  = 0.8,
+    linetype   = "solid"
+  ) +
+  scale_color_manual(
+    values = c("burnin" = "grey60", "tail" = "red", "middle" = "black"),
+    labels = c("burnin" = "Burn-in", "tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
+    name   = NULL
+  ) +
+  guides(
+    color = guide_legend(override.aes = list(
+      alpha = 1,
+      shape = 15,
+      size  = 4
+    ))
+  ) +
+  labs(
+    x = "Cycle",
+    y = "Imputed perikymata per millimeter"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position  = "right"
+  )
+p1 
+
+ggsave(
+  paste0(output, "simulatedMissingDataTrace.svg"), 
+  plot = p1, 
+  width = 10, height = 8
+)
+
+#### evolutionary vcv ####
+#now apply burn in
+sim_post <- sim_post[round(0.1 * nrow(sim_post)) : nrow(sim_post), ]
+
+trueEvo <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/exampleSimulatedData/evolutionaryVCV.tsv", header = FALSE)
+
+plot_vcv_posterior <- function(posterior, true_mat, target, bins = 500) {
+  p <- 8
+  decile_labels <- paste0("Decile ", 3:10)
+  
+  if (target == "evo") {
+    prefix      <- "evo_vcv_."
+    plot_title  <- "Evolutionary VCV posterior distributions"
+    col_builder <- function(i, j) paste0("evo_vcv_.", i, ".", j, ".")
+  } else {
+    prefix      <- paste0(target, "_vcv_.")
+    plot_title  <- bquote("Intraspecific VCV posterior distributions —" ~
+                            italic(.(gsub("_", " ", target))))
+    col_builder <- function(i, j) paste0(target, "_vcv_.", i, ".", j, ".")
+  }
+  
+  vcv_cols <- as.vector(outer(0:(p-1), 0:(p-1), col_builder))
+  missing_cols <- setdiff(vcv_cols, colnames(posterior))
+  if (length(missing_cols) > 0)
+    stop(sprintf("Missing columns for '%s': %s",
+                 target, paste(missing_cols, collapse = ", ")))
+  
+  vcv_long <- posterior[, vcv_cols, drop = FALSE] %>%
+    pivot_longer(cols      = everything(),
+                 names_to  = "element",
+                 values_to = "value") %>%
+    mutate(
+      row     = as.integer(sub(paste0(gsub("\\.", "\\\\.", prefix), "(\\d+)\\.(\\d+)\\."), "\\1", element)),
+      col     = as.integer(sub(paste0(gsub("\\.", "\\\\.", prefix), "(\\d+)\\.(\\d+)\\."), "\\2", element)),
+      row_lbl = factor(decile_labels[row + 1], levels = decile_labels),
+      col_lbl = factor(decile_labels[col + 1], levels = decile_labels)
+    )
+  
+  vcv_quantiles <- vcv_long %>%
+    group_by(element) %>%
+    summarise(
+      q_lo   = quantile(value, 0.025),
+      q_hi   = quantile(value, 0.975),
+      trunc_lo = quantile(value, 0.005),   # <-- new: truncation bounds
+      trunc_hi = quantile(value, 0.995),   # <-- new
+      .groups = "drop"
+    )
+  
+  true_long <- data.frame(
+    row      = rep(0:(p-1), each = p),
+    col      = rep(0:(p-1), times = p),
+    true_val = as.vector(as.matrix(true_mat))
+  ) %>%
+    mutate(
+      row_lbl = factor(decile_labels[row + 1], levels = decile_labels),
+      col_lbl = factor(decile_labels[col + 1], levels = decile_labels)
+    )
+  
+  vcv_long <- vcv_long %>%
+    left_join(vcv_quantiles, by = "element") %>%
+    mutate(fill_color = if_else(value < q_lo | value > q_hi, "tail", "middle")) %>%
+    filter(value >= trunc_lo & value <= trunc_hi)               # <-- truncate here
+  
+  ggplot(vcv_long, aes(x = value, fill = fill_color)) +
+    geom_histogram(bins = bins, color = NA) +
+    geom_vline(
+      data      = true_long,
+      aes(xintercept = true_val),
+      color     = "blue",
+      linewidth = 0.6,
+      linetype  = "solid"
+    ) +
+    scale_fill_manual(
+      values = c("tail" = "red", "middle" = "black"),
+      labels = c("tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
+      name   = NULL
+    ) +
+    guides(
+      fill = guide_legend(override.aes = list(alpha = 1))
+    ) +
+    facet_grid(row_lbl ~ col_lbl, scales = "free") +
+    labs(
+      x     = "Posterior VCV value",
+      y     = "Posterior sample count",
+      title = plot_title
+    ) +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.border     = element_rect(color = "black", fill = NA),  # <-- outline
+      legend.position  = "right",
+      strip.text       = element_text(size = 7),
+      axis.text        = element_text(size = 6),
+      axis.text.x      = element_text(angle = 45, hjust = 1)
+    )
+}
+
+p1 <- plot_vcv_posterior(sim_post, trueEvo, target = "evo")
+p1
+ggsave(paste0(output, "simulatedEvoVCV.svg"), plot = p1, width = 8, height = 6)
