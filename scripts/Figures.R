@@ -641,13 +641,6 @@ p1 <- ggplot(data = missing_trace) +
     labels = c("burnin" = "Burn-in", "tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
     name   = NULL
   ) +
-  guides(
-    color = guide_legend(override.aes = list(
-      alpha = 1,
-      shape = 15,
-      size  = 4
-    ))
-  ) +
   labs(
     x = "Cycle",
     y = "Imputed perikymata per millimeter"
@@ -655,14 +648,15 @@ p1 <- ggplot(data = missing_trace) +
   theme_minimal(base_family = "Georgia") +
   theme(
     panel.grid.minor = element_blank(),
-    legend.position  = "right"
+    legend.position  = "none"
   )
 p1 
 
 ggsave(
-  paste0(output, "simulatedMissingDataTrace.svg"), 
+  paste0(output, "simulatedMissingDataTrace.pdf"), 
   plot = p1, 
-  width = 10, height = 8
+  width = 10, height = 8,
+  device = cairo_pdf
 )
 
 #### evolutionary vcv ####
@@ -755,7 +749,7 @@ plot_vcv_posterior <- function(posterior, true_mat, target, bins = 500) {
     theme(
       panel.grid.minor = element_blank(),
       panel.border     = element_rect(color = "black", fill = NA),  # <-- outline
-      legend.position  = "right",
+      legend.position  = "none",
       strip.text       = element_text(size = 7),
       axis.text        = element_text(size = 6),
       axis.text.x      = element_text(angle = 45, hjust = 1)
@@ -764,4 +758,10 @@ plot_vcv_posterior <- function(posterior, true_mat, target, bins = 500) {
 
 p1 <- plot_vcv_posterior(sim_post, trueEvo, target = "evo")
 p1
-ggsave(paste0(output, "simulatedEvoVCV.svg"), plot = p1, width = 8, height = 6)
+ggsave(paste0(output, "simulatedEvoVCV.svg"), plot = p1, width = 6, height = 6)
+ggsave(
+  paste0(output, "simulatedEvoVCV.pdf"), 
+  plot = p1, 
+  width = 6, height = 6,
+  device = cairo_pdf
+)
