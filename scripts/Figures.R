@@ -75,8 +75,18 @@ map_estimate <- function(x) {
   as.numeric(bayestestR::map_estimate(x))
 }
 
+#### LC with hominins ####
 #evo VCV MAP
 evo_vcv_cols <- paste0("evo_vcv_.", rep(0:7, each = 8), ".", rep(0:7, times = 8), ".")
+
+shared_max <- max(
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist()
+)
+shared_min <- min(
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist()
+)
 
 evo_map <- dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |>
   summarise(across(everything(), map_estimate)) |>
@@ -94,13 +104,17 @@ evo_map <- evo_map |>
     col_label = factor(decile_labels[col], levels = decile_labels)
   )
 
+evo_map$is_diag <- evo_map$col_label == evo_map$row_label
+
 evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
   geom_tile() +
+  geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
   geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
   scale_fill_gradient(
-    low  = "white",
-    high = "#a31e22"
-  ) +
+    low    = "white",
+    high   = "#a31e22",
+    limits = c(shared_min, shared_max)
+  )+
   labs(
     x = NULL,
     y = NULL,
@@ -122,6 +136,7 @@ treeplot <- ggtree(plottree) +
               geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
               hexpand(0.55)
 treeplot <- ggtree::rotate(treeplot, 12)
+treeplot <- ggtree::rotate(treeplot, 14)
 treeplot
 
 #heatmap at tips
@@ -129,6 +144,17 @@ tip_order <- treeplot$data |>
   dplyr::filter(isTip) |>
   dplyr::arrange(y) |>
   dplyr::pull(label)
+
+species_map <-c(
+  "Pongo abelii" = "Pongo_abelii", 
+  "Pongo pygmaeus" = "Pongo_pygmaeus", 
+  "Gorilla beringei" = "Gorilla_beringei", 
+  "Gorilla gorilla" =  "Gorilla_gorilla", 
+  "Pan troglodytes" = "Pan_troglodytes", 
+  "Pan paniscus" = "Pan_paniscus", 
+  "Neanderthal" ="Neanderthal", 
+  "Modern humans" = "Homo_sapiens"
+)
 
 mean_map <- lapply(names(species_map), function(tip_label) {
   sp        <- unname(species_map[tip_label])
@@ -171,9 +197,126 @@ tipplot <- ggplot(mean_map, aes(x = decile, y = tip_label, fill = map)) +
 tipplot
 
 
-p1 <- evoVCV + treeplot + tipplot
+p1 <-  evoVCV +  treeplot+ tipplot
 p1
-ggsave(paste0(output, "treeMAP.svg"), plot = p1, width = 14, height = 6)
+
+#### LC without hominins ####
+#evo VCV MAP
+evo_vcv_cols <- paste0("evo_vcv_.", rep(0:7, each = 8), ".", rep(0:7, times = 8), ".")
+
+evo_map <- dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |>
+  summarise(across(everything(), map_estimate)) |>
+  pivot_longer(everything(), names_to = "element", values_to = "map") |>
+  mutate(
+    row = as.integer(sub("evo_vcv_\\.(\\d+)\\.(\\d+)\\.", "\\1", element)) + 1,
+    col = as.integer(sub("evo_vcv_\\.\\d+\\.(\\d+)\\.", "\\1", element)) + 1
+  )
+
+decile_labels <- paste0("Decile ", 3:10)
+
+evo_map <- evo_map |>
+  mutate(
+    row_label = factor(decile_labels[row], levels = decile_labels),
+    col_label = factor(decile_labels[col], levels = decile_labels)
+  )
+
+evo_map$is_diag <- evo_map$col_label == evo_map$row_label
+
+evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  geom_tile() +
+  geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
+  geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+  scale_fill_gradient(
+    low    = "white",
+    high   = "#a31e22",
+    limits = c(shared_min, shared_max)
+  )+
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "MAP"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+evoVCV
+
+#tree
+plottree <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
+plottree <- drop.tip(plottree, "Neanderthal")
+plottree <- drop.tip(plottree, "Homo_sapiens")
+plottree$tip.label <- gsub("_", " ", plottree$tip.label)
+treeplot <- ggtree(plottree) + 
+  geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
+  hexpand(0.55)
+treeplot
+
+#heatmap at tips
+tip_order <- treeplot$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
+
+species_map <-c(
+  "Pongo abelii" = "Pongo_abelii", 
+  "Pongo pygmaeus" = "Pongo_pygmaeus", 
+  "Gorilla beringei" = "Gorilla_beringei", 
+  "Gorilla gorilla" =  "Gorilla_gorilla", 
+  "Pan troglodytes" = "Pan_troglodytes", 
+  "Pan paniscus" = "Pan_paniscus"
+)
+
+mean_map <- lapply(names(species_map), function(tip_label) {
+  sp        <- unname(species_map[tip_label])
+  mean_cols <- paste0(sp, "_mean_", 0:7)
+  vals      <- dplyr::select(lc_posterior_no_hominin, all_of(mean_cols)) |>
+    summarise(across(everything(), map_estimate))
+  data.frame(
+    tip_label = tip_label,
+    decile    = paste0("Decile ", 3:10),
+    map       = as.numeric(vals)
+  )
+}) |> bind_rows() |>
+  mutate(
+    decile    = factor(decile, levels = paste0("Decile ", 3:10)),
+    tip_label = factor(tip_label, levels = tip_order)
+  )
+
+italic_face <- ifelse(tip_order %in% c("Modern humans", "Neanderthal"), 
+                      "plain", "italic")
+
+tipplot <- ggplot(mean_map, aes(x = decile, y = tip_label, fill = map)) +
+  geom_tile() +
+  geom_text(aes(label = round(map, 1)),
+            size   = 3.5,
+            color  = "black",
+            family = "Georgia") +
+  scale_fill_gradient2(
+    low  = "white",
+    high = "#09539c",
+    name = "MAP mean"
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, family = "Georgia"),
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    panel.grid = element_blank()
+  )
+tipplot
+
+
+p2 <-  evoVCV +treeplot + tipplot
+p2
+
+p3 <- p1/p2
+p3
+
+ggsave(paste0(output, "treeMAP.svg"), plot = p3, width = 14, height = 8)
 
 # Posterior predictive differences between modern humans and neand --------
 get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
