@@ -422,6 +422,36 @@ for(i in 1:length(posteriorFits)){
   print(paste(names(posteriorFits)[i],round( posteriorFits[[i]]$nu , 2)))
 }
 
+
+#### Lower canine symmetrized KL divergence ####
+posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_posterior_fits.rds")
+
+calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
+  p <- 8
+  klforward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit1$scale,
+    dofPost = posteriorFit1$nu,
+    scalePrior = posteriorFit2$scale,
+    dofPrior = posteriorFit2$nu
+  )
+  klbackward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit2$scale,
+    dofPost = posteriorFit2$nu,
+    scalePrior = posteriorFit1$scale,
+    dofPrior = posteriorFit1$nu
+  )
+  
+  return(
+    round(klforward + klbackward, 2)
+  )
+}
+
+calcSymmetrizedKLDivergence(posteriorFits$Homo_sapiens, posteriorFits$Neanderthal)
+calcSymmetrizedKLDivergence(posteriorFits$Pan_troglodytes, posteriorFits$Pan_paniscus)
+calcSymmetrizedKLDivergence(posteriorFits$Gorilla_beringei, posteriorFits$Gorilla_gorilla)
+calcSymmetrizedKLDivergence(posteriorFits$Pongo_abelii, posteriorFits$Pongo_pygmaeus)
+
+
 # Analyses on the posterior predictive distributions ----------------------------------------------
 
 hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
