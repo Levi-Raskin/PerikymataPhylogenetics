@@ -474,130 +474,96 @@ for(i in 1:8){
 }
 
 # Modularity test ---------------------------------------------------------
-
-library(evolqg)
-
-#### C1 analysis with hominins ####
 lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
 lc_evolutionary <- lc_vcv_list$evolutionary
+lc_vcv_list_no_hominins <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_no_hominin_VCVs_extracted.rds")
+lc_evolutionary_no_hominin <- lc_vcv_list_no_hominins$evolutionary
+
+#### AVG Ratio #### 
+library(evolqg)
+testAVG <- function(vcvList, permMat){
+  avg_rat_results <- mclapply(vcvList, 
+                              function(vcv) {
+                                cor_mat <- cov2cor(vcv)
+                                result <- CalcAVG(permMat, cor_mat)
+                                return(result[1] /result[2])
+                              },
+                              mc.cores = detectCores()-1)
+  
+  avg_rat_results <- unlist(avg_rat_results)
+  
+  cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
+  cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+}
+
+hypoMat1 <- matrix(0, 8, 8)
+hypoMat1[1:4, 1:4] <- 1
+hypoMat1[5:8, 5:8] <- 1
+
+hypoMat2 <- matrix(0, 8, 8)
+hypoMat2[1:4, 1:4] <- 1
+hypoMat2[5:8, 5:8] <- 1
+
+hypoMat3 <- matrix(0, 8, 8)
+hypoMat3[1:3, 1:3] <- 1
+hypoMat3[4,4] <- 1
+hypoMat3[5:8, 5:8] <- 1
+
+#### C1 analysis with hominins ####
 
 #### Hypothesis 1: deciles 3-6; deciles 7-10 ####
-partition_matrix <- matrix(0, 8, 8)
-partition_matrix[1:4, 1:4] <- 1
-partition_matrix[5:8, 5:8] <- 1
-
-
-avg_rat_results <- mclapply(lc_evolutionary, 
-  function(vcv) {
-    cor_mat <- cov2cor(vcv)
-    result <- CalcAVG(partition_matrix, cor_mat)
-    return(result[1] /result[2])
-  },
-  mc.cores = detectCores()-1)
-
-avg_rat_results <- unlist(avg_rat_results)
-
-cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+testAVG(lc_evolutionary, hypoMat1)
 
 #### Hypothesis 2: deciles 3-5; deciles 6-10 ####
-partition_matrix <- matrix(0, 8, 8)
-partition_matrix[1:3, 1:3] <- 1
-partition_matrix[4:8, 4:8] <- 1
-
-
-avg_rat_results <- mclapply(lc_evolutionary, 
-                            function(vcv) {
-                              cor_mat <- cov2cor(vcv)
-                              result <- CalcAVG(partition_matrix, cor_mat)
-                              return(result[1] /result[2])
-                            },
-                            mc.cores = detectCores()-1)
-
-avg_rat_results <- unlist(avg_rat_results)
-
-cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+testAVG(lc_evolutionary, hypoMat2)
 
 #### Hypothesis 3: deciles 3-5; decile 6; deciles 7-10 ####
-partition_matrix <- matrix(0, 8, 8)
-partition_matrix[1:3, 1:3] <- 1
-partition_matrix[4,4] <- 1
-partition_matrix[5:8, 5:8] <- 1
-
-
-avg_rat_results <- mclapply(lc_evolutionary, 
-                            function(vcv) {
-                              cor_mat <- cov2cor(vcv)
-                              result <- CalcAVG(partition_matrix, cor_mat)
-                              return(result[1] /result[2])
-                            },
-                            mc.cores = detectCores()-1)
-
-avg_rat_results <- unlist(avg_rat_results)
-
-cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
-
+testAVG(lc_evolutionary, hypoMat3)
 
 #### C1 analysis without hominins ####
-lc_vcv_list_no_hominins <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_no_hominin_VCVs_extracted.rds")
-lc_evolutionary <- lc_vcv_list_no_hominins$evolutionary
-
 #### Hypothesis 1: deciles 3-6; deciles 7-10 ####
-partition_matrix <- matrix(0, 8, 8)
-partition_matrix[1:4, 1:4] <- 1
-partition_matrix[5:8, 5:8] <- 1
-
-
-avg_rat_results <- mclapply(lc_evolutionary, 
-                            function(vcv) {
-                              cor_mat <- cov2cor(vcv)
-                              result <- CalcAVG(partition_matrix, cor_mat)
-                              return(result[1] /result[2])
-                            },
-                            mc.cores = detectCores()-1)
-
-avg_rat_results <- unlist(avg_rat_results)
-
-cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+testAVG(lc_evolutionary_no_hominin, hypoMat1)
 
 #### Hypothesis 2: deciles 3-5; deciles 6-10 ####
-partition_matrix <- matrix(0, 8, 8)
-partition_matrix[1:3, 1:3] <- 1
-partition_matrix[4:8, 4:8] <- 1
-
-
-avg_rat_results <- mclapply(lc_evolutionary, 
-                            function(vcv) {
-                              cor_mat <- cov2cor(vcv)
-                              result <- CalcAVG(partition_matrix, cor_mat)
-                              return(result[1] /result[2])
-                            },
-                            mc.cores = detectCores()-1)
-
-avg_rat_results <- unlist(avg_rat_results)
-
-cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+testAVG(lc_evolutionary_no_hominin, hypoMat2)
 
 #### Hypothesis 3: deciles 3-5; decile 6; deciles 7-10 ####
-partition_matrix <- matrix(0, 8, 8)
-partition_matrix[1:3, 1:3] <- 1
-partition_matrix[4,4] <- 1
-partition_matrix[5:8, 5:8] <- 1
+testAVG(lc_evolutionary_no_hominin, hypoMat3)
 
+#### CR ####
+CalcCR <- function(pv, vcv_matrix) {
+  ### modified from Adams (2016)
+  gps<-factor(pv)
+  S11<-S11.0<-vcv_matrix[which(gps==levels(gps)[1]),which(gps==levels(gps)[1])]
+  S22<-S22.0<-vcv_matrix[which(gps==levels(gps)[2]),which(gps==levels(gps)[2])]
+  diag(S11.0)<-0
+  diag(S22.0)<-0
+  S12<-vcv_matrix[which(gps==levels(gps)[1]),which(gps==levels(gps)[2])]
+  S21<-t(S12)
+  return(sqrt( sum(diag(S12%*%S21)) / sqrt(sum(diag(S11.0%*%S11.0))*sum(diag(S22.0%*%S22.0)))))
+}
+testCR <- function(vcvList, pm){
+  cr_results <- mclapply(vcvList, 
+                         function(vcv) CalcCR(pm, vcv),
+                         mc.cores = detectCores()-1)
+  cr_results <- unlist(cr_results)
+  cat("Posterior mean CR:", mean(cr_results, na.rm = TRUE), "\n")
+  cat("95% credible interval:", quantile(cr_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+}
 
-avg_rat_results <- mclapply(lc_evolutionary, 
-                            function(vcv) {
-                              cor_mat <- cov2cor(vcv)
-                              result <- CalcAVG(partition_matrix, cor_mat)
-                              return(result[1] /result[2])
-                            },
-                            mc.cores = detectCores()-1)
+hypo1Vec <- c(rep(1, 4), rep (2, 4))
+hypo2Vec <- c(rep(1, 3), rep (2, 5))
 
-avg_rat_results <- unlist(avg_rat_results)
+#### C1 analysis with hominins ####
+#### Hypothesis 1: deciles 3-6; deciles 7-10 ####
+testCR(lc_evolutionary, hypo1Vec)
 
-cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+#### Hypothesis 2: deciles 3-5; deciles 6-10 ####
+testCR(lc_evolutionary, hypo2Vec)
+
+#### C1 analysis without hominins ####
+#### Hypothesis 1: deciles 3-6; deciles 7-10 ####
+testCR(lc_evolutionary_no_hominin, hypo1Vec)
+
+#### Hypothesis 2: deciles 3-5; deciles 6-10 ####
+testCR(lc_evolutionary_no_hominin, hypo2Vec)
