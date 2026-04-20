@@ -4,6 +4,7 @@
 #include "PerikymataHSPv4.hpp"
 #include "ReadTSV.hpp"
 #include "ReadCSV.hpp"
+#include "SimulateData.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
@@ -27,6 +28,8 @@ int main(int argc, const char* argv[]) {
     int pf = settings.getPrintFrequency();
     int sf = settings.getSampleFrequency();
     
+    SimulateData s = SimulateData();
+    
     for(int i = 0; i < settings.getNumReps(); i++){
         std::cout << "-----------------------------------------------------------------------" << std::endl;
         std::cout << "On rep " << i + 1 << " of " << settings.getNumReps() << "\n";
@@ -35,20 +38,19 @@ int main(int argc, const char* argv[]) {
         
         
         //simulate data
-        
-        
+        s.simulateData();
         
         //infer parameters from simulated data
         if(numChains > 1){
             std::vector<PhylogeneticModel*> perikymataModels;
             perikymataModels.resize(numChains);
             for(int i = 0; i < numChains; i++)
-                perikymataModels[i] = new PerikymataHSPv4(&tree, rawReadDatNames, &readDat);
+                perikymataModels[i] = new PerikymataHSPv4(s.getSimulatedTree(), s.getSimulatedRownames(), s.getSimulatedData());
 
             MetropolisCoupledMcmc mcmc(numCycles, pf, sf, perikymataModels);
             mcmc.run();
         }else if (numChains == 1){
-            PhylogeneticModel* perikymataModel = new PerikymataHSPv4(&tree, rawReadDatNames, &readDat);
+            PhylogeneticModel* perikymataModel = new PerikymataHSPv4(s.getSimulatedTree(), s.getSimulatedRownames(), s.getSimulatedData());
             Mcmc mcmc(numCycles, pf, sf, perikymataModel);
             mcmc.run();
         }

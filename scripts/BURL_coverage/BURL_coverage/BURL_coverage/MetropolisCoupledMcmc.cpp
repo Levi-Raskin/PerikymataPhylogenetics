@@ -31,7 +31,7 @@ MetropolisCoupledMcmc::MetropolisCoupledMcmc(unsigned long ng, int pf, int sf, s
     lnAcceptanceProbabilities.resize(numModels);
     
     UserSettings& settings = UserSettings::userSettings();
-    tracerFileName = settings.getOutputFile();
+    tracerFileName = settings.getOutputFile() + "Outfile.tsv";
     WriteTSV w();
 }
 

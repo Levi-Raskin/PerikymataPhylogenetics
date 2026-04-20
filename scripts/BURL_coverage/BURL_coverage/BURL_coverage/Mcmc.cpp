@@ -12,7 +12,7 @@
 
 Mcmc::Mcmc(int ng, int pf, int sf, PhylogeneticModel* m) : numCycles(ng), printFrequency(pf), sampleFrequency(sf), model(m) {
     UserSettings& settings = UserSettings::userSettings();
-    tracerFileName = settings.getOutputFile();
+    tracerFileName = settings.getOutputFile() + "Outfile.tsv";
     WriteTSV w();
 }
 
