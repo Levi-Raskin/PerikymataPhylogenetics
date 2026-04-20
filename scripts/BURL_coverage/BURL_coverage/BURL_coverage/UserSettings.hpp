@@ -28,6 +28,8 @@ class UserSettings {
         int                         getPrintFrequency(void) { checkSettings(); return printFrequency; }
         std::string                 getReadDataType(void) { checkSettings(); return readDatDatatype; }
         int                         getSampleFrequency(void) { checkSettings(); return sampleFrequency; }
+        bool                        getWithPhylogeny(void) { checkSettings(); return withPhylogeny; }
+        bool                        getWithIntraspecific(void) { checkSettings(); return withIntraspecific; }
         void                        print(void);
         void                        printHelp(void);
         void                        startTiming(void);
@@ -56,6 +58,8 @@ class UserSettings {
         int                         sampleFrequency;
         bool                        settingsInitialized;
         bool                        logTransformData;
+        bool                        withPhylogeny;
+        bool                        withIntraspecific;
 };
 
 #endif

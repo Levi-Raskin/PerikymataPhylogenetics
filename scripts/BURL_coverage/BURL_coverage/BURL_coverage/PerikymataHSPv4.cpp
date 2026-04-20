@@ -83,8 +83,24 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
 
     for(auto&s : tipMatrices){
         tipNames.push_back(s.first);
-        TipModelV2* newTipModel = new TipModelV2(s.first, s.second, this);
-        tipModels.insert({s.first, newTipModel});
+        
+        //if withIntraspecific = false, we just take species means
+        if(settings.getWithIntraspecific() == false){
+            Eigen::MatrixXd mean = Eigen::MatrixXd::Zero(1, s.second.cols());
+            for(int i = 0; i < s.second.rows(); i++){
+                for(int j = 0; j < s.second.cols(); j++){
+                    if(!std::isnan(s.second(i,j))){
+                        mean(0, j) += s.second(i,j);
+                    }
+                }
+            }
+            mean /= s.second.rows();
+            TipModelV2* newTipModel = new TipModelV2(s.first, mean, this);
+            tipModels.insert({s.first, newTipModel});
+        }else{
+            TipModelV2* newTipModel = new TipModelV2(s.first, s.second, this);
+            tipModels.insert({s.first, newTipModel});
+        }
     }
     
     tipMeansConcat.resize(tipModels.size(), dat->cols());

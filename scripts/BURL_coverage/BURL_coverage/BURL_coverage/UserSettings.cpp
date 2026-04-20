@@ -23,7 +23,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     // Defaults
     outputFile      = "";
-    chainLength     = 2000000;
+    chainLength     = 20000;
     numChains       = 10;
     numThreads      = 10;
     printFrequency  = 1000;
@@ -38,10 +38,10 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     // Known flags and whether they take a value
     std::set<std::string> knownFlags = {
-        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-help", "-h"
+        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-p", "-i", "-help", "-h"
     };
     std::set<std::string> valueFlags = {
-        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs"
+        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-p", "-i"
     };
 
     for (int i = 1; i < (int)arguments.size(); i++) {
@@ -74,6 +74,20 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
             if (arg == "-o") {
                 outputFile = val;
                 
+            }else if (arg == "-p") {
+                if (val == "T" || val == "t" || val == "true")
+                    withPhylogeny = true;
+                else if (val == "F" || val == "f" || val == "false")
+                    withPhylogeny = false;
+                else
+                    Msg::error("Flag \"-p\" expects T/true or F/false, but got \"" + val + "\".");
+            }else if (arg == "-i") {
+                if (val == "T" || val == "t" || val == "true")
+                    withIntraspecific = true;
+                else if (val == "F" || val == "f" || val == "false")
+                    withIntraspecific = false;
+                else
+                    Msg::error("Flag \"-i\" expects T/true or F/false, but got \"" + val + "\".");
             }else {
                 // Integer-valued flags
                 // Check all characters are digits (allowing leading minus for negative detection)
@@ -169,6 +183,9 @@ void UserSettings::print(void) {
     std::cout << "Number of missing observations:        " << numImp << std::endl;
     std::cout << "Number of observations per tip:        " << numObs << std::endl;
     std::cout << "-----------------------------------------------------------------------" << std::endl;
+    std::cout << "With phylogeny:                        " << withPhylogeny << std::endl;
+    std::cout << "With intraspecific:                    " << withIntraspecific << std::endl;
+    std::cout << "-----------------------------------------------------------------------" << std::endl;
 }
 
 void UserSettings::printHelp(void){
@@ -180,6 +197,8 @@ void UserSettings::printHelp(void){
     std::cout << "  -ntraits    <int>       Number of traits to simulate\n";
     std::cout << "  -nimp       <int>       Number of missing observations (global)\n";
     std::cout << "  -nobs       <int>       Number of observations per species\n";
+    std::cout << "  -p          <T/F>       Inference with phylogeny (true/T, false/F)\n";
+    std::cout << "  -i          <T/F>       Inference with intraspecific variation (true/T, false/F) \n";
 }
 
 void UserSettings::writeLog(void){
