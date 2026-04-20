@@ -9,8 +9,12 @@
 #include "UserSettings.hpp"
 
 #include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 void printHeader(void);
+std::string formatDuration(double seconds);
 
 int main(int argc, const char* argv[]) {
     printHeader();
@@ -19,7 +23,6 @@ int main(int argc, const char* argv[]) {
     settings.print();
     std::string readDatType = settings.getReadDataType();
     settings.writeLog();
-    
     
     settings.startTiming();
     
@@ -30,17 +33,28 @@ int main(int argc, const char* argv[]) {
     
     SimulateData s = SimulateData();
     
-    for(int i = 0; i < settings.getNumReps(); i++){
+    int numReps = settings.getNumReps();
+    auto wallStart = std::chrono::steady_clock::now();
+
+    for(int i = 0; i < numReps; i++){
         std::cout << "-----------------------------------------------------------------------" << std::endl;
-        std::cout << "On rep " << i + 1 << " of " << settings.getNumReps() << "\n";
-        std::cout << "Current coverage: " << 10 << "\n";
+        std::cout << "On rep " << i + 1 << " of " << numReps << "\n";
+
+        if (i > 0) {
+            auto now = std::chrono::steady_clock::now();
+            double elapsed = std::chrono::duration<double>(now - wallStart).count();
+            double avgPerRep = elapsed / i;
+            double eta = avgPerRep * (numReps - i);
+            std::cout << "Elapsed: " << formatDuration(elapsed)
+                      << "  |  Avg/rep: " << formatDuration(avgPerRep)
+                      << "  |  ETA: " << formatDuration(eta) << "\n";
+        }
+
         std::cout << "-----------------------------------------------------------------------" << std::endl;
         
-        
-        //simulate data
+        // Simulate data
         s.simulateData();
         
-        //infer parameters from simulated data
         if(numChains > 1){
             std::vector<PhylogeneticModel*> perikymataModels;
             perikymataModels.resize(numChains);
@@ -49,23 +63,48 @@ int main(int argc, const char* argv[]) {
 
             MetropolisCoupledMcmc mcmc(numCycles, pf, sf, perikymataModels);
             mcmc.run();
-        }else if (numChains == 1){
+        } else if (numChains == 1){
             PhylogeneticModel* perikymataModel = new PerikymataHSPv4(s.getSimulatedTree(), s.getSimulatedRownames(), s.getSimulatedData());
             Mcmc mcmc(numCycles, pf, sf, perikymataModel);
             mcmc.run();
         }
-    //check coverage
-    
+        
+        // Check coverage
+        s.checkCredInt();
+        s.print();
+    }
+
+    {
+        auto now = std::chrono::steady_clock::now();
+        double elapsed = std::chrono::duration<double>(now - wallStart).count();
+        std::cout << "-----------------------------------------------------------------------" << std::endl;
+        std::cout << "All " << numReps << " reps completed in " << formatDuration(elapsed) << std::endl;
+        std::cout << "-----------------------------------------------------------------------" << std::endl;
     }
     
-    //overwrite trace file with coverage
-    
+    s.writeCoverage();
     settings.endTiming();
     return 0;
 }
 
-void printHeader(void) {
+std::string formatDuration(double seconds) {
+    std::ostringstream oss;
+    if (seconds < 60.0) {
+        oss << std::fixed << std::setprecision(1) << seconds << "s";
+    } else if (seconds < 3600.0) {
+        int m = static_cast<int>(seconds) / 60;
+        int s = static_cast<int>(seconds) % 60;
+        oss << m << "m " << s << "s";
+    } else {
+        int h = static_cast<int>(seconds) / 3600;
+        int m = (static_cast<int>(seconds) % 3600) / 60;
+        int s = static_cast<int>(seconds) % 60;
+        oss << h << "h " << m << "m " << s << "s";
+    }
+    return oss.str();
+}
 
+void printHeader(void) {
     std::cout << std::endl;
     std::cout << "-----------------------------------------------------------------------" << std::endl;
     std::cout << "   BURLc - validation of BURL through coverage checks" << std::endl;

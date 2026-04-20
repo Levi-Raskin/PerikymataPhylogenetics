@@ -7,6 +7,7 @@
 
 
 PhylogeneticModel::PhylogeneticModel(void) : updatedParameter(nullptr) {
+
 }
  
 PhylogeneticModel::~PhylogeneticModel(void) {

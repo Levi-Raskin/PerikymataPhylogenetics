@@ -23,7 +23,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     // Defaults
     outputFile      = "";
-    chainLength     = 10000000;
+    chainLength     = 2000000;
     numChains       = 10;
     numThreads      = 10;
     printFrequency  = 1000;
@@ -144,8 +144,8 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
         numThreads = 1;
     }
     
-    if(numReps <= 1){
-        Msg::warning("Only checking coverage in one or fewer simulated data; results are meaningless.");
+    if(numReps <= 5){
+        Msg::warning("Only checking coverage in five or fewer simulated data; results are meaningless.");
     }
 
     if (outputFile.empty())
@@ -183,10 +183,10 @@ void UserSettings::printHelp(void){
 }
 
 void UserSettings::writeLog(void){
-    const std::string tsv = ".tsv";
-    const std::string txt = "Log.txt";
-    logFile = outputFile;
-    logFile.replace(outputFile.size() - tsv.size(), tsv.size(), txt);
+//    const std::string tsv = ".tsv";
+//    const std::string txt = "Log.txt";
+    logFile = outputFile + "Log.txt";
+//    logFile.replace(outputFile.size() - tsv.size(), tsv.size(), txt);
     
     std::ofstream log(logFile);
     if (!log.is_open())
@@ -199,11 +199,12 @@ void UserSettings::writeLog(void){
     log << "Print-to-screen frequency:             " << printFrequency << "\n";
     log << "Chain sampling frequency:              " << sampleFrequency << "\n";
     log << "---------------------------------------" << "\n";
-    log << "Number of repititions:                 " << numReps << "\n";
+    log << "Number of repetitions:                 " << numReps << "\n";
     log << "Number of tips:                        " << numTips << "\n";
     log << "Number of traits:                      " << numTraits << "\n";
     log << "Number of missing observations:        " << numImp << "\n";
     log << "Number of observations per tip:        " << numObs << "\n";
+    log << "---------------------------------------" << "\n";
 
 
     log.close();

@@ -2,12 +2,16 @@
 #include "Node.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
+#include "ReadTSV.hpp"
 #include "SimulateData.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 #include "Utility.hpp"
 
-SimulateData::SimulateData(void) : tree(nullptr){
+#include <iostream>
+#include <fstream>
+
+SimulateData::SimulateData(void) : tree(nullptr), trials(0){
     RandomVariable& rng = RandomVariable::randomVariableInstance();
     
     UserSettings& settings = UserSettings::userSettings();
@@ -38,6 +42,13 @@ SimulateData::SimulateData(void) : tree(nullptr){
 }
 
 void SimulateData::simulateData(void){
+    trials++;
+    rownames.clear();
+    trueTipMeans.clear();
+    trueTipVCVs.clear();
+    tipNameToIndex.clear();
+    trueMissingValues.clear();
+
     RandomVariable& rng = RandomVariable::randomVariableInstance();
 
     //---simulate tree---//
@@ -132,31 +143,148 @@ void SimulateData::simulateData(void){
     }
 }
 
+void SimulateData::checkCredInt(void){
+    UserSettings& settings = UserSettings::userSettings();
+    ReadTSV r(settings.getOutputFile() + "Outfile.tsv", false, true);
+    Eigen::MatrixXd rDat = r.getEigenMat();
+    std::vector<std::string> cn = r.getColnames();
+    
+    // Evaluate evolutionary VCV coverage
+    int evoVCVCovered = 0;
+    for(int x = 0; x < cn.size(); x++){
+        std::string s = cn[x];
+        if(s.substr(0, 7) == "evo_vcv"){
+            size_t rowPos = s.find_first_of("0123456789");
+            size_t commaPos = s.find(',');
+            int i = std::stoi(s.substr(rowPos, commaPos - rowPos));
+            int j = std::stoi(s.substr(commaPos + 1));
+            auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(x), 0.1);
+            if(sampledEvoVCV(i,j) < impInterval.second && sampledEvoVCV(i,j) > impInterval.first){
+                vcvInCredInt(i,j)++;
+                evoVCVCovered++;
+            }
+        }
+    }
+    // Evaluate tip mean coverage
+    for(auto& tipEntry : trueTipMeans) {
+        std::string tipName = tipEntry.first;
+        Eigen::VectorXd trueMean = tipEntry.second;
+        int tipIdx = tipNameToIndex[tipName];
+        int tipMeanCovered = 0;
+        
+        for(int traitIdx = 0; traitIdx < ntraits; traitIdx++) {
+            std::string paramName = tipName + "_mean_" + std::to_string(traitIdx);
+            
+            auto it = std::find(cn.begin(), cn.end(), paramName);
+            if(it != cn.end()) {
+                int colIdx = std::distance(cn.begin(), it);
+                auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.1);
+                
+                if(trueMean(traitIdx) < impInterval.second && trueMean(traitIdx) > impInterval.first) {
+                    #pragma omp atomic
+                    tipMeanInCredInt(tipIdx,traitIdx)++;
+                    tipMeanCovered++;
+                }
+            }
+        }
+    }
+    
+    // Evaluate tip VCV coverage
+    for(auto& tipEntry : trueTipVCVs) {
+        std::string tipName = tipEntry.first;
+        Eigen::MatrixXd trueVCV = tipEntry.second;
+        int tipIdx = tipNameToIndex[tipName];
+        int tipVCVCovered = 0;
+        
+        for(int i = 0; i < ntraits; i++) {
+            for(int j = 0; j < ntraits; j++) {
+                std::string paramName = tipName + "_vcv_(" + std::to_string(i) + "," + std::to_string(j) + ")";
+                
+                auto it = std::find(cn.begin(), cn.end(), paramName);
+                if(it != cn.end()) {
+                    int colIdx = std::distance(cn.begin(), it);
+                    auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.1);
+                    
+                    if(trueVCV(i,j) < impInterval.second && trueVCV(i,j) > impInterval.first) {
+                        #pragma omp atomic
+                        tipVCVInCredInt[tipIdx](i,j)++;
+                        tipVCVCovered++;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Evaluate missing data imputation
+    for(int x = 0; x < (int)cn.size(); x++){
+        std::string s = cn[x];
+        if(s.substr(0, 8) == "missing_"){
+            size_t parenOpen  = s.find('(');
+            size_t parenClose = s.find(')');
+            size_t lastUnderscore = s.rfind('_', parenOpen - 1);
 
-/*
-        void                                    checkCredInt(void);
-        double                                  getVCVInCredInt(void);
-        double                                  getTipMeanInCredInt(void);
-        double                                  getTipVCVInCredInt(void);
-        double                                  getImputedInCredInt(void);
-        void                                    simulateData(void);
+            std::string tipName = s.substr(8, lastUnderscore - 8);
+
+            std::string inside = s.substr(parenOpen + 1, parenClose - parenOpen - 1);
+            size_t commaPos = inside.find(',');
+            int localRow = std::stoi(inside.substr(0, commaPos));
+            int col      = std::stoi(inside.substr(commaPos + 1));
+
+            // reconstruct absolute row
+            auto tipIt = tipNameToIndex.find(tipName);
+            if(tipIt == tipNameToIndex.end()) continue;
+            int tipIdx = tipIt->second;
+            int absRow = tipIdx * nind + localRow;
+
+            auto it = trueMissingValues.find({absRow, col});
+            if(it != trueMissingValues.end()){
+                double trueVal = it->second;
+                auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(x), 0.1);
+                if(trueVal > impInterval.first && trueVal < impInterval.second){
+                    int impIdx = (int)std::distance(trueMissingValues.begin(), it);
+                    imputedInCredInt(impIdx)++;
+                }
+            }
+        }
+    }
+}
+
+void SimulateData::print(void){
+    int total = 0;
+    for(auto& m : tipVCVInCredInt)
+        total += m.sum();
+
+    std::cout << "-----------------------------------------------------------------------" << std::endl;
+    std::cout << "Evolutionary VCV coverage:            " << vcvInCredInt.sum() << "/" << (trials * ntraits * ntraits) << "\t\t | (" << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << ")" << "\n";
+    std::cout << "Tip VCV coverage:                     " << total << "/" << (trials * ntips * ntraits * ntraits) << "\t\t | (" << (double)total / (trials * ntips * ntraits * ntraits) << ")" << "\n";
+    std::cout << "Tim mean coverage:                    " << tipMeanInCredInt.sum() << "/" << (trials * ntips * ntraits) << "\t\t | (" << (double)tipMeanInCredInt.sum() / (trials * ntips * ntraits) << ")" << "\n";
+    std::cout << "Missing data coverage:                " << imputedInCredInt.sum() << "/" << (trials * nimp) << "\t\t | (" << (double)imputedInCredInt.sum() / (trials * nimp) << ")" << "\n";
+    std::cout << "-----------------------------------------------------------------------" << std::endl;
+}
+
+void SimulateData::writeCoverage(void){
+    UserSettings& settings = UserSettings::userSettings();
+    std::string logFile = settings.getOutputFile() + "CoverageResults.txt";
+    
+    std::ofstream log(logFile);
+    if (!log.is_open())
+        Msg::error("Could not open log file: " + logFile);
         
-    private:
-//coverage instance vars
-        Eigen::MatrixXi                         vcvInCredInt;       // ntraits × ntraits
-        Eigen::MatrixXi                         tipMeanInCredInt;   // ntips   × ntraits
-        std::vector<Eigen::MatrixXi>            tipVCVInCredInt;    // ntips   × ntraits × ntraits
-        Eigen::VectorXi                         imputedInCredInt;   // nimp
-        
-        //prior parameters
-        double                                  priorDOF;
-        Eigen::MatrixXd                         psi;
-        
-        //simulated parameters
-        Eigen::VectorXd                         `trueMissingValues`;
-        
-        //misc
-        int                                     nimp;
-        int                                     nreps;
-        int                                     ntips;
-        int                                     ntraits;*/
+    int total = 0;
+    for(auto& m : tipVCVInCredInt)
+        total += m.sum();
+    
+    int cumCov = total;
+    cumCov += vcvInCredInt.sum();
+    cumCov += tipMeanInCredInt.sum();
+    cumCov += imputedInCredInt.sum();
+    log << "Total coverage: " << (double) cumCov / ((trials * ntraits * ntraits) + (trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) ;
+    log << "-----------------------------------------------------------------------\n";
+    log << "Evolutionary VCV coverage:            " << vcvInCredInt.sum() << "/" << (trials * ntraits * ntraits) << " | (" << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << ")" << "\n";
+    log << "Tip VCV coverage:                     " << total << "/" << (trials * ntips * ntraits * ntraits) << " | (" << (double)total / (trials * ntips * ntraits * ntraits) << ")" << "\n";
+    log << "Tim mean coverage:                    " <<  tipMeanInCredInt.sum() << "/" << (trials * ntips * ntraits) << " | (" << (double)tipMeanInCredInt.sum() / (trials * ntips * ntraits) << ")" << "\n";
+    log << "Evolutionary VCV coverage:            " <<  imputedInCredInt.sum() << "/" << (trials * nimp) << " | (" << (double)imputedInCredInt.sum() / (trials * nimp) << ")" << "\n";
+
+    log.close();
+
+}

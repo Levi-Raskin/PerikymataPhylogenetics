@@ -8,14 +8,12 @@
 class SimulateData{
     public:
                                                 SimulateData(void);
-        void                                    checkCredIntdata(void);
+        void                                    checkCredInt(void);
         Eigen::MatrixXd*                        getSimulatedData(void){ return &data; };
         std::vector<std::string>                getSimulatedRownames(void){ return rownames; };
         Tree*                                   getSimulatedTree(void){ return tree; };
-        double                                  getVCVInCredInt(void);
-        double                                  getTipMeanInCredInt(void);
-        double                                  getTipVCVInCredInt(void);
-        double                                  getImputedInCredInt(void);
+        void                                    print(void);
+        void                                    writeCoverage(void);
         void                                    simulateData(void);
         
     private:
@@ -46,6 +44,7 @@ class SimulateData{
         int                                     nreps;
         int                                     ntips;
         int                                     ntraits;
+        int                                     trials;
 };
 
 #endif
