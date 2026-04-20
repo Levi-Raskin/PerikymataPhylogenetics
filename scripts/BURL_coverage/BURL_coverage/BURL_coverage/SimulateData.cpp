@@ -278,7 +278,22 @@ void SimulateData::writeCoverage(void){
     cumCov += vcvInCredInt.sum();
     cumCov += tipMeanInCredInt.sum();
     cumCov += imputedInCredInt.sum();
-    log << "Total coverage: " << (double) cumCov / ((trials * ntraits * ntraits) + (trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) ;
+    
+    if(settings.getWithIntraspecific() == false){
+        log << "Total coverage: " << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << "\n";
+    }else if(settings.getWithIntraspecific() == false){
+        int cumCov = total;
+        cumCov += tipMeanInCredInt.sum();
+        cumCov += imputedInCredInt.sum();
+        log << "Total coverage: " << (double) cumCov / ((trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << "\n";
+    }else{
+        int cumCov = total;
+        cumCov += vcvInCredInt.sum();
+        cumCov += tipMeanInCredInt.sum();
+        cumCov += imputedInCredInt.sum();
+
+        log << "Total coverage: " << (double) cumCov / ((trials * ntraits * ntraits) + (trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << "\n";
+    }
     log << "-----------------------------------------------------------------------\n";
     log << "Evolutionary VCV coverage:            " << vcvInCredInt.sum() << "/" << (trials * ntraits * ntraits) << " | (" << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << ")" << "\n";
     log << "Tip VCV coverage:                     " << total << "/" << (trials * ntips * ntraits * ntraits) << " | (" << (double)total / (trials * ntips * ntraits * ntraits) << ")" << "\n";

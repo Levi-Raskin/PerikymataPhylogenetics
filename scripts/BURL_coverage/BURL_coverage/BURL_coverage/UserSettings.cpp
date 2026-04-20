@@ -23,7 +23,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     // Defaults
     outputFile      = "";
-    chainLength     = 20000;
+    chainLength     = 2000000;
     numChains       = 10;
     numThreads      = 10;
     printFrequency  = 1000;
@@ -165,6 +165,8 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
     if (outputFile.empty())
         Msg::warning("No output file specified (-o). Use -help for usage.");
 
+    if (withPhylogeny == false && withIntraspecific == false)
+        Msg::error("Inference with phylogeny is false and inference with intraspecific variation is false; one must be true.");
 }
 
 void UserSettings::print(void) {

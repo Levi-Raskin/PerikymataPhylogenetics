@@ -77,11 +77,11 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-p T"
+            argument = "-p F"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-i F"
+            argument = "-i T"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

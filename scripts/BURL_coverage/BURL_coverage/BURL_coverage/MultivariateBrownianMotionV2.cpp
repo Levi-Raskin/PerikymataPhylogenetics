@@ -6,6 +6,7 @@
 #include "PhylogeneticModel.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
+#include "UserSettings.hpp"
 
 #include <iostream>
 
@@ -70,6 +71,9 @@ MultivariateBrownianMotionV2::~MultivariateBrownianMotionV2(void){
 }
 
 std::vector<std::string> MultivariateBrownianMotionV2::getParameterNames(void){
+    UserSettings& settings = UserSettings::userSettings();
+    if(settings.getWithPhylogeny() == false)
+        return {};
     std::vector<std::string> parmValues;
     
     //variance covariance matrix
@@ -81,6 +85,9 @@ std::vector<std::string> MultivariateBrownianMotionV2::getParameterNames(void){
 }
 
 std::vector<double> MultivariateBrownianMotionV2::getParameterString(void){
+    UserSettings& settings = UserSettings::userSettings();
+    if(settings.getWithPhylogeny() == false)
+        return {};
     std::vector<double> parmValues;
     for(int i = 0; i < numberOfTraits; i++)
         for(int j = 0; j < numberOfTraits; j++)

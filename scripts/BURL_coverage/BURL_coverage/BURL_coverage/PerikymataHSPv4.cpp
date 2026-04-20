@@ -19,6 +19,10 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
     fixedTree(*backbone),
     updateTipsOn(true){
     
+    UserSettings& settings = UserSettings::userSettings();
+    if(settings.getWithIntraspecific() == false)
+        updateTipsOn = false;
+    
     fixedTree = Tree(*backbone);
 
     // First pass: identify tips to drop
@@ -76,7 +80,6 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
         }
     }
      
-    UserSettings& settings = UserSettings::userSettings();
     if(settings.getLogTransformData() == true)
         for(auto& s : tipMatrices)
             s.second = s.second.array().log();
@@ -126,7 +129,12 @@ PerikymataHSPv4::~PerikymataHSPv4(void){
 
 double PerikymataHSPv4::lnLikelihood(void){
     //CANNOT CACHE LNL BECAUSE TIP MEANS CHANGE
-    double lnl = MultivariateBrownianMotionV2::lnLikelihood();
+    double lnl = 0.0;
+    
+    UserSettings& settings = UserSettings::userSettings();
+    if(settings.getWithPhylogeny() == true)
+        lnl += MultivariateBrownianMotionV2::lnLikelihood();
+    
     for (auto s : tipModels)
         lnl += s.second->lnLikelihood();
     return lnl;
@@ -169,8 +177,15 @@ void PerikymataHSPv4::print(void){
 }
 
 double PerikymataHSPv4::update(void){
+    UserSettings& settings = UserSettings::userSettings();
     RandomVariable& rng = RandomVariable::randomVariableInstance();
+
+    if(settings.getWithPhylogeny() == false){
+        goto forceUpdateTips;
+    }
+
     if(rng.uniformRv() < 0.9 && updateTipsOn == true){
+        forceUpdateTips:
         tipUpdate = true;
         retry:
         std::string s = tipNames[(int)(rng.uniformRv() * tipNames.size())];
