@@ -194,6 +194,7 @@ void UserSettings::printHelp(void){
     std::cout << "Usage: BURLc [options]\n";
     std::cout << "Options:\n";
     std::cout << "  -o          <file>      Output file without filepath ending (Outputs coverage in TSV only)\n";
+    std::cout << "  -c          <int>       Number of MCMC cycles to run\n";
     std::cout << "  -nreps      <int>       Number of repetitions for coverage check\n";
     std::cout << "  -ntips      <int>       Number of tips to simulate tree with\n";
     std::cout << "  -ntraits    <int>       Number of traits to simulate\n";

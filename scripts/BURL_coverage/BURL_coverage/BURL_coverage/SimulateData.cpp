@@ -101,17 +101,14 @@ void SimulateData::simulateData(void){
     for(int i = 0; i < ntips; i++){
         //sample tip VCV
         Eigen::VectorXd mu0 = Eigen::VectorXd::Zero(ntraits);
-        Eigen::MatrixXd psi = Eigen::MatrixXd::Constant(ntraits, ntraits, 1e-6);
-        psi.diagonal().array() = 1.0;
-        psi = Eigen::VectorXd::Ones(ntraits).asDiagonal() * psi * Eigen::VectorXd::Ones(ntraits).asDiagonal();
         Eigen::MatrixXd tipVCV = Probability::InverseWishart::rv(&rng, psi, priorDOF);
 
         std::string tipName = taxNames[i];
         Eigen::VectorXd tipMean = dat.row(i);
         
         std::vector<std::string> colnames = {};
-        for(int i =0; i < ntraits; i++)
-            colnames.push_back("trait" + std::to_string(i));
+        for(int j =0; j < ntraits; j++)
+            colnames.push_back("trait" + std::to_string(j));
 
         // Store true values
         trueTipMeans[tipName] = tipMean;
@@ -181,7 +178,6 @@ void SimulateData::checkCredInt(void){
                 auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.1);
                 
                 if(trueMean(traitIdx) < impInterval.second && trueMean(traitIdx) > impInterval.first) {
-                    #pragma omp atomic
                     tipMeanInCredInt(tipIdx,traitIdx)++;
                     tipMeanCovered++;
                 }
@@ -206,7 +202,6 @@ void SimulateData::checkCredInt(void){
                     auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.1);
                     
                     if(trueVCV(i,j) < impInterval.second && trueVCV(i,j) > impInterval.first) {
-                        #pragma omp atomic
                         tipVCVInCredInt[tipIdx](i,j)++;
                         tipVCVCovered++;
                     }
@@ -257,7 +252,7 @@ void SimulateData::print(void){
     std::cout << "-----------------------------------------------------------------------" << std::endl;
     std::cout << "Evolutionary VCV coverage:            " << vcvInCredInt.sum() << "/" << (trials * ntraits * ntraits) << "\t\t | (" << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << ")" << "\n";
     std::cout << "Tip VCV coverage:                     " << total << "/" << (trials * ntips * ntraits * ntraits) << "\t\t | (" << (double)total / (trials * ntips * ntraits * ntraits) << ")" << "\n";
-    std::cout << "Tim mean coverage:                    " << tipMeanInCredInt.sum() << "/" << (trials * ntips * ntraits) << "\t\t | (" << (double)tipMeanInCredInt.sum() / (trials * ntips * ntraits) << ")" << "\n";
+    std::cout << "Tip mean coverage:                    " << tipMeanInCredInt.sum() << "/" << (trials * ntips * ntraits) << "\t\t | (" << (double)tipMeanInCredInt.sum() / (trials * ntips * ntraits) << ")" << "\n";
     std::cout << "Missing data coverage:                " << imputedInCredInt.sum() << "/" << (trials * nimp) << "\t\t | (" << (double)imputedInCredInt.sum() / (trials * nimp) << ")" << "\n";
     std::cout << "-----------------------------------------------------------------------" << std::endl;
 }
@@ -274,31 +269,26 @@ void SimulateData::writeCoverage(void){
     for(auto& m : tipVCVInCredInt)
         total += m.sum();
     
-    int cumCov = total;
-    cumCov += vcvInCredInt.sum();
-    cumCov += tipMeanInCredInt.sum();
-    cumCov += imputedInCredInt.sum();
-    
     if(settings.getWithIntraspecific() == false){
-        log << "Total coverage: " << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << "\n";
-    }else if(settings.getWithIntraspecific() == false){
+        log << "Total coverage: " << vcvInCredInt.sum() << "/" << (trials * ntraits * ntraits) << " | (" << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << ")\n";
+    }else if(settings.getWithPhylogeny() == false){
         int cumCov = total;
         cumCov += tipMeanInCredInt.sum();
         cumCov += imputedInCredInt.sum();
-        log << "Total coverage: " << (double) cumCov / ((trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << "\n";
+        log << "Total coverage: " << cumCov << "/" << ((trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << " | ("<< (double) cumCov / ((trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << ")\n";
     }else{
         int cumCov = total;
         cumCov += vcvInCredInt.sum();
         cumCov += tipMeanInCredInt.sum();
         cumCov += imputedInCredInt.sum();
 
-        log << "Total coverage: " << (double) cumCov / ((trials * ntraits * ntraits) + (trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << "\n";
+        log << "Total coverage: " << cumCov << "/" << ((trials * ntraits * ntraits) + (trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << " | ("<< (double) cumCov / ((trials * ntraits * ntraits) + (trials * ntips * ntraits * ntraits) + (trials * ntips * ntraits) + (trials * nimp)) << ")\n";
     }
     log << "-----------------------------------------------------------------------\n";
     log << "Evolutionary VCV coverage:            " << vcvInCredInt.sum() << "/" << (trials * ntraits * ntraits) << " | (" << (double)vcvInCredInt.sum() / (trials * ntraits * ntraits) << ")" << "\n";
     log << "Tip VCV coverage:                     " << total << "/" << (trials * ntips * ntraits * ntraits) << " | (" << (double)total / (trials * ntips * ntraits * ntraits) << ")" << "\n";
-    log << "Tim mean coverage:                    " <<  tipMeanInCredInt.sum() << "/" << (trials * ntips * ntraits) << " | (" << (double)tipMeanInCredInt.sum() / (trials * ntips * ntraits) << ")" << "\n";
-    log << "Evolutionary VCV coverage:            " <<  imputedInCredInt.sum() << "/" << (trials * nimp) << " | (" << (double)imputedInCredInt.sum() / (trials * nimp) << ")" << "\n";
+    log << "Tip mean coverage:                    " <<  tipMeanInCredInt.sum() << "/" << (trials * ntips * ntraits) << " | (" << (double)tipMeanInCredInt.sum() / (trials * ntips * ntraits) << ")" << "\n";
+    log << "Missing data coverage:                " <<  imputedInCredInt.sum() << "/" << (trials * nimp) << " | (" << (double)imputedInCredInt.sum() / (trials * nimp) << ")" << "\n";
 
     log.close();
 
