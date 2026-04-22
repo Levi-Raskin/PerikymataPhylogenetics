@@ -567,3 +567,14 @@ testCR(lc_evolutionary_no_hominin, hypo1Vec)
 
 #### Hypothesis 2: deciles 3-5; deciles 6-10 ####
 testCR(lc_evolutionary_no_hominin, hypo2Vec)
+
+
+# Rphylopars --------------------------------------------------------------
+
+library(Rphylopars)
+dat <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
+cn <- colnames(dat)
+cn[1] <- "species"
+colnames(dat) <- cn
+
+res <- phylopars(dat, tree)

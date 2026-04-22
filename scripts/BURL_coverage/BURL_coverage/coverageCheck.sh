@@ -9,7 +9,7 @@ build/burlc \
     -nimp 10 \
     -nobs 10 \
     -p T \
-    -i T &
+    -i T
 
 build/burlc \
     -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/coverageCheck/coverage_withoutphylo_" \
@@ -20,7 +20,7 @@ build/burlc \
     -nimp 10 \
     -nobs 10 \
     -p F \
-    -i T &
+    -i T
 
 build/burlc \
     -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/coverageCheck/coverage_withoutintra_" \
@@ -31,7 +31,4 @@ build/burlc \
     -nimp 10 \
     -nobs 10 \
     -p T \
-    -i F &
-
-wait
-echo "All jobs completed."
+    -i F
