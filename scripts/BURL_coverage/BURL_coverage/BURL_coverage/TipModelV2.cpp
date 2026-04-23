@@ -163,10 +163,7 @@ double TipModelV2::computeLnLikelihood(void){
 double TipModelV2::computeLnPriorProbability(void){
     if(numRows == 1)
         return 0.0;
-    double lnp = 0.0;
-    for(auto p : parameters)
-        lnp += p->lnProbability();
-    return lnp;
+    return taxonVariance->lnProbability();
 }
 
 double TipModelV2::lnLikelihood(void){
