@@ -163,10 +163,10 @@ double TipModelV2::computeLnLikelihood(void){
 double TipModelV2::computeLnPriorProbability(void){
     if(numRows == 1)
         return 0.0;
-    double lnp = 0.0;
-    for(auto p : parameters)
-        lnp += p->lnProbability();
-    return lnp;
+//    double lnp = 0.0;
+//    for(auto p : parameters)
+//        lnp += p->lnProbability();
+    return taxonVariance->lnProbability();
 }
 
 double TipModelV2::lnLikelihood(void){
@@ -206,6 +206,7 @@ double TipModelV2::update(void){
         updatePkGibbs();
         lnLDirty = true;
         lnPDirty = true;
+    return std::numeric_limits<double>::max();
         return 0.0;
     }else{
         gibbsPkUpdate = false;
