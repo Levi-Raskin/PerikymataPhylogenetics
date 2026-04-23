@@ -206,7 +206,7 @@ double TipModelV2::update(void){
         updatePkGibbs();
         lnLDirty = true;
         lnPDirty = true;
-        return 0.0;
+        return std::numeric_limits<double>::max();
     }else{
         gibbsPkUpdate = false;
         Parameter* parm = nullptr;
