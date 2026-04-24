@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#number of MCMC chains
+#number of MCMC cycles
 nc=100000000
 
 ### posterior estimation ###
