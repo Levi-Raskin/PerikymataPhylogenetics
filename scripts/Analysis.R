@@ -452,6 +452,52 @@ calcSymmetrizedKLDivergence(posteriorFits$Gorilla_beringei, posteriorFits$Gorill
 calcSymmetrizedKLDivergence(posteriorFits$Pongo_abelii, posteriorFits$Pongo_pygmaeus)
 
 
+
+# Posterior Predictive Draws ---------------------------------------------
+get_posterior_predictive <- function(posterior, species, n_traits, n_samples) {
+  
+  mean_cols <- paste0(species, "_mean_", 0:(n_traits - 1))
+  mu_samples <- as.matrix(posterior[, mean_cols])
+  
+  vcv_cols <- outer(0:(n_traits - 1), 0:(n_traits - 1),
+                    FUN = function(i, j) paste0(species, "_vcv_.", i, ".", j, "."))
+  vcv_mat <- as.matrix(posterior[, as.vector(vcv_cols)])
+  
+  draw_one <- function(s) {
+    Sigma <- matrix(vcv_mat[s, ], nrow = n_traits, ncol = n_traits)
+    Sigma <- (Sigma + t(Sigma)) / 2
+    Sigma <- Sigma + diag(1e-6, n_traits)
+    mvrnorm(n = 1, mu = mu_samples[s, ], Sigma = Sigma)
+  }
+  
+  preds <- do.call(rbind, mclapply(1:n_samples, draw_one, mc.cores = detectCores() - 1))
+  
+  colnames(preds) <- trait_labels
+  as.data.frame(preds) |>
+    mutate(species = species)
+}
+
+n_samples <- nrow(lc_posterior)
+n_traits <- 8
+trait_labels <- paste0("Decile ", 3:10)
+
+# Generate posterior predictives
+# hs_preds <- get_posterior_predictive(lc_posterior, "Homo_sapiens", n_traits, n_samples)
+# ne_preds <- get_posterior_predictive(lc_posterior, "Neanderthal", n_traits, n_samples)
+# pp_preds <- get_posterior_predictive(lc_posterior, "Pan_paniscus", n_traits, n_samples)
+# pt_preds <- get_posterior_predictive(lc_posterior, "Pan_troglodytes", n_traits, n_samples)
+# gb_preds <- get_posterior_predictive(lc_posterior, "Gorilla_beringei", n_traits, n_samples)
+# gg_preds <- get_posterior_predictive(lc_posterior, "Gorilla_gorilla", n_traits, n_samples)
+# pa_preds <- get_posterior_predictive(lc_posterior, "Pongo_abelii", n_traits, n_samples)
+# ppyg_preds <- get_posterior_predictive(lc_posterior, "Pongo_pygmaeus", n_traits, n_samples)
+# saveRDS(hs_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
+# saveRDS(ne_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/neanderthalPostPred.rds")
+# saveRDS(pp_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/panpaniscusPostPred.rds")
+# saveRDS(pt_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pantroglodytesPostPred.rds")
+# saveRDS(gb_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorrillaberingeiPostPred.rds")
+# saveRDS(gg_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorillagorillaPostPred.rds")
+# saveRDS(pa_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongoabeliiPostPred.rds")
+# saveRDS(ppyg_preds, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongopygmaeusPostPred.rds")
 # Analyses on the posterior predictive distributions ----------------------------------------------
 
 hs_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
