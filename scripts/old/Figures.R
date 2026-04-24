@@ -328,7 +328,6 @@ gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/resu
 pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongoabeliiPostPred.rds")
 ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongopygmaeusPostPred.rds")
 
-trait_labels <- paste0("Decile ", 3:10)
 
 plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
   recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
