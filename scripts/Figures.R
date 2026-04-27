@@ -1,5 +1,6 @@
 library(ape)
 library(bayestestR)
+library(data.table)
 library(dplyr)
 library(MASS)
 library(ggridges)
@@ -15,13 +16,13 @@ library(tidyverse)
 
 output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
 
-lc_posterior <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8.tsv")
+lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10.tsv"))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
-lc_posterior_no_hominin <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8_no_hominin.tsv")
+lc_posterior_no_hominin <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin.tsv"))
 lc_posterior_no_hominin  <- lc_posterior_no_hominin[round(0.1 * nrow(lc_posterior_no_hominin)) : nrow(lc_posterior_no_hominin), ] #apply burnin
 
-lc_posterior_species_means <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_dec3_8_species_means.tsv")
+lc_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_species_means.tsv"))
 lc_posterior_species_means  <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)) : nrow(lc_posterior_species_means), ] #apply burnin
 
 # modern human line drawing ---------------------------------------------------
@@ -77,7 +78,7 @@ map_estimate <- function(x) {
 
 #### LC with hominins ####
 #evo VCV MAP
-evo_vcv_cols <- paste0("evo_vcv_.", rep(0:7, each = 8), ".", rep(0:7, times = 8), ".")
+evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
 
 shared_max <- max(
   dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
@@ -92,16 +93,16 @@ evo_map <- dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |>
   summarise(across(everything(), map_estimate)) |>
   pivot_longer(everything(), names_to = "element", values_to = "map") |>
   mutate(
-    row = as.integer(sub("evo_vcv_\\.(\\d+)\\.(\\d+)\\.", "\\1", element)) + 1,
-    col = as.integer(sub("evo_vcv_\\.\\d+\\.(\\d+)\\.", "\\1", element)) + 1
+    row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
+    col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
   )
 
 decile_labels <- paste0("Decile ", 3:10)
 
 evo_map <- evo_map |>
   mutate(
-    row_label = factor(decile_labels[row], levels = decile_labels),
-    col_label = factor(decile_labels[col], levels = decile_labels)
+    row_label = factor(decile_labels[row + 1], levels = decile_labels),
+    col_label = factor(decile_labels[col + 1], levels = decile_labels)
   )
 
 evo_map$is_diag <- evo_map$col_label == evo_map$row_label
@@ -202,22 +203,20 @@ p1
 
 #### LC without hominins ####
 #evo VCV MAP
-evo_vcv_cols <- paste0("evo_vcv_.", rep(0:7, each = 8), ".", rep(0:7, times = 8), ".")
-
 evo_map <- dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |>
   summarise(across(everything(), map_estimate)) |>
   pivot_longer(everything(), names_to = "element", values_to = "map") |>
   mutate(
-    row = as.integer(sub("evo_vcv_\\.(\\d+)\\.(\\d+)\\.", "\\1", element)) + 1,
-    col = as.integer(sub("evo_vcv_\\.\\d+\\.(\\d+)\\.", "\\1", element)) + 1
+    row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
+    col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
   )
 
 decile_labels <- paste0("Decile ", 3:10)
 
 evo_map <- evo_map |>
   mutate(
-    row_label = factor(decile_labels[row], levels = decile_labels),
-    col_label = factor(decile_labels[col], levels = decile_labels)
+    row_label = factor(decile_labels[row + 1], levels = decile_labels),
+    col_label = factor(decile_labels[col + 1], levels = decile_labels)
   )
 
 evo_map$is_diag <- evo_map$col_label == evo_map$row_label
@@ -319,16 +318,25 @@ p3
 ggsave(paste0(output, "treeMAP.svg"), plot = p3, width = 14, height = 8)
 
 # Posterior predictive differences between modern humans and neand --------
-hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/hsPostPred.rds")
-ne_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/neanderthalPostPred.rds")
-pp_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/panpaniscusPostPred.rds")
-pt_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pantroglodytesPostPred.rds")
-gb_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorrillaberingeiPostPred.rds")
-gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/gorillagorillaPostPred.rds")
-pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongoabeliiPostPred.rds")
-ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/PosteriorPredictiveDraws/pongopygmaeusPostPred.rds")
+hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/hsPostPred.rds")
+ne_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/neanderthalPostPred.rds")
+pp_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/panpaniscusPostPred.rds")
+pt_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pantroglodytesPostPred.rds")
+gb_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorrillaberingeiPostPred.rds")
+gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorillagorillaPostPred.rds")
+pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongoabeliiPostPred.rds")
+ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongopygmaeusPostPred.rds")
 
 trait_labels <- paste0("Decile ", 3:10)
+
+pred1 = hs_preds
+pred2 = ne_preds
+specName1 = "Homo_sapiens"
+specName2 ="Neanderthal"
+plotName1 = "Modern humans"
+plotName2 = "Neanderthals"
+color1 = species_colors["Modern humans"]
+color2 = species_colors["Neanderthals"]
 
 plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
   recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
@@ -345,20 +353,23 @@ plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotNam
   
   overlap_data <- plot_data |>
     group_by(trait) |>
-    summarise(
-      overlap = overlapping::overlap(
+    group_modify(~{
+      df <- .x
+      
+      ov <- overlapping::overlap(
         list(
-          value[species == plotName1],
-          value[species == plotName2]
+          df$value[df$species == plotName1],
+          df$value[df$species == plotName2]
         )
-      )$OV,
-      .groups = "drop"
-    ) |>
+      )$OV
+      
+      tibble(overlap = ov)
+    }) |>
+    ungroup() |>
     mutate(
       trait = factor(trait, levels = trait_labels),
       label = paste0(round(overlap * 100, 1), "%")
-    )
-  
+    )  
   pt <- ggplot(plot_data, aes(x = trait, y = value, fill = species)) +
     geom_half_violin(data = filter(plot_data, species == plotName1),
                      aes(fill = species),
@@ -429,12 +440,34 @@ pongo <- plotRidgePlot(ppyg_preds, pa_preds,
                      species_colors["Pongo abelii"], species_colors["Pongo pygmaeus"])
 pongo
 
-combined <- homo + pan + gorilla + pongo
+combined <- (homo + pan) / (gorilla + pongo)
 combined
 ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
 
+# Table 1: Posterior predictive means and variances -----------------------
 
+writeTableOne <- function(pred){
+  string <- ""
+  for(i in 1:8){
+    mean <- mean(pred[,i])
+    var <- var(pred[,i])
+    string <- paste0(string, round(mean, 2), " (" , round(var, 2), ")")
+    if(i != 8){
+     string <- paste0(string, " & ") 
+    }
+  }
+  print(string)
+}
+
+writeTableOne(hs_preds)
+writeTableOne(ne_preds)
+writeTableOne(pp_preds)
+writeTableOne(pt_preds)
+writeTableOne(gb_preds)
+writeTableOne(gg_preds)
+writeTableOne(pa_preds)
+writeTableOne(ppyg_preds)
 
 
 # LC intraspecific means vs. MLE ------------------------------------------
@@ -463,7 +496,7 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
     ))
   }
   
-  if (!species %in% lc_mle$genus) {
+  if (all(!(species %in% lc_mle$genus))) {
     stop(sprintf(
       "Species '%s' not found in lc_mle$genus. Available species: %s",
       species, paste(unique(lc_mle$genus), collapse = ", ")
@@ -475,13 +508,13 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
     pivot_longer(cols     = everything(),
                  names_to  = "mean_col",
                  values_to = "value") %>%
-    mutate(decile = factor(decile_map[mean_col], levels = decile_levels))
+    mutate(decile = factor(unname(decile_map[mean_col]), levels = decile_levels))  # fixed
   
-  sp_quantiles <- sp_long %>%
-    group_by(decile) %>%
-    summarise(q_lo = quantile(value, 0.025),
-              q_hi = quantile(value, 0.975),
-              .groups = "drop")
+  sp_quantiles <- data.frame(
+    decile = factor(decile_levels, levels = decile_levels),
+    q_lo   = tapply(sp_long$value, sp_long$decile, quantile, 0.025),
+    q_hi   = tapply(sp_long$value, sp_long$decile, quantile, 0.975)
+  )
   
   sp_long <- sp_long %>%
     left_join(sp_quantiles, by = "decile") %>%
@@ -550,10 +583,11 @@ for(i in species){
   p <- plot_species_posteriors(lc_posterior, lc_mle, i)
   print(p)
   ggsave(
-    paste0(output, "/meanPosteriorHists/",i,".svg"), 
+    paste0(output, "/meanPosteriorHists/", i, ".pdf"), 
     plot = p, 
-    width = 10, height = 8
-    )
+    width = 10, height = 8,
+    device = cairo_pdf
+  )
 }
 
 
@@ -850,3 +884,37 @@ ggsave(
   width = 6, height = 6,
   device = cairo_pdf
 )
+
+
+# Phylopars AIRM histograms -----------------------------------------------
+
+lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
+
+all_AIRM_dat <- list()
+
+for(i in 1:length(lc_vcv_list)){
+  name <- names(lc_vcv_list)[i]
+  AIRM_dat <- readRDS(paste0("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
+                             name,
+                             "_AIRM_distances.rds"))
+  AIRM_dat$group <- name
+  all_AIRM_dat[[i]] <- AIRM_dat
+}
+
+combined_dat <- do.call(rbind, all_AIRM_dat)
+
+ggplot(combined_dat, aes(x = value, fill = group)) +
+  geom_histogram(bins = 500, color = NA, alpha = 0.5,
+                 position = "identity") + 
+  scale_x_continuous(limits = c(0, 50)) +
+  labs(
+    x     = "AIRM distance",
+    y     = "Count",
+    fill  = "Group"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position  = "right"
+  )
+

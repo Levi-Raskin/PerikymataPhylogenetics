@@ -14,13 +14,6 @@ ui2_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPh
 ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
 
 # Functions ---------------------------------------------------------------
-convertLatexTable <- function(vec){
-  string <- ""
-  for(i in vec){
-    string <- paste0(string, round(i, 2), " & ")
-  }
-  print(string)
-}
 calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPrior){
   V1 <- solve(scalePost)
   V2 <- solve(scalePrior)
@@ -64,7 +57,51 @@ summary(ess)
 ui2_gr <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/ui2_dec3_10_ess_gelman_rubin.RDS")
 
 # KL divergence -------------------------------------------------
+convertLatexTable <- function(kl, postFits){
+  
+  order_vec <- c(
+    "evolutionary",
+    "Homo_sapiens",
+    "Neanderthal",
+    "Pan_paniscus",
+    "Pan_troglodytes",
+    "Gorilla_beringei",
+    "Gorilla_gorilla",
+    "Pongo_abelii",
+    "Pongo_pygmaeus"
+  )
+  
+  idx <- match(order_vec, names(kl))
+  
+  string <- ""
+  
+  for(i in seq_along(order_vec)){
+    
+    k <- idx[i]
+
+    kl_val <- if(!is.na(k)) round(kl[k], 2) else "-"
+    
+    pf_val <- "-"
+    if(!is.na(k) && !is.null(postFits[[k]]) && !is.null(postFits[[k]]$nu)){
+      pf_val <- round(postFits[[k]]$nu, 2)
+    }
+    
+    string <- paste0(
+      string,
+      kl_val, " (", pf_val, ")"
+    )
+    
+    if(i != length(order_vec)){
+      string <- paste0(string, " & ")
+    }
+  }
+  
+  print(order_vec)
+  print(string)
+}
 p <- 8
+
+
 #### Lower Canine ####
 lc_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_posterior_fits.RDS")
 
@@ -84,11 +121,7 @@ for(i in 1:length(lc_posteriorFits)){
 }
 names(res) <- names(lc_posteriorFits)
 print(res)
-convertLatexTable(res)
-
-for(i in 1:length(lc_posteriorFits)){
-  print(paste(names(lc_posteriorFits)[i],round( lc_posteriorFits[[i]]$nu , 2)))
-}
+convertLatexTable(res, lc_posteriorFits)
 
 #### Lower Canine no hominins ####
 lc_no_hominin_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin_posterior_fits.RDS") 
@@ -107,11 +140,7 @@ for(i in 1:length(lc_no_hominin_posteriorFits)){
 }
 names(res) <- names(lc_no_hominin_posteriorFits)
 print(res)
-convertLatexTable(res)
-
-for(i in 1:length(lc_no_hominin_posteriorFits)){
-  print(paste(names(lc_no_hominin_posteriorFits)[i],round( lc_no_hominin_posteriorFits[[i]]$nu , 2)))
-}
+convertLatexTable(res, lc_no_hominin_posteriorFits)
 
 #### Upper second incisor ####
 ui2_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS")
@@ -132,12 +161,7 @@ for(i in 1:length(ui2_posteriorFits)){
 }
 names(res) <- names(ui2_posteriorFits)
 print(res)
-convertLatexTable(res)
-
-for(i in 1:length(ui2_posteriorFits)){
-  print(paste(names(ui2_posteriorFits)[i],round( ui2_posteriorFits[[i]]$nu , 2)))
-}
-
+convertLatexTable(res, ui2_posteriorFits)
 
 #### Lower canine symmetrized KL divergence ####
 lc_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_posterior_fits.RDS")
@@ -189,9 +213,9 @@ for(i in 1:8){
 }
 
 # Modularity test ---------------------------------------------------------
-lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_VCVs_extracted.rds")
+lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
 lc_evolutionary <- lc_vcv_list$evolutionary
-lc_vcv_list_no_hominins <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/lc/lc_no_hominin_VCVs_extracted.rds")
+lc_vcv_list_no_hominins <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin_vcv_extracted.RDS")
 lc_evolutionary_no_hominin <- lc_vcv_list_no_hominins$evolutionary
 
 #### AVG Ratio #### 
@@ -207,8 +231,14 @@ testAVG <- function(vcvList, permMat){
   
   avg_rat_results <- unlist(avg_rat_results)
   
-  cat("Posterior mean AVG ratio:", mean(avg_rat_results, na.rm = TRUE), "\n")
-  cat("95% credible interval:", quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE), "\n")
+  meanAvg <-   mean(avg_rat_results, trim = 0.005, na.rm = TRUE)
+  quant <-quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE)
+  
+  print(paste0(round(meanAvg, 2), 
+              " (", 
+               round(quant[1],2), 
+               ", ", 
+               round(quant[2],2), ")" ))
 }
 
 hypoMat1 <- matrix(0, 8, 8)
@@ -216,8 +246,8 @@ hypoMat1[1:4, 1:4] <- 1
 hypoMat1[5:8, 5:8] <- 1
 
 hypoMat2 <- matrix(0, 8, 8)
-hypoMat2[1:4, 1:4] <- 1
-hypoMat2[5:8, 5:8] <- 1
+hypoMat2[1:3, 1:3] <- 1
+hypoMat2[4:8, 4:8] <- 1
 
 hypoMat3 <- matrix(0, 8, 8)
 hypoMat3[1:3, 1:3] <- 1
@@ -293,3 +323,61 @@ cn[1] <- "species"
 colnames(dat) <- cn
 
 res <- phylopars(dat, tree)
+saveRDS(res, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/lc_dec3_10_phylopars.rds")
+phyloparsRes <-readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/lc_dec3_10_phylopars.rds")
+
+phyloparsEvoVCV <- phyloparsRes$pars$phylocov
+phyloparsIntraVCV <- phyloparsRes$pars$phenocov
+
+#calculate Affine-Invariant Riemannian Metric (AIRM) distnace
+library(RiemBase)
+
+nearest_spd <- function(mat, tol = 1e-12) {
+  mat <- (mat + t(mat)) / 2
+  eig <- eigen(mat, symmetric = TRUE)
+  eig$values[eig$values <= 0] <- tol
+  eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+}
+
+numericalStability <- function(mat1, mat2) {
+  #all matrices are known to be SPD, but ill conditioned; if error, will project to nearest SPD
+  tryCatch(
+    riemfactory(list(mat1, mat2), name = "spd"),
+    error = function(e) {
+      riemfactory(list(nearest_spd(mat1), nearest_spd(mat2)), name = "spd")
+    }
+  )
+}
+
+calcAIRMEvoVCV <- function(mat){
+  data_list <- numericalStability(mat, phyloparsEvoVCV)
+  return(rbase.pdist(data_list)[1,2])
+}
+calcAIRMIntraVCV <- function(mat){
+  data_list <- numericalStability(mat, phyloparsIntraVCV)
+  return(rbase.pdist(data_list)[1,2])
+}
+
+lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
+
+for(i in 1:length(lc_vcv_list)){
+  mat <- lc_vcv_list[[i]]
+  name <- names(lc_vcv_list)[i]
+  if(name=="evolutionary"){
+    res <- mclapply(
+      mat,
+      calcAIRMEvoVCV,
+      mc.cores = detectCores()-1
+    )
+  }else{
+    res <- mclapply(
+      mat,
+      calcAIRMIntraVCV,
+      mc.cores = detectCores()-1
+    )
+  }
+  saveRDS(res,
+          paste0("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
+                 name,
+                 "_AIRM_distances.rds"))
+}
