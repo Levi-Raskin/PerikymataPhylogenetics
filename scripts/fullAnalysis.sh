@@ -8,7 +8,7 @@ nc=100000000
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10.tsv" \
+    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -21,7 +21,7 @@ for i in 1 2 3 4; do
     BURL/build/burl \
         -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv" \
         -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/gelmanRubin/out${i}.tsv" \
+        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/gelmanRubin/out${i}.tsv" \
         -n "$nc" \
         -p 1000 \
         -s 1000 \
@@ -34,7 +34,7 @@ done
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10_no_hominin.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin.tsv" \
+    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_no_hominin.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -46,7 +46,7 @@ BURL/build/burl \
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10_species_means.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_species_means.tsv" \
+    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_species_means.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -58,7 +58,7 @@ BURL/build/burl \
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/ui2_dec3_10_no_pongo.tsv" \
+    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_no_pongo.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -71,7 +71,7 @@ for i in 1 2 3 4; do
     BURL/build/burl \
         -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv" \
         -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/gelmanRubin/out${i}.tsv" \
+        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/gelmanRubin/out${i}.tsv" \
         -n "$nc" \
         -p 1000 \
         -s 1000 \

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RESULTS=/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs
+RESULTS=/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2
 
 # calculate Rank-Normalized R hat
 Rscript cmd_line_rscripts/mcmc_convergence.R \
