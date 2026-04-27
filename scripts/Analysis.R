@@ -339,22 +339,12 @@ nearest_spd <- function(mat, tol = 1e-12) {
   eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
 }
 
-numericalStability <- function(mat1, mat2) {
-  #all matrices are known to be SPD, but ill conditioned; if error, will project to nearest SPD
-  tryCatch(
-    riemfactory(list(mat1, mat2), name = "spd"),
-    error = function(e) {
-      riemfactory(list(nearest_spd(mat1), nearest_spd(mat2)), name = "spd")
-    }
-  )
-}
-
 calcAIRMEvoVCV <- function(mat){
-  data_list <- numericalStability(mat, phyloparsEvoVCV)
+  data_list <- riemfactory(list(mat, phyloparsEvoVCV), name = "spd")
   return(rbase.pdist(data_list)[1,2])
 }
 calcAIRMIntraVCV <- function(mat){
-  data_list <- numericalStability(mat, phyloparsIntraVCV)
+  data_list <- riemfactory(list(mat, phyloparsIntraVCV), name = "spd")
   return(rbase.pdist(data_list)[1,2])
 }
 

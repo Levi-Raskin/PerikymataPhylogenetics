@@ -891,30 +891,32 @@ ggsave(
 lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
 
 all_AIRM_dat <- list()
-
-for(i in 1:length(lc_vcv_list)){
+for (i in 1:length(lc_vcv_list)) {
   name <- names(lc_vcv_list)[i]
-  AIRM_dat <- readRDS(paste0("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
-                             name,
-                             "_AIRM_distances.rds"))
-  AIRM_dat$group <- name
-  all_AIRM_dat[[i]] <- AIRM_dat
+  AIRM_dat <- readRDS(paste0(
+    "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
+    name,
+    "_AIRM_distances.rds"
+  ))
+  all_AIRM_dat[[i]] <- data.frame(
+    value = as.numeric(AIRM_dat),
+    group = name
+  )
 }
 
 combined_dat <- do.call(rbind, all_AIRM_dat)
 
 ggplot(combined_dat, aes(x = value, fill = group)) +
   geom_histogram(bins = 500, color = NA, alpha = 0.5,
-                 position = "identity") + 
+                 position = "identity") +
   scale_x_continuous(limits = c(0, 50)) +
   labs(
-    x     = "AIRM distance",
-    y     = "Count",
-    fill  = "Group"
+    x    = "AIRM distance",
+    y    = "Count",
+    fill = "Group"
   ) +
   theme_minimal(base_family = "Georgia") +
   theme(
     panel.grid.minor = element_blank(),
     legend.position  = "right"
   )
-
