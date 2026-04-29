@@ -54,8 +54,9 @@ void SimulateData::simulateData(void){
     //---simulate tree---//
     if(tree != nullptr)
         delete tree;
-        
     tree = new Tree(tipNames, 10.0);
+//    tree = new Tree("(((Gorilla_beringei:2.558516,Gorilla_gorilla:2.558516):6.093717,((Homo_sapiens:0.568721,Neanderthal:0.538721):5.607159,(Pan_paniscus:2.333553,Pan_troglodytes:2.333553):3.842326):2.476353):6.480222,(Pongo_abelii:3.825854,Pongo_pygmaeus:3.825854):11.306601);");
+//    ntips = tree->getNumTaxa();
         
     //---simulate evo VCV---//
     sampledEvoVCV = psi;

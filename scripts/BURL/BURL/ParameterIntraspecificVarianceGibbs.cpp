@@ -56,8 +56,7 @@ double ParameterIntraspecificVarianceGibbs::update(void){
         datScatter += ydiff * ydiff.transpose();
     }
     
-    Eigen::MatrixXd prior_scatter = mu_current * mu_current.transpose();
-    Eigen::MatrixXd psiN = psi + datScatter + prior_scatter;
+    Eigen::MatrixXd psiN = psi + datScatter;
     Eigen::MatrixXd psiNInvLower = psiN.inverse().llt().matrixL();
     
 //    value[0] = Probability::InverseWishart::rv(&rng, &psiN, dofN);

@@ -61,10 +61,6 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-ntips 8"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "-ntraits 8"
             isEnabled = "YES">
          </CommandLineArgument>
