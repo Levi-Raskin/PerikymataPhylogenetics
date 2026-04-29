@@ -14,15 +14,22 @@ library(RColorBrewer)
 library(tidyr)
 library(tidyverse)
 
+library(conflicted)
+conflicts_prefer(dplyr::filter)
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::summarise)
+conflicts_prefer(dplyr::mutate)
+
+input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/"
 output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
 
-lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10.tsv"))
+lc_posterior <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10.tsv")))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
-lc_posterior_no_hominin <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin.tsv"))
+lc_posterior_no_hominin <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_no_hominin.tsv")))
 lc_posterior_no_hominin  <- lc_posterior_no_hominin[round(0.1 * nrow(lc_posterior_no_hominin)) : nrow(lc_posterior_no_hominin), ] #apply burnin
 
-lc_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_species_means.tsv"))
+lc_posterior_species_means <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_species_means.tsv")))
 lc_posterior_species_means  <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)) : nrow(lc_posterior_species_means), ] #apply burnin
 
 # modern human line drawing ---------------------------------------------------
@@ -81,13 +88,18 @@ map_estimate <- function(x) {
 evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
 
 shared_max <- max(
-  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist()
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
 )
+
 shared_min <- min(
-  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist()
-)
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
+  )
 
 evo_map <- dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |>
   summarise(across(everything(), map_estimate)) |>
@@ -318,25 +330,16 @@ p3
 ggsave(paste0(output, "treeMAP.svg"), plot = p3, width = 14, height = 8)
 
 # Posterior predictive differences between modern humans and neand --------
-hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/hsPostPred.rds")
-ne_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/neanderthalPostPred.rds")
-pp_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/panpaniscusPostPred.rds")
-pt_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pantroglodytesPostPred.rds")
-gb_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorrillaberingeiPostPred.rds")
-gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorillagorillaPostPred.rds")
-pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongoabeliiPostPred.rds")
-ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongopygmaeusPostPred.rds")
+hs_preds <- read_rds(paste0(input, "/lc/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
+gb_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
+gg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
+pa_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
+ppyg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
 
 trait_labels <- paste0("Decile ", 3:10)
-
-pred1 = hs_preds
-pred2 = ne_preds
-specName1 = "Homo_sapiens"
-specName2 ="Neanderthal"
-plotName1 = "Modern humans"
-plotName2 = "Neanderthals"
-color1 = species_colors["Modern humans"]
-color2 = species_colors["Neanderthals"]
 
 plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
   recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
@@ -386,7 +389,7 @@ plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotNam
               inherit.aes = FALSE,
               vjust = 1.5, size = 3, color = "grey30") +
     scale_fill_manual(values = color_vec) +
-    scale_y_continuous(limits = c(0, 50)) +
+    scale_y_continuous(limits = c(0, 40)) +
     labs(
       x    = "Decile",
       y    = "Perikymata count per millimeter",
@@ -888,13 +891,13 @@ ggsave(
 
 # Phylopars AIRM histograms -----------------------------------------------
 
-lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
+lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS")
 
 all_AIRM_dat <- list()
 for (i in 1:length(lc_vcv_list)) {
   name <- names(lc_vcv_list)[i]
   AIRM_dat <- readRDS(paste0(
-    "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
+    paste0(input, "lc/phylopars/",
     name,
     "_AIRM_distances.rds"
   ))
