@@ -375,3 +375,114 @@ for(i in 1:length(lc_vcv_list)){
                  name,
                  "_AIRM_distances.rds")))
 }
+
+# Exhaustive search through every modularity hypothesis -------------------
+lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_vcv_extracted.RDS")
+lc_evolutionary <- lc_vcv_list$evolutionary
+lc_vcv_list_no_hominins <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_vcv_extracted.RDS"))
+lc_evolutionary_no_hominin <- lc_vcv_list_no_hominins$evolutionary
+ui2_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS")
+ui2_evolutionary <- ui2_vcv_list$evolutionary
+
+library(evolqg)
+library(parallel)
+
+
+# helper functions --------------------------------------------------------
+make_hypo_mat <- function(clustering, n = 8) {
+  mat <- matrix(0, n, n)
+  for (cluster in clustering) {
+    mat[cluster, cluster] <- 1
+  }
+  mat
+}
+enumerate_sequential_clusterings <- function(n, K) {
+  gaps <- 1:(n - 1)
+  cut_combos <- combn(gaps, K - 1, simplify = FALSE)
+  lapply(cut_combos, function(cuts) {
+    breaks <- c(0, cuts, n)
+    lapply(seq_len(K), function(k) (breaks[k] + 1):breaks[k + 1])
+  })
+}
+clustering_label <- function(clustering) {
+  paste(sapply(clustering, function(g) paste0(min(g), "-", max(g))), collapse = " | ")
+}
+
+
+# run analysis ------------------------------------------------------------
+n_traits <- 8
+all_clusterings <- unlist(
+  lapply(2:7, function(K) enumerate_sequential_clusterings(n_traits, K)),
+  recursive = FALSE
+)
+
+hypo_mats  <- lapply(all_clusterings, make_hypo_mat, n = n_traits)
+hypo_labels <- sapply(all_clusterings, clustering_label)
+hypo_K      <- sapply(all_clusterings, length)
+
+cat(sprintf("Total hypotheses to test: %d\n", length(hypo_mats)))
+
+calcAVG_ratio <- function(vcvList, permMat) {
+  results <- mclapply(vcvList,
+                      function(vcv) {
+                        cor_mat <- cov2cor(vcv)
+                        r <- CalcAVG(permMat, cor_mat)
+                        r[1] / r[2]
+                      },
+                      mc.cores = detectCores() - 1
+  )
+  results <- unlist(results)
+  list(
+    mean  = mean(results, trim = 0.005, na.rm = TRUE),
+    lower = quantile(results, 0.025,   na.rm = TRUE),
+    upper = quantile(results, 0.975,   na.rm = TRUE)
+  )
+}
+
+run_exhaustive_search <- function(vcvList, label = "dataset") {
+  cat(sprintf("\n=== Exhaustive sequential clustering search: %s ===\n", label))
+  
+  results <- vector("list", length(hypo_mats))
+  
+  for (i in seq_along(hypo_mats)) {
+    r <- calcAVG_ratio(vcvList, hypo_mats[[i]])
+    results[[i]] <- data.frame(
+      hypothesis = hypo_labels[i],
+      K          = hypo_K[i],
+      mean_avg   = r$mean,
+      lower_95   = r$lower,
+      upper_95   = r$upper,
+      stringsAsFactors = FALSE
+    )
+    if (i %% 10 == 0) cat(sprintf("  ... tested %d / %d\n", i, length(hypo_mats)))
+  }
+  
+  df <- do.call(rbind, results)
+  df <- df[order(-df$mean_avg), ]
+  rownames(df) <- NULL
+  df
+}
+
+results_hominins    <- run_exhaustive_search(lc_evolutionary,           "with hominins")
+results_no_hominins <- run_exhaustive_search(lc_evolutionary_no_hominin, "no hominins")
+results_ui2 <- run_exhaustive_search(ui2_evolutionary, "ui2")
+
+print_top <- function(df, n = 10, label = "") {
+  cat(sprintf("\nTop %d hypotheses — %s\n", n, label))
+  cat(sprintf("%-25s  %4s  %6s  %13s\n", "clustering", "K", "mean", "95% CI"))
+  cat(strrep("-", 60), "\n")
+  for (i in seq_len(min(n, nrow(df)))) {
+    cat(sprintf("%-25s  %4d  %6.3f  (%5.3f, %5.3f)\n",
+                df$hypothesis[i], df$K[i], df$mean_avg[i],
+                df$lower_95[i], df$upper_95[i]
+    ))
+  }
+}
+
+print_top(results_hominins,    n = 10, label = "with hominins")
+print_top(results_no_hominins, n = 10, label = "no hominins")
+print_top(results_ui2, n = 10, label = "ui2")
+
+write.csv(results_hominins,    "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_hominins.csv",    row.names = FALSE)
+write.csv(results_no_hominins, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_no_hominins.csv", row.names = FALSE)
+write.csv(results_ui2, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_ui2.csv", row.names = FALSE)

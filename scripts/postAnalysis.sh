@@ -37,7 +37,11 @@ Rscript cmd_line_rscripts/posterior_fits.R \
     $RESULTS/ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS \
     $RESULTS/ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS
 
-# posterior predictive draws (just done on lower canine full dataset)
+# posterior predictive draws 
 Rscript cmd_line_rscripts/posterior_pred_draws.R \
     $RESULTS/lc/lc_dec3_10.tsv \
     $RESULTS/lc/posteriorPredictive/
+
+Rscript cmd_line_rscripts/posterior_pred_draws_ui2.R \
+    $RESULTS/ui2/ui2_dec3_10_no_pongo.tsv \
+    $RESULTS/ui2/posteriorPredictive/
