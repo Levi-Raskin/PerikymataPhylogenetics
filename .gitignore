@@ -8,3 +8,6 @@ results/LC_prelim/out0gelmanRubin3.tsv
 *.xcuserstate
 *.xcuserstate
 scripts/BURL/.DS_Store
+scripts/BURL_coverage/.DS_Store
+scripts/.DS_Store
+.DS_Store
