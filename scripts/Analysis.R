@@ -44,6 +44,7 @@ summary(ess)
 
 #GR
 lc_gr <- readRDS(paste0(input, "lc/lc_dec3_10_ess_gelman_rubin.RDS"))
+summary(unlist(lc_gr))
 
 ### ess LC w/o hominin
 mcmcObj <- mcmc(lc_posterior_no_hominin[,2:ncol(lc_posterior_no_hominin)]) #removes n

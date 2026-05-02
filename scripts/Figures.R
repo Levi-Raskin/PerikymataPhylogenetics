@@ -619,6 +619,16 @@ writeTableOne <- function(pred){
   print(string)
 }
 
+#### LC
+hs_preds <- read_rds(paste0(input, "/lc/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
+gb_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
+gg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
+pa_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
+ppyg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
+
 writeTableOne(hs_preds)
 writeTableOne(ne_preds)
 writeTableOne(pp_preds)
@@ -628,6 +638,15 @@ writeTableOne(gg_preds)
 writeTableOne(pa_preds)
 writeTableOne(ppyg_preds)
 
+#### ui2
+hs_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/pantroglodytesPostPred.rds"))
+writeTableOne(hs_preds)
+writeTableOne(ne_preds)
+writeTableOne(pp_preds)
+writeTableOne(pt_preds)
 
 # LC intraspecific means vs. MLE ------------------------------------------
 
@@ -703,7 +722,7 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
       linewidth = 0.8,
       linetype  = "solid"
     ) +
-    scale_x_continuous(limits = c(0,50))+
+    scale_x_continuous(limits = c(0,30))+
     scale_fill_manual(
       values = c("tail" = "red", "middle" = "black"),
       labels = c("tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
