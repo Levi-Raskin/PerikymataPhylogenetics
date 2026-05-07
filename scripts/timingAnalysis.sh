@@ -1,7 +1,7 @@
 #!/bin/bash
 
-ntips=(8 16 32 64 128 256 512)
-ntraits=(10 25 50 100 200)
+ntips=(16 32 64 128 256 512)
+ntraits=(10 25 50 100)
 
 for t in "${ntips[@]}"
 do
