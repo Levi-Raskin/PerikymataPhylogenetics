@@ -167,9 +167,8 @@ names(res) <- names(ui2_posteriorFits)
 print(res)
 convertLatexTable(res, ui2_posteriorFits)
 
-#### Lower canine symmetrized KL divergence ####
+#### symmetrized KL divergence ####
 lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
-
 calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
   p <- 8
   klforward <- calcKLDivergenceInverseWishart(
@@ -194,6 +193,30 @@ calcSymmetrizedKLDivergence(lc_posteriorFits$Homo_sapiens, lc_posteriorFits$Nean
 calcSymmetrizedKLDivergence(lc_posteriorFits$Pan_troglodytes, lc_posteriorFits$Pan_paniscus)
 calcSymmetrizedKLDivergence(lc_posteriorFits$Gorilla_beringei, lc_posteriorFits$Gorilla_gorilla)
 calcSymmetrizedKLDivergence(lc_posteriorFits$Pongo_abelii, lc_posteriorFits$Pongo_pygmaeus)
+
+ui2_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS"))
+calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
+  p <- 8
+  klforward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit1$scale,
+    dofPost = posteriorFit1$nu,
+    scalePrior = posteriorFit2$scale,
+    dofPrior = posteriorFit2$nu
+  )
+  klbackward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit2$scale,
+    dofPost = posteriorFit2$nu,
+    scalePrior = posteriorFit1$scale,
+    dofPrior = posteriorFit1$nu
+  )
+  
+  return(
+    round(klforward + klbackward, 2)
+  )
+}
+
+calcSymmetrizedKLDivergence(ui2_posteriorFits$Homo_sapiens, ui2_posteriorFits$Neanderthal)
+calcSymmetrizedKLDivergence(ui2_posteriorFits$Pan_troglodytes, ui2_posteriorFits$Pan_paniscus)
 
 # Analyses on the posterior predictive distributions ----------------------------------------------
 
