@@ -1284,8 +1284,8 @@ true_missing_val <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogen
 
 #### simulated missing vla trace plot ####
 missing_trace <- data.frame(
-  idx = sim_post$n,
-  post = sim_post$missing_Pan_paniscus_.7.5.)
+  idx = lc_posterior$n,
+  post = lc_posterior$`evo_vcv_(0,0)`)
 
 burnin_cutoff <- 0.1 * max(missing_trace$idx)
 
@@ -1308,13 +1308,7 @@ p1 <- ggplot(data = missing_trace) +
           TRUE                 ~ "middle"
         )),
     alpha = 0.1
-  ) +
-  geom_hline(
-    yintercept = true_missing_val,
-    color      = "blue",
-    linewidth  = 0.8,
-    linetype   = "solid"
-  ) +
+  )+
   scale_color_manual(
     values = c("burnin" = "grey60", "tail" = "red", "middle" = "black"),
     labels = c("burnin" = "Burn-in", "tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
@@ -1322,7 +1316,7 @@ p1 <- ggplot(data = missing_trace) +
   ) +
   labs(
     x = "Cycle",
-    y = "Imputed perikymata per millimeter"
+    y = "C Decile 3 evolutinary rate"
   ) +
   theme_minimal(base_family = "Georgia") +
   theme(
@@ -1332,9 +1326,9 @@ p1 <- ggplot(data = missing_trace) +
 p1 
 
 ggsave(
-  paste0(output, "simulatedMissingDataTrace.pdf"), 
+  paste0(output, "LCEvoRateDec3Trace.pdf"), 
   plot = p1, 
-  width = 10, height = 8,
+  width = 8, height = 6,
   device = cairo_pdf
 )
 
