@@ -5,13 +5,15 @@ library(MCMCpack)
 library(overlapping)
 library(parallel)
 
+input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/"
+
 lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10.tsv"))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
-lc_posterior_no_hominin <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin.tsv"))
+lc_posterior_no_hominin <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_no_hominin.tsv")))
 lc_posterior_no_hominin  <- lc_posterior_no_hominin[round(0.1 * nrow(lc_posterior_no_hominin)) : nrow(lc_posterior_no_hominin), ] #apply burnin
 
-ui2_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/ui2_dec3_10_no_pongo.tsv"))
+ui2_posterior <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_no_pongo.tsv")))
 ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
 
 # Functions ---------------------------------------------------------------
@@ -41,7 +43,8 @@ print(ess)
 summary(ess)
 
 #GR
-lc_gr <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_ess_gelman_rubin.RDS")
+lc_gr <- readRDS(paste0(input, "lc/lc_dec3_10_ess_gelman_rubin.RDS"))
+summary(unlist(lc_gr))
 
 ### ess LC w/o hominin
 mcmcObj <- mcmc(lc_posterior_no_hominin[,2:ncol(lc_posterior_no_hominin)]) #removes n
@@ -55,7 +58,7 @@ ess <- effectiveSize(mcmcObj)
 print(ess)
 summary(ess)
 
-ui2_gr <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/ui2_dec3_10_ess_gelman_rubin.RDS")
+ui2_gr <- readRDS(paste0(input, "ui2/ui2_dec3_10_ess_gelman_rubin.RDS"))
 
 # KL divergence -------------------------------------------------
 convertLatexTable <- function(kl, postFits){
@@ -104,7 +107,7 @@ p <- 8
 
 
 #### Lower Canine ####
-lc_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_posterior_fits.RDS")
+lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
 
 ### calc KL divergence
 priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
@@ -125,7 +128,7 @@ print(res)
 convertLatexTable(res, lc_posteriorFits)
 
 #### Lower Canine no hominins ####
-lc_no_hominin_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin_posterior_fits.RDS") 
+lc_no_hominin_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_posterior_fits.RDS"))
 priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
 priorScale <- matrix(1e-6, p, p)
 diag(priorScale) <- 1.0
@@ -144,7 +147,7 @@ print(res)
 convertLatexTable(res, lc_no_hominin_posteriorFits)
 
 #### Upper second incisor ####
-ui2_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS")
+ui2_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS"))
   
 ### calc KL divergence
 priorDOF<- 10 # numtraits + 2; E[IW] = scale / (dof - p -1 )
@@ -164,9 +167,8 @@ names(res) <- names(ui2_posteriorFits)
 print(res)
 convertLatexTable(res, ui2_posteriorFits)
 
-#### Lower canine symmetrized KL divergence ####
-lc_posteriorFits <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_posterior_fits.RDS")
-
+#### symmetrized KL divergence ####
+lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
 calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
   p <- 8
   klforward <- calcKLDivergenceInverseWishart(
@@ -192,16 +194,40 @@ calcSymmetrizedKLDivergence(lc_posteriorFits$Pan_troglodytes, lc_posteriorFits$P
 calcSymmetrizedKLDivergence(lc_posteriorFits$Gorilla_beringei, lc_posteriorFits$Gorilla_gorilla)
 calcSymmetrizedKLDivergence(lc_posteriorFits$Pongo_abelii, lc_posteriorFits$Pongo_pygmaeus)
 
+ui2_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS"))
+calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
+  p <- 8
+  klforward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit1$scale,
+    dofPost = posteriorFit1$nu,
+    scalePrior = posteriorFit2$scale,
+    dofPrior = posteriorFit2$nu
+  )
+  klbackward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit2$scale,
+    dofPost = posteriorFit2$nu,
+    scalePrior = posteriorFit1$scale,
+    dofPrior = posteriorFit1$nu
+  )
+  
+  return(
+    round(klforward + klbackward, 2)
+  )
+}
+
+calcSymmetrizedKLDivergence(ui2_posteriorFits$Homo_sapiens, ui2_posteriorFits$Neanderthal)
+calcSymmetrizedKLDivergence(ui2_posteriorFits$Pan_troglodytes, ui2_posteriorFits$Pan_paniscus)
+
 # Analyses on the posterior predictive distributions ----------------------------------------------
 
-hs_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/hsPostPred.rds")
-ne_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/neanderthalPostPred.rds")
-pp_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/panpaniscusPostPred.rds")
-pt_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pantroglodytesPostPred.rds")
-gb_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorrillaberingeiPostPred.rds")
-gg_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorillagorillaPostPred.rds")
-pa_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongoabeliiPostPred.rds")
-ppyg_preds <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongopygmaeusPostPred.rds")
+hs_preds <- readRDS(paste0(input, "lc/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- readRDS(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- readRDS(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- readRDS(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
+gb_preds <- readRDS(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
+gg_preds <- readRDS(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
+pa_preds <- readRDS(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
+ppyg_preds <- readRDS(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
 
 ### variance in the posterior predictive
 for(i in 1:8){
@@ -216,7 +242,7 @@ for(i in 1:8){
 # Modularity test ---------------------------------------------------------
 lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_vcv_extracted.RDS")
 lc_evolutionary <- lc_vcv_list$evolutionary
-lc_vcv_list_no_hominins <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin_vcv_extracted.RDS")
+lc_vcv_list_no_hominins <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_vcv_extracted.RDS"))
 lc_evolutionary_no_hominin <- lc_vcv_list_no_hominins$evolutionary
 
 #### AVG Ratio #### 
@@ -323,9 +349,10 @@ cn <- colnames(dat)
 cn[1] <- "species"
 colnames(dat) <- cn
 
+tree <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
 res <- phylopars(dat, tree)
-saveRDS(res, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/lc_dec3_10_phylopars.rds")
-phyloparsRes <-readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/lc_dec3_10_phylopars.rds")
+saveRDS(res, paste0(input, "lc/phylopars/lc_dec3_10_phylopars.rds"))
+phyloparsRes <-readRDS(paste0(input, "lc/phylopars/lc_dec3_10_phylopars.rds"))
 
 phyloparsEvoVCV <- phyloparsRes$pars$phylocov
 phyloparsIntraVCV <- phyloparsRes$pars$phenocov
@@ -349,7 +376,7 @@ calcAIRMIntraVCV <- function(mat){
   return(rbase.pdist(data_list)[1,2])
 }
 
-lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
+lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
 
 for(i in 1:length(lc_vcv_list)){
   mat <- lc_vcv_list[[i]]
@@ -368,7 +395,118 @@ for(i in 1:length(lc_vcv_list)){
     )
   }
   saveRDS(res,
-          paste0("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
+          paste0(paste0(input, "lc/phylopars/",
                  name,
-                 "_AIRM_distances.rds"))
+                 "_AIRM_distances.rds")))
 }
+
+# Exhaustive search through every modularity hypothesis -------------------
+lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_vcv_extracted.RDS")
+lc_evolutionary <- lc_vcv_list$evolutionary
+lc_vcv_list_no_hominins <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_vcv_extracted.RDS"))
+lc_evolutionary_no_hominin <- lc_vcv_list_no_hominins$evolutionary
+ui2_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS")
+ui2_evolutionary <- ui2_vcv_list$evolutionary
+
+library(evolqg)
+library(parallel)
+
+
+# helper functions --------------------------------------------------------
+make_hypo_mat <- function(clustering, n = 8) {
+  mat <- matrix(0, n, n)
+  for (cluster in clustering) {
+    mat[cluster, cluster] <- 1
+  }
+  mat
+}
+enumerate_sequential_clusterings <- function(n, K) {
+  gaps <- 1:(n - 1)
+  cut_combos <- combn(gaps, K - 1, simplify = FALSE)
+  lapply(cut_combos, function(cuts) {
+    breaks <- c(0, cuts, n)
+    lapply(seq_len(K), function(k) (breaks[k] + 1):breaks[k + 1])
+  })
+}
+clustering_label <- function(clustering) {
+  paste(sapply(clustering, function(g) paste0(min(g), "-", max(g))), collapse = " | ")
+}
+
+
+# run analysis ------------------------------------------------------------
+n_traits <- 8
+all_clusterings <- unlist(
+  lapply(2:7, function(K) enumerate_sequential_clusterings(n_traits, K)),
+  recursive = FALSE
+)
+
+hypo_mats  <- lapply(all_clusterings, make_hypo_mat, n = n_traits)
+hypo_labels <- sapply(all_clusterings, clustering_label)
+hypo_K      <- sapply(all_clusterings, length)
+
+cat(sprintf("Total hypotheses to test: %d\n", length(hypo_mats)))
+
+calcAVG_ratio <- function(vcvList, permMat) {
+  results <- mclapply(vcvList,
+                      function(vcv) {
+                        cor_mat <- cov2cor(vcv)
+                        r <- CalcAVG(permMat, cor_mat)
+                        r[1] / r[2]
+                      },
+                      mc.cores = detectCores() - 1
+  )
+  results <- unlist(results)
+  list(
+    mean  = mean(results, trim = 0.005, na.rm = TRUE),
+    lower = quantile(results, 0.025,   na.rm = TRUE),
+    upper = quantile(results, 0.975,   na.rm = TRUE)
+  )
+}
+
+run_exhaustive_search <- function(vcvList, label = "dataset") {
+  cat(sprintf("\n=== Exhaustive sequential clustering search: %s ===\n", label))
+  
+  results <- vector("list", length(hypo_mats))
+  
+  for (i in seq_along(hypo_mats)) {
+    r <- calcAVG_ratio(vcvList, hypo_mats[[i]])
+    results[[i]] <- data.frame(
+      hypothesis = hypo_labels[i],
+      K          = hypo_K[i],
+      mean_avg   = r$mean,
+      lower_95   = r$lower,
+      upper_95   = r$upper,
+      stringsAsFactors = FALSE
+    )
+    if (i %% 10 == 0) cat(sprintf("  ... tested %d / %d\n", i, length(hypo_mats)))
+  }
+  
+  df <- do.call(rbind, results)
+  df <- df[order(-df$mean_avg), ]
+  rownames(df) <- NULL
+  df
+}
+
+results_hominins    <- run_exhaustive_search(lc_evolutionary,           "with hominins")
+results_no_hominins <- run_exhaustive_search(lc_evolutionary_no_hominin, "no hominins")
+results_ui2 <- run_exhaustive_search(ui2_evolutionary, "ui2")
+
+print_top <- function(df, n = 10, label = "") {
+  cat(sprintf("\nTop %d hypotheses — %s\n", n, label))
+  cat(sprintf("%-25s  %4s  %6s  %13s\n", "clustering", "K", "mean", "95% CI"))
+  cat(strrep("-", 60), "\n")
+  for (i in seq_len(min(n, nrow(df)))) {
+    cat(sprintf("%-25s  %4d  %6.3f  (%5.3f, %5.3f)\n",
+                df$hypothesis[i], df$K[i], df$mean_avg[i],
+                df$lower_95[i], df$upper_95[i]
+    ))
+  }
+}
+
+print_top(results_hominins,    n = 10, label = "with hominins")
+print_top(results_no_hominins, n = 10, label = "no hominins")
+print_top(results_ui2, n = 10, label = "ui2")
+
+write.csv(results_hominins,    "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_hominins.csv",    row.names = FALSE)
+write.csv(results_no_hominins, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_no_hominins.csv", row.names = FALSE)
+write.csv(results_ui2, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_ui2.csv", row.names = FALSE)

@@ -2,6 +2,7 @@ library(ape)
 library(bayestestR)
 library(data.table)
 library(dplyr)
+library(latex2exp)
 library(MASS)
 library(ggridges)
 library(ggplot2)
@@ -14,16 +15,26 @@ library(RColorBrewer)
 library(tidyr)
 library(tidyverse)
 
+library(conflicted)
+conflicts_prefer(dplyr::filter)
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::summarise)
+conflicts_prefer(dplyr::mutate)
+
+input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/"
 output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
 
-lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10.tsv"))
+lc_posterior <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10.tsv")))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
-lc_posterior_no_hominin <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_no_hominin.tsv"))
+lc_posterior_no_hominin <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_no_hominin.tsv")))
 lc_posterior_no_hominin  <- lc_posterior_no_hominin[round(0.1 * nrow(lc_posterior_no_hominin)) : nrow(lc_posterior_no_hominin), ] #apply burnin
 
-lc_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_species_means.tsv"))
+lc_posterior_species_means <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_species_means.tsv")))
 lc_posterior_species_means  <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)) : nrow(lc_posterior_species_means), ] #apply burnin
+
+ui2_posterior <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_no_pongo.tsv")))
+ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
 
 # modern human line drawing ---------------------------------------------------
 lcDat <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
@@ -81,13 +92,18 @@ map_estimate <- function(x) {
 evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
 
 shared_max <- max(
-  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist()
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
 )
+
 shared_min <- min(
-  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> summarise(across(everything(), map_estimate)) |> unlist()
-)
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
+  )
 
 evo_map <- dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |>
   summarise(across(everything(), map_estimate)) |>
@@ -317,26 +333,266 @@ p3
 
 ggsave(paste0(output, "treeMAP.svg"), plot = p3, width = 14, height = 8)
 
+# UI2 evo VCV ---------------------------------------------------------------
+
+evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
+
+shared_max <- max(
+  dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist())
+
+shared_min <- min(
+  dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
+)
+
+evo_map <- dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |>
+  summarise(across(everything(), map_estimate)) |>
+  pivot_longer(everything(), names_to = "element", values_to = "map") |>
+  mutate(
+    row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
+    col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
+  )
+
+decile_labels <- paste0("Decile ", 3:10)
+
+evo_map <- evo_map |>
+  mutate(
+    row_label = factor(decile_labels[row + 1], levels = decile_labels),
+    col_label = factor(decile_labels[col + 1], levels = decile_labels)
+  )
+
+evo_map$is_diag <- evo_map$col_label == evo_map$row_label
+
+evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  geom_tile() +
+  geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
+  geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+  scale_fill_gradient(
+    low    = "white",
+    high   = "#a31e22",
+    limits = c(shared_min, shared_max)
+  )+
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "MAP"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+evoVCV
+
+
+# Evo VCV combined --------------------------------------------------------
+
+map_estimate <- function(x) {
+  as.numeric(bayestestR::map_estimate(x))
+}
+#evo VCV MAP
+evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
+
+shared_max <- max(
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
+)
+
+shared_min <- min(
+  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
+  dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |> 
+    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
+)
+
+evo_map <- dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |>
+  summarise(across(everything(), map_estimate)) |>
+  pivot_longer(everything(), names_to = "element", values_to = "map") |>
+  mutate(
+    row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
+    col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
+  )
+
+decile_labels <- paste0("Decile ", 3:10)
+
+evo_map <- evo_map |>
+  mutate(
+    row_label = factor(decile_labels[row + 1], levels = decile_labels),
+    col_label = factor(decile_labels[col + 1], levels = decile_labels)
+  )
+
+evo_map$is_diag <- evo_map$col_label == evo_map$row_label
+
+evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  geom_tile() +
+  geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
+  geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+  scale_fill_gradient(
+    low    = "white",
+    high   = "#a31e22",
+    limits = c(shared_min, shared_max)
+  )+
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "MAP"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+evoVCV
+
+#tree
+plottree <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
+plottree$tip.label <- gsub("_", " ", plottree$tip.label)
+plottree$tip.label <- gsub("Homo sapiens", "Modern humans", plottree$tip.label)
+treeplot <- ggtree(plottree) + 
+  geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
+  hexpand(0.55)
+treeplot <- ggtree::rotate(treeplot, 12)
+treeplot <- ggtree::rotate(treeplot, 14)
+treeplot
+
+lcHominins <- treeplot +  evoVCV
+lcHominins
+
+#### LC without hominins ####
+#evo VCV MAP
+evo_map <- dplyr::select(lc_posterior_no_hominin, all_of(evo_vcv_cols)) |>
+  summarise(across(everything(), map_estimate)) |>
+  pivot_longer(everything(), names_to = "element", values_to = "map") |>
+  mutate(
+    row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
+    col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
+  )
+
+decile_labels <- paste0("Decile ", 3:10)
+
+evo_map <- evo_map |>
+  mutate(
+    row_label = factor(decile_labels[row + 1], levels = decile_labels),
+    col_label = factor(decile_labels[col + 1], levels = decile_labels)
+  )
+
+evo_map$is_diag <- evo_map$col_label == evo_map$row_label
+
+evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  geom_tile() +
+  geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
+  geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+  scale_fill_gradient(
+    low    = "white",
+    high   = "#a31e22",
+    limits = c(shared_min, shared_max)
+  )+
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "MAP"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+evoVCV
+
+#tree
+plottree <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
+plottree <- drop.tip(plottree, "Neanderthal")
+plottree <- drop.tip(plottree, "Homo_sapiens")
+plottree$tip.label <- gsub("_", " ", plottree$tip.label)
+treeplot <- ggtree(plottree) + 
+  geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
+  hexpand(0.55)
+treeplot
+
+lcNoHominins <- treeplot + evoVCV
+lcNoHominins
+
+# UI2 evo VCV ---------------------------------------------------------------
+
+evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
+
+evo_map <- dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |>
+  summarise(across(everything(), map_estimate)) |>
+  pivot_longer(everything(), names_to = "element", values_to = "map") |>
+  mutate(
+    row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
+    col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
+  )
+
+decile_labels <- paste0("Decile ", 3:10)
+
+evo_map <- evo_map |>
+  mutate(
+    row_label = factor(decile_labels[row + 1], levels = decile_labels),
+    col_label = factor(decile_labels[col + 1], levels = decile_labels)
+  )
+
+evo_map$is_diag <- evo_map$col_label == evo_map$row_label
+
+evoVCV <- ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  geom_tile() +
+  geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
+  geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+  scale_fill_gradient(
+    low    = "white",
+    high   = "#a31e22",
+    limits = c(shared_min, shared_max)
+  )+
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "MAP"
+  ) +
+  theme_minimal(base_family = "Georgia") +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+evoVCV
+
+plottree <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
+plottree <- keep.tip(plottree, c("Neanderthal", "Homo_sapiens", "Pan_paniscus", "Pan_troglodytes"))
+plottree$tip.label <- gsub("_", " ", plottree$tip.label)
+treeplot <- ggtree(plottree) + 
+  geom_tiplab(aes(fontface = ifelse(label %in% c("Modern humans", "Neanderthal"), 2, 4)), family = "Georgia") +
+  hexpand(0.55)
+treeplot <- ggtree::rotate(treeplot, 5)
+treeplot
+
+ui2 <- treeplot + evoVCV
+ui2
+
+combined <- lcHominins / lcNoHominins / ui2
+combined
+ggsave(paste0(output, "treeMAPCombined.svg"), plot = combined, width = 14, height = 12)
+
 # Posterior predictive differences between modern humans and neand --------
-hs_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/hsPostPred.rds")
-ne_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/neanderthalPostPred.rds")
-pp_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/panpaniscusPostPred.rds")
-pt_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pantroglodytesPostPred.rds")
-gb_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorrillaberingeiPostPred.rds")
-gg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/gorillagorillaPostPred.rds")
-pa_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongoabeliiPostPred.rds")
-ppyg_preds <- read_rds("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/posteriorPredictive/pongopygmaeusPostPred.rds")
+hs_preds <- read_rds(paste0(input, "/lc/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
+gb_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
+gg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
+pa_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
+ppyg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
 
 trait_labels <- paste0("Decile ", 3:10)
-
-pred1 = hs_preds
-pred2 = ne_preds
-specName1 = "Homo_sapiens"
-specName2 ="Neanderthal"
-plotName1 = "Modern humans"
-plotName2 = "Neanderthals"
-color1 = species_colors["Modern humans"]
-color2 = species_colors["Neanderthals"]
 
 plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
   recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
@@ -384,9 +640,9 @@ plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotNam
     geom_text(data = overlap_data,
               aes(x = trait, y = Inf, label = label),
               inherit.aes = FALSE,
-              vjust = 1.5, size = 3, color = "grey30") +
+              vjust = 1.5, size = 5, color = "grey30") +
     scale_fill_manual(values = color_vec) +
-    scale_y_continuous(limits = c(0, 50)) +
+    scale_y_continuous(limits = c(0, 40)) +
     labs(
       x    = "Decile",
       y    = "Perikymata count per millimeter",
@@ -395,7 +651,7 @@ plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotNam
     theme_minimal(base_family = "Georgia") +
     theme(
       legend.position = "right",
-      axis.text.x = element_text(size = 10, angle = 45, hjust = 1)
+      axis.text.x = element_text(size = 12, angle = 45, hjust = 1)
     )
   return(pt)
 }
@@ -445,6 +701,291 @@ combined
 ggsave(paste0(output, "postPred.svg"), plot = combined, width = 14, height = 14)
 
 
+# Posterior predictive ui2 --------
+hs_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/pantroglodytesPostPred.rds"))
+
+trait_labels <- paste0("Decile ", 3:10)
+
+plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
+  recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
+  color_vec  <- setNames(c(color1, color2), c(plotName1, plotName2))
+  
+  plot_data <- bind_rows(pred1, pred2) |>
+    pivot_longer(cols = all_of(trait_labels),
+                 names_to = "trait",
+                 values_to = "value") |>
+    mutate(
+      trait   = factor(trait, levels = trait_labels),
+      species = recode(species, !!!recode_vec)
+    )
+  
+  overlap_data <- plot_data |>
+    group_by(trait) |>
+    group_modify(~{
+      df <- .x
+      
+      ov <- overlapping::overlap(
+        list(
+          df$value[df$species == plotName1],
+          df$value[df$species == plotName2]
+        )
+      )$OV
+      
+      tibble(overlap = ov)
+    }) |>
+    ungroup() |>
+    mutate(
+      trait = factor(trait, levels = trait_labels),
+      label = paste0(round(overlap * 100, 1), "%")
+    )  
+  pt <- ggplot(plot_data, aes(x = trait, y = value, fill = species)) +
+    geom_half_violin(data = filter(plot_data, species == plotName1),
+                     aes(fill = species),
+                     alpha = 0.6, scale = "width", side = "l") +
+    geom_half_violin(data = filter(plot_data, species == plotName2),
+                     aes(fill = species),
+                     alpha = 0.6, scale = "width", side = "r") +
+    geom_half_boxplot(data = filter(plot_data, species == plotName1),
+                      alpha = 0.6, scale = "width", side = "l", outlier.shape = NA) +
+    geom_half_boxplot(data = filter(plot_data, species == plotName2),
+                      alpha = 0.6, scale = "width", side = "r", outlier.shape = NA) +
+    geom_text(data = overlap_data,
+              aes(x = trait, y = Inf, label = label),
+              inherit.aes = FALSE,
+              vjust = 1.5, size = 3, color = "grey30") +
+    scale_fill_manual(values = color_vec) +
+    scale_y_continuous(limits = c(0, 40)) +
+    labs(
+      x    = "Decile",
+      y    = "Perikymata count per millimeter",
+      fill = "Species"
+    ) +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      legend.position = "right",
+      axis.text.x = element_text(size = 10, angle = 45, hjust = 1)
+    )
+  return(pt)
+}
+
+colors <- brewer.pal(8, "Paired")
+
+species_colors <- c(
+  "Modern humans"    = colors[1],
+  "Neanderthals"     = colors[2],
+  
+  "Pan paniscus"     = colors[3],
+  "Pan troglodytes"  = colors[4],
+  
+  "Gorilla beringei" = colors[5],
+  "Gorilla gorilla"  = colors[6],
+  
+  "Pongo abelii"     = colors[7],
+  "Pongo pygmaeus"   = colors[8]
+)
+
+homo <- plotRidgePlot(hs_preds, ne_preds, 
+                      "Homo_sapiens", "Neanderthal", 
+                      "Modern humans", "Neanderthals", 
+                      species_colors["Modern humans"], species_colors["Neanderthals"])
+homo
+
+pan <- plotRidgePlot(pp_preds, pt_preds, 
+                     "Pan_paniscus", "Pan_troglodytes", 
+                     "Pan paniscus", "Pan troglodytes", 
+                     species_colors["Pan paniscus"], species_colors["Pan troglodytes"])
+pan
+
+combined <- (homo + pan)
+ggsave(paste0(output, "postPredUI2.svg"), plot = combined, width = 14, height = 7)
+
+
+# UI2 LC combined ---------------------------------------------------------
+hs_preds_lc   <- read_rds(paste0(input, "/lc/posteriorPredictive/hsPostPred.rds"))
+ne_preds_lc   <- read_rds(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds_lc   <- read_rds(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds_lc   <- read_rds(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
+gb_preds_lc   <- read_rds(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
+gg_preds_lc   <- read_rds(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
+pa_preds_lc   <- read_rds(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
+ppyg_preds_lc <- read_rds(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
+
+hs_preds_ui2 <- read_rds(paste0(input, "ui2/posteriorPredictive/hsPostPred.rds"))
+ne_preds_ui2 <- read_rds(paste0(input, "ui2/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds_ui2 <- read_rds(paste0(input, "ui2/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds_ui2 <- read_rds(paste0(input, "ui2/posteriorPredictive/pantroglodytesPostPred.rds"))
+
+trait_labels <- paste0("Decile ", 3:10)
+
+colors <- brewer.pal(8, "Paired")
+
+species_colors <- c(
+  "Modern humans"    = colors[1],
+  "Neanderthals"     = colors[2],
+  "Pan paniscus"     = colors[3],
+  "Pan troglodytes"  = colors[4],
+  "Gorilla beringei" = colors[5],
+  "Gorilla gorilla"  = colors[6],
+  "Pongo abelii"     = colors[7],
+  "Pongo pygmaeus"   = colors[8]
+)
+
+plotRidgePlotCombined <- function(pred1_lc, pred2_lc, pred1_ui2, pred2_ui2,
+                                  specName1, specName2,
+                                  plotName1, plotName2,
+                                  color1, color2) {
+  
+  recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
+  color_vec  <- setNames(c(color1, color2), c(plotName1, plotName2))
+  
+  prep_data <- function(pred1, pred2, tooth_type) {
+    bind_rows(pred1, pred2) |>
+      pivot_longer(cols = all_of(trait_labels),
+                   names_to = "trait",
+                   values_to = "value") |>
+      mutate(
+        trait      = factor(trait, levels = trait_labels),
+        species    = recode(species, !!!recode_vec),
+        tooth_type = tooth_type
+      )
+  }
+  
+  ordered_levels <- c(
+    paste(trait_labels, "C",  sep = " — "),
+    paste(trait_labels, "I2", sep = " — ")
+  )
+  
+  # Build display labels: "Decile 3 — $\bar{C}$", "Decile 3 — $I^2$", etc.
+  x_labels <- setNames(
+    c(sapply(trait_labels, function(d) TeX(paste0(d, " — $\\bar{C}$"))),
+      sapply(trait_labels, function(d) TeX(paste0(d, " — $I^2$")))),
+    ordered_levels
+  )
+  
+  plot_data <- bind_rows(
+    prep_data(pred1_lc,  pred2_lc,  "C"),
+    prep_data(pred1_ui2, pred2_ui2, "I2")
+  ) |>
+    mutate(
+      tooth_type  = factor(tooth_type, levels = c("C", "I2")),
+      trait_tooth = factor(paste(trait, tooth_type, sep = " — "), levels = ordered_levels)
+    )
+  
+  n_lc      <- length(trait_labels)
+  band_data <- tibble(xmin = n_lc + 0.5, xmax = n_lc * 2 + 0.5)
+  
+  overlap_data <- plot_data |>
+    group_by(trait_tooth) |>
+    group_modify(~{
+      df <- .x
+      ov <- overlapping::overlap(
+        list(
+          df$value[df$species == plotName1],
+          df$value[df$species == plotName2]
+        )
+      )$OV
+      tibble(overlap = ov)
+    }) |>
+    ungroup() |>
+    mutate(
+      trait_tooth = factor(trait_tooth, levels = ordered_levels),
+      label       = paste0(round(overlap * 100, 1), "%")
+    )
+  
+  fill_vec <- setNames(
+    c(color1, color2),
+    c(plotName1, plotName2)
+  )
+  
+  pt <- ggplot(plot_data, aes(x = trait_tooth, y = value, fill = species)) +
+    geom_rect(
+      data        = band_data,
+      aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+      inherit.aes = FALSE,
+      fill        = "grey90", alpha = 0.5
+    ) +
+    geom_half_violin(
+      data  = filter(plot_data, species == plotName1),
+      aes(fill = species),
+      alpha = 0.7, scale = "width", side = "l"
+    ) +
+    geom_half_violin(
+      data  = filter(plot_data, species == plotName2),
+      aes(fill = species),
+      alpha = 0.7, scale = "width", side = "r"
+    ) +
+    geom_half_boxplot(
+      data  = filter(plot_data, species == plotName1),
+      aes(fill = species),
+      alpha = 0.7, scale = "width", side = "l", outlier.shape = NA
+    ) +
+    geom_half_boxplot(
+      data  = filter(plot_data, species == plotName2),
+      aes(fill = species),
+      alpha = 0.7, scale = "width", side = "r", outlier.shape = NA
+    ) +
+    geom_text(
+      data        = overlap_data,
+      aes(x = trait_tooth, y = Inf, label = label),
+      inherit.aes = FALSE,
+      vjust = 1.5, size = 5, color = "grey30"
+    ) +
+    scale_fill_manual(values = fill_vec) +
+    scale_y_continuous(limits = c(0, 40)) +
+    scale_x_discrete(labels = x_labels) +
+    labs(
+      x    = "Decile — Tooth type",
+      y    = "Perikymata count per millimeter",
+      fill = "Species"
+    ) +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      legend.position = "right",
+      axis.text.x     = element_text(size = 12, angle = 45, hjust = 1)
+    )
+  
+  return(pt)
+}
+
+homo <- plotRidgePlotCombined(
+  hs_preds_lc, ne_preds_lc, hs_preds_ui2, ne_preds_ui2,
+  "Homo_sapiens", "Neanderthal",
+  "Modern humans", "Neanderthals",
+  species_colors["Modern humans"], species_colors["Neanderthals"]
+)
+homo
+
+pan <- plotRidgePlotCombined(
+  pp_preds_lc, pt_preds_lc, pp_preds_ui2, pt_preds_ui2,
+  "Pan_paniscus", "Pan_troglodytes",
+  "Pan paniscus", "Pan troglodytes",
+  species_colors["Pan paniscus"], species_colors["Pan troglodytes"]
+)
+pan
+
+# LC-only plots for gorilla and pongo (no UI2 data)
+gorilla <- plotRidgePlot(
+  gb_preds_lc, gg_preds_lc,
+  "Gorilla_beringei", "Gorilla_gorilla",
+  "Gorilla beringei", "Gorilla gorilla",
+  species_colors["Gorilla beringei"], species_colors["Gorilla gorilla"]
+)
+
+pongo <- plotRidgePlot(
+  ppyg_preds_lc, pa_preds_lc,
+  "Pongo_abelii", "Pongo_pygmaeus",
+  "Pongo abelii", "Pongo pygmaeus",
+  species_colors["Pongo abelii"], species_colors["Pongo pygmaeus"]
+)
+
+combined <- homo /  pan / (gorilla + pongo)
+combined
+ggsave(paste0(output, "postPredCombined.svg"), plot = combined, width = 14, height = 21)
+
+
 # Table 1: Posterior predictive means and variances -----------------------
 
 writeTableOne <- function(pred){
@@ -460,6 +1001,16 @@ writeTableOne <- function(pred){
   print(string)
 }
 
+#### LC
+hs_preds <- read_rds(paste0(input, "lc/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
+gb_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
+gg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
+pa_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
+ppyg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
+
 writeTableOne(hs_preds)
 writeTableOne(ne_preds)
 writeTableOne(pp_preds)
@@ -469,6 +1020,15 @@ writeTableOne(gg_preds)
 writeTableOne(pa_preds)
 writeTableOne(ppyg_preds)
 
+#### ui2
+hs_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/hsPostPred.rds"))
+ne_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/neanderthalPostPred.rds"))
+pp_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/panpaniscusPostPred.rds"))
+pt_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/pantroglodytesPostPred.rds"))
+writeTableOne(hs_preds)
+writeTableOne(ne_preds)
+writeTableOne(pp_preds)
+writeTableOne(pt_preds)
 
 # LC intraspecific means vs. MLE ------------------------------------------
 
@@ -544,7 +1104,7 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
       linewidth = 0.8,
       linetype  = "solid"
     ) +
-    scale_x_continuous(limits = c(0,50))+
+    scale_x_continuous(limits = c(0,30))+
     scale_fill_manual(
       values = c("tail" = "red", "middle" = "black"),
       labels = c("tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
@@ -724,8 +1284,8 @@ true_missing_val <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogen
 
 #### simulated missing vla trace plot ####
 missing_trace <- data.frame(
-  idx = sim_post$n,
-  post = sim_post$missing_Pan_paniscus_.7.5.)
+  idx = lc_posterior$n,
+  post = lc_posterior$`evo_vcv_(0,0)`)
 
 burnin_cutoff <- 0.1 * max(missing_trace$idx)
 
@@ -748,13 +1308,7 @@ p1 <- ggplot(data = missing_trace) +
           TRUE                 ~ "middle"
         )),
     alpha = 0.1
-  ) +
-  geom_hline(
-    yintercept = true_missing_val,
-    color      = "blue",
-    linewidth  = 0.8,
-    linetype   = "solid"
-  ) +
+  )+
   scale_color_manual(
     values = c("burnin" = "grey60", "tail" = "red", "middle" = "black"),
     labels = c("burnin" = "Burn-in", "tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
@@ -762,7 +1316,7 @@ p1 <- ggplot(data = missing_trace) +
   ) +
   labs(
     x = "Cycle",
-    y = "Imputed perikymata per millimeter"
+    y = "C Decile 3 evolutinary rate"
   ) +
   theme_minimal(base_family = "Georgia") +
   theme(
@@ -772,9 +1326,9 @@ p1 <- ggplot(data = missing_trace) +
 p1 
 
 ggsave(
-  paste0(output, "simulatedMissingDataTrace.pdf"), 
+  paste0(output, "LCEvoRateDec3Trace.pdf"), 
   plot = p1, 
-  width = 10, height = 8,
+  width = 8, height = 6,
   device = cairo_pdf
 )
 
@@ -888,35 +1442,43 @@ ggsave(
 
 # Phylopars AIRM histograms -----------------------------------------------
 
-lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/lc_dec3_10_vcv_extracted.RDS")
+lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
 
 all_AIRM_dat <- list()
 for (i in 1:length(lc_vcv_list)) {
   name <- names(lc_vcv_list)[i]
   AIRM_dat <- readRDS(paste0(
-    "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs/lc/phylopars/",
+    paste0(input, "lc/phylopars/",
     name,
     "_AIRM_distances.rds"
-  ))
+  )))
   all_AIRM_dat[[i]] <- data.frame(
     value = as.numeric(AIRM_dat),
     group = name
   )
 }
 
+colors <- brewer.pal(9, "Spectral")
 combined_dat <- do.call(rbind, all_AIRM_dat)
 
-ggplot(combined_dat, aes(x = value, fill = group)) +
-  geom_histogram(bins = 500, color = NA, alpha = 0.5,
+p1 <- ggplot(combined_dat, aes(x = value, fill = group)) +
+  geom_histogram(bins = 500, color = NaN, alpha = 0.7,
                  position = "identity") +
-  scale_x_continuous(limits = c(0, 50)) +
+  scale_fill_manual(values = colors) +
   labs(
     x    = "AIRM distance",
     y    = "Count",
-    fill = "Group"
+    fill = "VCV type"
   ) +
   theme_minimal(base_family = "Georgia") +
   theme(
     panel.grid.minor = element_blank(),
     legend.position  = "right"
   )
+p1
+ggsave(
+  paste0(output, "AIRM_distances_lc.pdf"), 
+  plot = p1, 
+  width = 10, height = 6,
+  device = cairo_pdf
+)

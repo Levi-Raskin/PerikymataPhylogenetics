@@ -6,8 +6,4 @@ results/LC_prelim/out0gelmanRubin3.tsv
 /scripts/BURL/build
 /scripts/BURL_coverage/BURL_coverage/build
 *.xcuserstate
-*.xcuserstate
-scripts/BURL/.DS_Store
-scripts/BURL_coverage/.DS_Store
-scripts/.DS_Store
 .DS_Store
