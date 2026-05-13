@@ -45,3 +45,20 @@ Rscript cmd_line_rscripts/posterior_pred_draws.R \
 Rscript cmd_line_rscripts/posterior_pred_draws_ui2.R \
     $RESULTS/ui2/ui2_dec3_10_no_pongo.tsv \
     $RESULTS/ui2/posteriorPredictive/
+
+# species means analyses
+Rscript cmd_line_rscripts/data_wrangling.R \
+    $RESULTS/lc/lc_dec3_10_species_means.tsv\
+    $RESULTS/lc/lc_dec3_10_vcv_extracted_species_means.RDS
+
+Rscript cmd_line_rscripts/posterior_fits.R \
+    $RESULTS/lc/lc_dec3_10_vcv_extracted_species_means.RDS \
+    $RESULTS/lc/lc_dec3_10_posterior_fits_species_means.RDS
+
+Rscript cmd_line_rscripts/data_wrangling.R \
+    $RESULTS/ui2/ui2_dec3_10_species_means.tsv\
+    $RESULTS/ui2/ui2_dec3_10_no_pongo_vcv_extracted_species_means.RDS
+
+Rscript cmd_line_rscripts/posterior_fits.R \
+    $RESULTS/ui2/ui2_dec3_10_no_pongo_vcv_extracted_species_means.RDS \
+    $RESULTS/ui2/ui2_dec3_10_posterior_fits_species_means.RDS

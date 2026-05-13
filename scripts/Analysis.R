@@ -4,6 +4,7 @@ library(dplyr)
 library(MCMCpack)
 library(overlapping)
 library(parallel)
+library(RiemBase)
 
 input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/"
 
@@ -16,8 +17,11 @@ lc_posterior_no_hominin  <- lc_posterior_no_hominin[round(0.1 * nrow(lc_posterio
 ui2_posterior <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_no_pongo.tsv")))
 ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
 
-# Functions ---------------------------------------------------------------
+
+# functions ---------------------------------------------------------------
+
 calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPrior){
+  p<- 8
   V1 <- solve(scalePost)
   V2 <- solve(scalePrior)
   n1 <- dofPost
@@ -34,6 +38,25 @@ calcKLDivergenceInverseWishart <- function(scalePost, dofPost, scalePrior, dofPr
   result <- 0.5 * (term1 + term2 + term3 + term4 + term5)
   return(as.numeric(result))
 }
+calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
+  klforward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit1$scale,
+    dofPost = posteriorFit1$nu,
+    scalePrior = posteriorFit2$scale,
+    dofPrior = posteriorFit2$nu
+  )
+  klbackward <- calcKLDivergenceInverseWishart(
+    scalePost = posteriorFit2$scale,
+    dofPost = posteriorFit2$nu,
+    scalePrior = posteriorFit1$scale,
+    dofPrior = posteriorFit1$nu
+  )
+  
+  return(
+    round(klforward + klbackward, 2)
+  )
+}
+
 
 # ESS/GR ------------------------------------------------------------------
 ### ess LC
@@ -105,7 +128,6 @@ convertLatexTable <- function(kl, postFits){
 }
 p <- 8
 
-
 #### Lower Canine ####
 lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
 
@@ -169,25 +191,6 @@ convertLatexTable(res, ui2_posteriorFits)
 
 #### symmetrized KL divergence ####
 lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
-calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
-  p <- 8
-  klforward <- calcKLDivergenceInverseWishart(
-    scalePost = posteriorFit1$scale,
-    dofPost = posteriorFit1$nu,
-    scalePrior = posteriorFit2$scale,
-    dofPrior = posteriorFit2$nu
-  )
-  klbackward <- calcKLDivergenceInverseWishart(
-    scalePost = posteriorFit2$scale,
-    dofPost = posteriorFit2$nu,
-    scalePrior = posteriorFit1$scale,
-    dofPrior = posteriorFit1$nu
-  )
-  
-  return(
-    round(klforward + klbackward, 2)
-  )
-}
 
 calcSymmetrizedKLDivergence(lc_posteriorFits$Homo_sapiens, lc_posteriorFits$Neanderthal)
 calcSymmetrizedKLDivergence(lc_posteriorFits$Pan_troglodytes, lc_posteriorFits$Pan_paniscus)
@@ -195,25 +198,6 @@ calcSymmetrizedKLDivergence(lc_posteriorFits$Gorilla_beringei, lc_posteriorFits$
 calcSymmetrizedKLDivergence(lc_posteriorFits$Pongo_abelii, lc_posteriorFits$Pongo_pygmaeus)
 
 ui2_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS"))
-calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
-  p <- 8
-  klforward <- calcKLDivergenceInverseWishart(
-    scalePost = posteriorFit1$scale,
-    dofPost = posteriorFit1$nu,
-    scalePrior = posteriorFit2$scale,
-    dofPrior = posteriorFit2$nu
-  )
-  klbackward <- calcKLDivergenceInverseWishart(
-    scalePost = posteriorFit2$scale,
-    dofPost = posteriorFit2$nu,
-    scalePrior = posteriorFit1$scale,
-    dofPrior = posteriorFit1$nu
-  )
-  
-  return(
-    round(klforward + klbackward, 2)
-  )
-}
 
 calcSymmetrizedKLDivergence(ui2_posteriorFits$Homo_sapiens, ui2_posteriorFits$Neanderthal)
 calcSymmetrizedKLDivergence(ui2_posteriorFits$Pan_troglodytes, ui2_posteriorFits$Pan_paniscus)
@@ -238,108 +222,6 @@ for(i in 1:8){
   print(var(ne_preds[,i]))
   print("=======")
 }
-
-# Modularity test ---------------------------------------------------------
-lc_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_vcv_extracted.RDS")
-lc_evolutionary <- lc_vcv_list$evolutionary
-lc_vcv_list_no_hominins <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_vcv_extracted.RDS"))
-lc_evolutionary_no_hominin <- lc_vcv_list_no_hominins$evolutionary
-
-#### AVG Ratio #### 
-library(evolqg)
-testAVG <- function(vcvList, permMat){
-  avg_rat_results <- mclapply(vcvList, 
-                              function(vcv) {
-                                cor_mat <- cov2cor(vcv)
-                                result <- CalcAVG(permMat, cor_mat)
-                                return(result[1] /result[2])
-                              },
-                              mc.cores = detectCores()-1)
-  
-  avg_rat_results <- unlist(avg_rat_results)
-  
-  meanAvg <-   mean(avg_rat_results, trim = 0.005, na.rm = TRUE)
-  quant <-quantile(avg_rat_results, c(0.025, 0.975), na.rm = TRUE)
-  
-  print(paste0(round(meanAvg, 2), 
-              " (", 
-               round(quant[1],2), 
-               ", ", 
-               round(quant[2],2), ")" ))
-}
-
-hypoMat1 <- matrix(0, 8, 8)
-hypoMat1[1:4, 1:4] <- 1
-hypoMat1[5:8, 5:8] <- 1
-
-hypoMat2 <- matrix(0, 8, 8)
-hypoMat2[1:3, 1:3] <- 1
-hypoMat2[4:8, 4:8] <- 1
-
-hypoMat3 <- matrix(0, 8, 8)
-hypoMat3[1:3, 1:3] <- 1
-hypoMat3[4,4] <- 1
-hypoMat3[5:8, 5:8] <- 1
-
-#### C1 analysis with hominins ####
-
-#### Hypothesis 1: deciles 3-6; deciles 7-10 ####
-testAVG(lc_evolutionary, hypoMat1)
-
-#### Hypothesis 2: deciles 3-5; deciles 6-10 ####
-testAVG(lc_evolutionary, hypoMat2)
-
-#### Hypothesis 3: deciles 3-5; decile 6; deciles 7-10 ####
-testAVG(lc_evolutionary, hypoMat3)
-
-#### C1 analysis without hominins ####
-#### Hypothesis 1: deciles 3-6; deciles 7-10 ####
-testAVG(lc_evolutionary_no_hominin, hypoMat1)
-
-#### Hypothesis 2: deciles 3-5; deciles 6-10 ####
-testAVG(lc_evolutionary_no_hominin, hypoMat2)
-
-#### Hypothesis 3: deciles 3-5; decile 6; deciles 7-10 ####
-testAVG(lc_evolutionary_no_hominin, hypoMat3)
-
-#### CR ####
-CalcCR <- function(pv, vcv_matrix) {
-  ### modified from Adams (2016)
-  gps<-factor(pv)
-  S11<-S11.0<-vcv_matrix[which(gps==levels(gps)[1]),which(gps==levels(gps)[1])]
-  S22<-S22.0<-vcv_matrix[which(gps==levels(gps)[2]),which(gps==levels(gps)[2])]
-  diag(S11.0)<-0
-  diag(S22.0)<-0
-  S12<-vcv_matrix[which(gps==levels(gps)[1]),which(gps==levels(gps)[2])]
-  S21<-t(S12)
-  return(sqrt( sum(diag(S12%*%S21)) / sqrt(sum(diag(S11.0%*%S11.0))*sum(diag(S22.0%*%S22.0)))))
-}
-testCR <- function(vcvList, pm){
-  cr_results <- mclapply(vcvList, 
-                         function(vcv) CalcCR(pm, vcv),
-                         mc.cores = detectCores()-1)
-  cr_results <- unlist(cr_results)
-  cat("Posterior mean CR:", mean(cr_results, na.rm = TRUE), "\n")
-  cat("95% credible interval:", quantile(cr_results, c(0.025, 0.975), na.rm = TRUE), "\n")
-}
-
-hypo1Vec <- c(rep(1, 4), rep (2, 4))
-hypo2Vec <- c(rep(1, 3), rep (2, 5))
-
-#### C1 analysis with hominins ####
-#### Hypothesis 1: deciles 3-6; deciles 7-10 ####
-testCR(lc_evolutionary, hypo1Vec)
-
-#### Hypothesis 2: deciles 3-5; deciles 6-10 ####
-testCR(lc_evolutionary, hypo2Vec)
-
-#### C1 analysis without hominins ####
-#### Hypothesis 1: deciles 3-6; deciles 7-10 ####
-testCR(lc_evolutionary_no_hominin, hypo1Vec)
-
-#### Hypothesis 2: deciles 3-5; deciles 6-10 ####
-testCR(lc_evolutionary_no_hominin, hypo2Vec)
-
 
 # Rphylopars --------------------------------------------------------------
 
@@ -412,7 +294,7 @@ library(evolqg)
 library(parallel)
 
 
-# helper functions --------------------------------------------------------
+#### helper functions ####
 make_hypo_mat <- function(clustering, n = 8) {
   mat <- matrix(0, n, n)
   for (cluster in clustering) {
@@ -433,7 +315,7 @@ clustering_label <- function(clustering) {
 }
 
 
-# run analysis ------------------------------------------------------------
+#### run analysis ####
 n_traits <- 8
 all_clusterings <- unlist(
   lapply(2:7, function(K) enumerate_sequential_clusterings(n_traits, K)),
@@ -510,3 +392,207 @@ print_top(results_ui2, n = 10, label = "ui2")
 write.csv(results_hominins,    "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_hominins.csv",    row.names = FALSE)
 write.csv(results_no_hominins, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_no_hominins.csv", row.names = FALSE)
 write.csv(results_ui2, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/exhaustive_avg_ui2.csv", row.names = FALSE)
+
+
+# comparison against species means infernece ----------------------------------------
+lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
+lc_species_means_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits_species_means.RDS"))
+
+calcSymmetrizedKLDivergence(lc_posteriorFits$evolutionary, lc_species_means_posteriorFits$evolutionary)
+
+ui2_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS"))
+ui2_species_means_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_posterior_fits_species_means.RDS"))
+
+calcSymmetrizedKLDivergence(ui2_species_means_posteriorFits$evolutionary, ui2_posteriorFits$evolutionary)
+
+#### overlap % ####
+library(overlapping)
+
+lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10.tsv"))
+lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)):nrow(lc_posterior), ]
+lc_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_species_means.tsv"))
+lc_posterior_species_means <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)):nrow(lc_posterior_species_means), ]
+
+vcv_cols_lc <- grep("^evo_vcv_", colnames(lc_posterior), value = TRUE)
+vcv_cols_sm <- grep("^evo_vcv_", colnames(lc_posterior_species_means), value = TRUE)
+shared_cols <- intersect(vcv_cols_lc, vcv_cols_sm)
+
+ov_vec <- setNames(numeric(length(shared_cols)), shared_cols)
+
+for (col in shared_cols) {
+  ov_result <- overlapping::overlap(
+    list(
+      lc_posterior[[col]],
+      lc_posterior_species_means[[col]]
+    )
+  )
+  ov_vec[col] <- ov_result$OV[[1]]
+}
+
+idx <- regmatches(shared_cols, regexpr("\\(\\d+,\\d+\\)", shared_cols))
+idx_mat <- do.call(rbind, strsplit(gsub("[()]", "", idx), ","))
+rows <- as.integer(idx_mat[, 1])
+cols <- as.integer(idx_mat[, 2])
+dim_size <- max(rows, cols) + 1  # 0-indexed
+
+ov_matrix <- matrix(NA, nrow = dim_size, ncol = dim_size)
+for (k in seq_along(shared_cols)) {
+  ov_matrix[rows[k] + 1, cols[k] + 1] <- ov_vec[shared_cols[k]]
+}
+
+ui2_posterior <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_no_pongo.tsv")))
+ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
+ui2_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_species_means.tsv"))
+ui2_posterior_species_means <- ui2_posterior_species_means[round(0.1 * nrow(ui2_posterior_species_means)):nrow(ui2_posterior_species_means), ]
+
+vcv_cols_ui2 <- grep("^evo_vcv_", colnames(ui2_posterior), value = TRUE)
+vcv_cols_sm_ui2 <- grep("^evo_vcv_", colnames(ui2_posterior_species_means), value = TRUE)
+shared_cols <- intersect(vcv_cols_lc, vcv_cols_sm)
+
+ov_vec <- setNames(numeric(length(shared_cols)), shared_cols)
+
+for (col in shared_cols) {
+  ov_result <- overlapping::overlap(
+    list(
+      ui2_posterior[[col]],
+      ui2_posterior_species_means[[col]]
+    )
+  )
+  ov_vec[col] <- ov_result$OV[[1]]
+}
+
+idx <- regmatches(shared_cols, regexpr("\\(\\d+,\\d+\\)", shared_cols))
+idx_mat <- do.call(rbind, strsplit(gsub("[()]", "", idx), ","))
+rows <- as.integer(idx_mat[, 1])
+cols <- as.integer(idx_mat[, 2])
+dim_size <- max(rows, cols) + 1  # 0-indexed
+
+ov_matrix_ui2 <- matrix(NA, nrow = dim_size, ncol = dim_size)
+for (k in seq_along(shared_cols)) {
+  ov_matrix_ui2[rows[k] + 1, cols[k] + 1] <- ov_vec[shared_cols[k]]
+}
+ov_matrix_ui2
+
+matrix_to_latex <- function(mat) {
+  rows <- apply(mat, 1, function(row) {
+    paste0("& ", paste(round(row, 2), collapse = " & "), " \\\\")
+  })
+  cat(paste(rows, collapse = "\n"))
+}
+
+matrix_to_latex(100*ov_matrix)
+matrix_to_latex(100*ov_matrix_ui2)
+
+#### mean SD diff ####
+sd_vec <- setNames(numeric(length(shared_cols)), shared_cols)
+
+for (col in shared_cols) {
+  sd_vec[col] <- var(lc_posterior[[col]]) - var(lc_posterior_species_means[[col]])
+}
+
+idx <- regmatches(shared_cols, regexpr("\\(\\d+,\\d+\\)", shared_cols))
+idx_mat <- do.call(rbind, strsplit(gsub("[()]", "", idx), ","))
+rows <- as.integer(idx_mat[, 1])
+cols <- as.integer(idx_mat[, 2])
+dim_size <- max(rows, cols) + 1  # 0-indexed
+
+sd_matrix <- matrix(NA, nrow = dim_size, ncol = dim_size)
+for (k in seq_along(shared_cols)) {
+  sd_matrix[rows[k] + 1, cols[k] + 1] <- sd_vec[shared_cols[k]]
+}
+
+sd_vec_ui2 <- setNames(numeric(length(shared_cols)), shared_cols)
+
+for (col in shared_cols) {
+  sd_vec_ui2[col] <- var(ui2_posterior[[col]]) - var(ui2_posterior_species_means[[col]])
+}
+
+idx <- regmatches(shared_cols, regexpr("\\(\\d+,\\d+\\)", shared_cols))
+idx_mat <- do.call(rbind, strsplit(gsub("[()]", "", idx), ","))
+rows <- as.integer(idx_mat[, 1])
+cols <- as.integer(idx_mat[, 2])
+dim_size <- max(rows, cols) + 1  # 0-indexed
+
+sd_matrix_ui2 <- matrix(NA, nrow = dim_size, ncol = dim_size)
+for (k in seq_along(shared_cols)) {
+  sd_matrix_ui2[rows[k] + 1, cols[k] + 1] <- sd_vec_ui2[shared_cols[k]]
+}
+
+mean_matrix <- matrix(NA, nrow = dim_size, ncol = dim_size)
+for (k in seq_along(shared_cols)) {
+  mean_matrix[rows[k] + 1, cols[k] + 1] <- bayestestR::map_estimate(lc_posterior[[shared_cols[k]]])$MAP_Estimate- bayestestR::map_estimate(lc_posterior_species_means[[shared_cols[k]]])$MAP_Estimate
+}
+
+mean_matrix_ui2 <- matrix(NA, nrow = dim_size, ncol = dim_size)
+for (k in seq_along(shared_cols)) {
+  mean_matrix_ui2[rows[k] + 1, cols[k] + 1] <- bayestestR::map_estimate(ui2_posterior[[shared_cols[k]]])$MAP_Estimate - bayestestR::map_estimate(ui2_posterior_species_means[[shared_cols[k]]])$MAP_Estimate
+}
+
+
+matrix_to_latex_mean_sd <- function(mat_mean, mat_sd) {
+  rows <- character(nrow(mat_mean))
+  for (i in seq_len(nrow(mat_mean))) {
+    cells <- paste0(round(mat_mean[i, ], 2), " (", round(mat_sd[i, ], 2), ")")
+    rows[i] <- paste0("& ", paste(cells, collapse = " & "), " \\\\")
+  }
+  cat(paste(rows, collapse = "\n"))
+}
+matrix_to_latex(mean_matrix)
+matrix_to_latex(mean_matrix_ui2)
+
+
+### Frechet Variance ####
+calculateFrechetVariance <- function(vcvList){
+  spd_data <- riemfactory(vcvList, name = "spd")
+  frechet_mean <- rbase.mean(spd_data)$x
+  geodesic_dists <- mclapply(lc_vcv_list$evolutionary, function(mat) {
+    pair <- riemfactory(list(mat, frechet_mean), name = "spd")
+    rbase.pdist(pair)[1, 2]
+  }, mc.cores = detectCores() - 1)
+  geodesic_dists <- unlist(geodesic_dists)
+  spread <- mean(geodesic_dists^2)
+  return(spread)
+}
+
+### LC
+lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
+lc_Frechet_Var <- vector(length = length(lc_vcv_list))
+names(lc_Frechet_Var) <- names(lc_vcv_list)
+for(i in 1:length(lc_vcv_list)){
+  lc_Frechet_Var[i] <- calculateFrechetVariance(lc_vcv_list[[i]])
+}
+lc_Frechet_Var
+saveRDS(lc_Frechet_Var, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_vcv_frechet_var.RDS")
+lc_Frechet_Var <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_vcv_frechet_var.RDS")
+
+lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_vcv_extracted.RDS"))
+lc_Frechet_Var <- vector(length = length(lc_vcv_list))
+names(lc_Frechet_Var) <- names(lc_vcv_list)
+for(i in 1:length(lc_vcv_list)){
+  lc_Frechet_Var[i] <- calculateFrechetVariance(lc_vcv_list[[i]])
+}
+lc_Frechet_Var
+saveRDS(lc_Frechet_Var, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_vcv_frechet_var_no_hominin.RDS")
+lc_Frechet_Var_nh <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_vcv_frechet_var_no_hominin.RDS")
+
+### UI2
+ui2_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS")
+ui2_Frechet_Var <- vector(length = length(ui2_vcv_list))
+names(ui2_Frechet_Var) <- names(ui2_vcv_list)
+for(i in 1:length(ui2_vcv_list)){
+  ui2_Frechet_Var[i] <- calculateFrechetVariance(ui2_vcv_list[[i]])
+}
+ui2_Frechet_Var
+saveRDS(ui2_Frechet_Var, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_vcv_frechet_var.RDS")
+ui2_Frechet_Var <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_vcv_frechet_var.RDS")
+
+### species means Frechet
+lc_vcv_list_species_means <- lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted_species_means.RDS"))
+ui2_vcv_list_species_means <- lc_vcv_list <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted_species_means.RDS"))
+
+print("LC evo")
+calculateFrechetVariance(lc_vcv_list$evolutionary)
+calculateFrechetVariance(lc_vcv_list_species_means$evolutionary)
+print("UI2 evo")
+calculateFrechetVariance(ui2_vcv_list$evolutionary)
+calculateFrechetVariance(ui2_vcv_list_species_means$evolutionary)
