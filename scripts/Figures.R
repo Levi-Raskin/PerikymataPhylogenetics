@@ -1030,10 +1030,11 @@ writeTableOne(ne_preds)
 writeTableOne(pp_preds)
 writeTableOne(pt_preds)
 
-# LC intraspecific means vs. MLE ------------------------------------------
+# intraspecific means vs. MLE ------------------------------------------
 
 plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
-  
+  lc_mle <- lc_mle %>%
+    rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
   decile_map <- c(
     "mean_0" = "Decile.3",
     "mean_1" = "Decile.4",
@@ -1150,6 +1151,25 @@ for(i in species){
   )
 }
 
+species<- c(
+  "Homo_sapiens",
+  "Neanderthal",
+  "Pan_paniscus",
+  "Pan_troglodytes"
+)
+
+ui2_mle <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo_species_means.csv")
+
+for(i in species){
+  p <- plot_species_posteriors(ui2_posterior, ui2_mle, i)
+  print(p)
+  ggsave(
+    paste0(output, "/meanPosteriorHists/", i, "_ui2.pdf"), 
+    plot = p, 
+    width = 10, height = 8,
+    device = cairo_pdf
+  )
+} ### note: pan paniscus plotted with breaks 0:40
 
 
 # missing data imputation -------------------------------------------------
@@ -1276,170 +1296,6 @@ p1 <- ggplot() +
 p1
 ggsave(paste0(output, "pongoAbeliiPred.svg"), plot = p1, width = 7, height = 6)
 
-# simulated data posteriors ----------------------------------------------------------
-
-sim_post <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulatedData/simulatedDataResults.tsv")
-#sim_post <- sim_post[round(0.1 * nrow(sim_post)) : nrow(sim_post), ] #apply burnin
-true_missing_val <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/exampleSimulatedData/trueMissingValue.tsv", header = FALSE)[1,1]
-
-#### simulated missing vla trace plot ####
-missing_trace <- data.frame(
-  idx = lc_posterior$n,
-  post = lc_posterior$`evo_vcv_(0,0)`)
-
-burnin_cutoff <- 0.1 * max(missing_trace$idx)
-
-p1 <- ggplot(data = missing_trace) +
-  geom_point(
-    aes(x = idx, 
-        y = post,
-        color = case_when(
-          idx <= burnin_cutoff                ~ "burnin",
-          post <= quantile(post, 0.025)       ~ "tail",
-          post >= quantile(post, 0.975)       ~ "tail",
-          TRUE                               ~ "middle"
-        )),
-    alpha = 0.05
-  ) +
-  geom_line(
-    aes(x = idx, y = post,
-        color = case_when(
-          idx <= burnin_cutoff ~ "burnin",
-          TRUE                 ~ "middle"
-        )),
-    alpha = 0.1
-  )+
-  scale_color_manual(
-    values = c("burnin" = "grey60", "tail" = "red", "middle" = "black"),
-    labels = c("burnin" = "Burn-in", "tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
-    name   = NULL
-  ) +
-  labs(
-    x = "Cycle",
-    y = "C Decile 3 evolutinary rate"
-  ) +
-  theme_minimal(base_family = "Georgia") +
-  theme(
-    panel.grid.minor = element_blank(),
-    legend.position  = "none"
-  )
-p1 
-
-ggsave(
-  paste0(output, "LCEvoRateDec3Trace.pdf"), 
-  plot = p1, 
-  width = 8, height = 6,
-  device = cairo_pdf
-)
-
-#### evolutionary vcv ####
-#now apply burn in
-sim_post <- sim_post[round(0.1 * nrow(sim_post)) : nrow(sim_post), ]
-
-trueEvo <- read.delim("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/exampleSimulatedData/evolutionaryVCV.tsv", header = FALSE)
-
-plot_vcv_posterior <- function(posterior, true_mat, target, bins = 500) {
-  p <- 8
-  decile_labels <- paste0("Decile ", 3:10)
-  
-  if (target == "evo") {
-    prefix      <- "evo_vcv_."
-    plot_title  <- "Evolutionary VCV posterior distributions"
-    col_builder <- function(i, j) paste0("evo_vcv_.", i, ".", j, ".")
-  } else {
-    prefix      <- paste0(target, "_vcv_.")
-    plot_title  <- bquote("Intraspecific VCV posterior distributions —" ~
-                            italic(.(gsub("_", " ", target))))
-    col_builder <- function(i, j) paste0(target, "_vcv_.", i, ".", j, ".")
-  }
-  
-  vcv_cols <- as.vector(outer(0:(p-1), 0:(p-1), col_builder))
-  missing_cols <- setdiff(vcv_cols, colnames(posterior))
-  if (length(missing_cols) > 0)
-    stop(sprintf("Missing columns for '%s': %s",
-                 target, paste(missing_cols, collapse = ", ")))
-  
-  vcv_long <- posterior[, vcv_cols, drop = FALSE] %>%
-    pivot_longer(cols      = everything(),
-                 names_to  = "element",
-                 values_to = "value") %>%
-    mutate(
-      row     = as.integer(sub(paste0(gsub("\\.", "\\\\.", prefix), "(\\d+)\\.(\\d+)\\."), "\\1", element)),
-      col     = as.integer(sub(paste0(gsub("\\.", "\\\\.", prefix), "(\\d+)\\.(\\d+)\\."), "\\2", element)),
-      row_lbl = factor(decile_labels[row + 1], levels = decile_labels),
-      col_lbl = factor(decile_labels[col + 1], levels = decile_labels)
-    )
-  
-  vcv_quantiles <- vcv_long %>%
-    group_by(element) %>%
-    summarise(
-      q_lo   = quantile(value, 0.025),
-      q_hi   = quantile(value, 0.975),
-      trunc_lo = quantile(value, 0.005),   # <-- new: truncation bounds
-      trunc_hi = quantile(value, 0.995),   # <-- new
-      .groups = "drop"
-    )
-  
-  true_long <- data.frame(
-    row      = rep(0:(p-1), each = p),
-    col      = rep(0:(p-1), times = p),
-    true_val = as.vector(as.matrix(true_mat))
-  ) %>%
-    mutate(
-      row_lbl = factor(decile_labels[row + 1], levels = decile_labels),
-      col_lbl = factor(decile_labels[col + 1], levels = decile_labels)
-    )
-  
-  vcv_long <- vcv_long %>%
-    left_join(vcv_quantiles, by = "element") %>%
-    mutate(fill_color = if_else(value < q_lo | value > q_hi, "tail", "middle")) %>%
-    filter(value >= trunc_lo & value <= trunc_hi)               # <-- truncate here
-  
-  ggplot(vcv_long, aes(x = value, fill = fill_color)) +
-    geom_histogram(bins = bins, color = NA) +
-    geom_vline(
-      data      = true_long,
-      aes(xintercept = true_val),
-      color     = "blue",
-      linewidth = 0.6,
-      linetype  = "solid"
-    ) +
-    scale_fill_manual(
-      values = c("tail" = "red", "middle" = "black"),
-      labels = c("tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
-      name   = NULL
-    ) +
-    guides(
-      fill = guide_legend(override.aes = list(alpha = 1))
-    ) +
-    facet_grid(row_lbl ~ col_lbl, scales = "free") +
-    labs(
-      x     = "Posterior VCV value",
-      y     = "Posterior sample count",
-      title = plot_title
-    ) +
-    theme_minimal(base_family = "Georgia") +
-    theme(
-      panel.grid.minor = element_blank(),
-      panel.border     = element_rect(color = "black", fill = NA),  # <-- outline
-      legend.position  = "none",
-      strip.text       = element_text(size = 7),
-      axis.text        = element_text(size = 6),
-      axis.text.x      = element_text(angle = 45, hjust = 1)
-    )
-}
-
-p1 <- plot_vcv_posterior(sim_post, trueEvo, target = "evo")
-p1
-ggsave(paste0(output, "simulatedEvoVCV.svg"), plot = p1, width = 6, height = 6)
-ggsave(
-  paste0(output, "simulatedEvoVCV.pdf"), 
-  plot = p1, 
-  width = 6, height = 6,
-  device = cairo_pdf
-)
-
-
 # Phylopars AIRM histograms -----------------------------------------------
 
 lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
@@ -1482,3 +1338,219 @@ ggsave(
   width = 10, height = 6,
   device = cairo_pdf
 )
+
+
+# posterior predictive check ----------------------------------------------
+lc_data <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
+ui2_data <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv")
+
+plot_ppc <- function(ppc_means, ppc_sds, observed_data, species, bins = 200) {
+  library(patchwork)
+  
+  observed_data <- observed_data %>%
+    rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
+  decile_levels <- paste0("Decile.", 3:10)
+  decile_labels <- setNames(paste0("Decile ", 3:10), decile_levels)
+  
+  obs_sp <- observed_data %>%
+    filter(genus == species) %>%
+    summarise(across(starts_with("Decile."),
+                     list(mean = ~mean(.x, na.rm = TRUE),
+                          sd   = ~sd(.x,   na.rm = TRUE)))) %>%
+    pivot_longer(everything(),
+                 names_to  = c("decile", ".value"),
+                 names_pattern = "(Decile\\.\\d+)_(mean|sd)") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  ppc_means_long <- as.data.frame(ppc_means) %>%
+    setNames(decile_levels) %>%
+    pivot_longer(everything(), names_to = "decile", values_to = "value") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  ppc_sds_long <- as.data.frame(ppc_sds) %>%
+    setNames(decile_levels) %>%
+    pivot_longer(everything(), names_to = "decile", values_to = "value") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  obs_means <- obs_sp %>% transmute(decile, obs_value = mean)
+  obs_sds   <- obs_sp %>% transmute(decile, obs_value = sd)
+  
+  pval_means <- ppc_means_long %>%
+    left_join(obs_means, by = "decile") %>%
+    group_by(decile) %>%
+    summarise(pval = mean(value >= obs_value), .groups = "drop")
+  
+  pval_sds <- ppc_sds_long %>%
+    left_join(obs_sds, by = "decile") %>%
+    group_by(decile) %>%
+    summarise(pval = mean(value >= obs_value), .groups = "drop")
+  
+  mean_labels <- setNames(
+    paste0(decile_labels, "\np = ", round(pval_means$pval, 2)),
+    decile_levels
+  )
+  sd_labels <- setNames(
+    paste0(decile_labels, "\np = ", round(pval_sds$pval, 2)),
+    decile_levels
+  )
+  
+  species_label <- gsub("_", " ", species)
+  
+  p_mean <- ggplot(ppc_means_long, aes(x = value)) +
+    geom_histogram(bins = bins, color = NA, fill = "black") +
+    geom_vline(data = obs_means, aes(xintercept = obs_value),
+               color = "blue", linewidth = 0.8) +
+    facet_wrap(~ decile, nrow = 1, scales = "free",
+               labeller = labeller(decile = mean_labels)) +
+    scale_x_continuous(
+      breaks = function(x) {
+        brks <- scales::pretty_breaks(n = 4)(x)
+        brks[brks %% 1 == 0]
+      }
+    ) +
+    labs(x = "Posterior predictive mean", y = "Count",
+         title = bquote(italic(.(species_label)))) +
+    theme_minimal(base_family = "Georgia") +
+    theme(panel.grid.minor = element_blank())
+  
+  p_sd <- ggplot(ppc_sds_long, aes(x = value)) +
+    geom_histogram(bins = bins, color = NA, fill = "black") +
+    geom_vline(data = obs_sds, aes(xintercept = obs_value),
+               color = "blue", linewidth = 0.8) +
+    facet_wrap(~ decile, nrow = 1, scales = "free",
+               labeller = labeller(decile = sd_labels)) +
+    scale_x_continuous(
+      breaks = function(x) {
+        brks <- scales::pretty_breaks(n = 6)(x)
+        brks[brks %% 1 == 0]
+      }
+    ) +
+    labs(x = "Posterior predictive SD", y = "Count") +
+    theme_minimal(base_family = "Georgia") +
+    theme(panel.grid.minor = element_blank())
+  
+  p_mean / p_sd
+}
+
+#LC
+lc_mean_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_posterior_predictive_check_means.RDS")
+lc_sd_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_posterior_predictive_check_sd.RDS")
+
+species<- c(
+  "Homo_sapiens",
+  "Neanderthal",
+  "Pan_paniscus",
+  "Pan_troglodytes",
+  "Gorilla_beringei",
+  "Gorilla_gorilla",
+  "Pongo_abelii",
+  "Pongo_pygmaeus"
+)
+
+for (i in species) {
+  p <- plot_ppc(
+    ppc_means    = lc_mean_list[[i]],
+    ppc_sds      = lc_sd_list[[i]],
+    observed_data = lc_data,
+    species      = i
+  )
+  print(p)
+  ggsave(
+    paste0(output, "/ppc/", i, ".pdf"),
+    plot   = p,
+    width  = 14, height = 6,
+    device = cairo_pdf
+  )
+}
+
+
+### UI2
+ui2_mean_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_posterior_predictive_check_means.RDS")
+ui2_sd_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_posterior_predictive_check_sd.RDS")
+
+species<- c(
+  "Homo_sapiens",
+  "Neanderthal",
+  "Pan_paniscus",
+  "Pan_troglodytes"
+)
+
+for (i in species) {
+  p <- plot_ppc(
+    ppc_means    = ui2_mean_list[[i]],
+    ppc_sds      = ui2_sd_list[[i]],
+    observed_data = ui2_data,
+    species      = i
+  )
+  print(p)
+  ggsave(
+    paste0(output, "/ppc/", i, "_ui2.pdf"),
+    plot   = p,
+    width  = 14, height = 6,
+    device = cairo_pdf
+  )
+}
+
+calc_ppc_pvalues <- function(ppc_means, ppc_sds, observed_data, species) {
+  
+  observed_data <- observed_data %>%
+    rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
+  decile_levels <- paste0("Decile.", 3:10)
+  
+  obs_sp <- observed_data %>%
+    filter(genus == species) %>%
+    summarise(across(starts_with("Decile."),
+                     list(mean = ~mean(.x, na.rm = TRUE),
+                          sd   = ~sd(.x,   na.rm = TRUE)))) %>%
+    pivot_longer(everything(),
+                 names_to  = c("decile", ".value"),
+                 names_pattern = "(Decile\\.\\d+)_(mean|sd)") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  obs_means <- obs_sp %>% transmute(decile, obs_value = mean)
+  obs_sds   <- obs_sp %>% transmute(decile, obs_value = sd)
+  
+  ppc_means_long <- as.data.frame(ppc_means) %>%
+    setNames(decile_levels) %>%
+    pivot_longer(everything(), names_to = "decile", values_to = "value") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  ppc_sds_long <- as.data.frame(ppc_sds) %>%
+    setNames(decile_levels) %>%
+    pivot_longer(everything(), names_to = "decile", values_to = "value") %>%
+    mutate(decile = factor(decile, levels = decile_levels))
+  
+  pval_means <- ppc_means_long %>%
+    left_join(obs_means, by = "decile") %>%
+    group_by(decile) %>%
+    summarise(pval = mean(value >= obs_value), .groups = "drop") %>%
+    pull(pval)
+  
+  pval_sds <- ppc_sds_long %>%
+    left_join(obs_sds, by = "decile") %>%
+    group_by(decile) %>%
+    summarise(pval = mean(value >= obs_value), .groups = "drop") %>%
+    pull(pval)
+  
+  result <- matrix(
+    c(pval_means, pval_sds),
+    nrow = 2, byrow = TRUE,
+    dimnames = list(
+      c("mean", "sd"),
+      decile_levels
+    )
+  )
+  
+  result
+}
+
+total <- matrix(data = NA, nrow = 0, ncol = 8)
+for (i in species) {
+  p <- calc_ppc_pvalues(
+    ppc_means    = ui2_mean_list[[i]],
+    ppc_sds      = ui2_sd_list[[i]],
+    observed_data = ui2_data,
+    species      = i
+  )
+  total <- rbind(total, p)
+}

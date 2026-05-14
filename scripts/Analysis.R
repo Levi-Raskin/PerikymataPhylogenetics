@@ -49,9 +49,14 @@ calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
 
 
 # read data ----------------------------------------------------------------
+#raw data
+lc_data <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
+ui2_data <- read.csv("Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv")
+
+#posteriors
 input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/"
 
-lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10.tsv"))
+lc_posterior <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10.tsv")))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
 
 lc_posterior_no_hominin <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_no_hominin.tsv")))
@@ -91,14 +96,14 @@ phyloparsRes <-readRDS(paste0(input, "lc/phylopars/lc_dec3_10_phylopars.rds"))
 #VCV lists
 lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
 lc_vcv_list_no_hominins <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_vcv_extracted.RDS"))
-ui2_vcv_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS")
+ui2_vcv_list <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS"))
 lc_vcv_list_species_means <- lc_vcv_list <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted_species_means.RDS"))
 ui2_vcv_list_species_means <- lc_vcv_list <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted_species_means.RDS"))
 
 #Frechet variances
-lc_Frechet_Var <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_vcv_frechet_var.RDS")
-lc_Frechet_Var_nh <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_vcv_frechet_var_no_hominin.RDS")
-ui2_Frechet_Var <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_vcv_frechet_var.RDS")
+lc_Frechet_Var <- readRDS(paste0(input, "lc/lc_vcv_frechet_var.RDS"))
+lc_Frechet_Var_nh <- readRDS(paste0(input, "lc/lc_vcv_frechet_var_no_hominin.RDS"))
+ui2_Frechet_Var <- readRDS(paste0(input, "ui2/ui2_vcv_frechet_var.RDS"))
 
 # ESS/GR ------------------------------------------------------------------
 ### ess LC
@@ -607,8 +612,8 @@ calculate_posterior_uncertainty <- function(posterior_df) {
     "Pan_troglodytes"     = "Pan troglodytes",
     "Gorilla_beringei"    = "G. beringei",
     "Gorilla_gorilla"     = "G. gorilla",
-    "Pongo_abelii"        = "P. abelii",
-    "Pongo_pygmaeus"      = "P. pygmaeus"
+    "Pongo_abelii"        = "Po. abelii",
+    "Pongo_pygmaeus"      = "Po. pygmaeus"
   )
   
   present_taxa <- names(taxon_map)[sapply(names(taxon_map), function(taxon) {
@@ -665,3 +670,87 @@ for(i in 2:length(ui2_posteriorFits)){
   print(calcSymmetrizedKLDivergence(ui2_posteriorFits$evolutionary, ui2_posteriorFits[[i]]))
   print("======")
 }
+
+
+# Posterior predictive checks ---------------------------------------------
+taxon_map <- c(
+  "Homo_sapiens"        = "Modern human",
+  "Neanderthal"         = "Neandertal",
+  "Pan_paniscus"        = "Pan paniscus",
+  "Pan_troglodytes"     = "Pan troglodytes",
+  "Gorilla_beringei"    = "G. beringei",
+  "Gorilla_gorilla"     = "G. gorilla",
+  "Pongo_abelii"        = "Po. abelii",
+  "Pongo_pygmaeus"      = "Po. pygmaeus"
+)
+
+set.seed(5)
+
+n_samples <- 10000
+n_traits <- 8
+trait_labels <- paste0("Decile ", 3:10)
+
+get_posterior_predictive_summary <- function(posterior, species, n_traits, n_samples) {
+  
+  mean_cols <- paste0(species, "_mean_", 0:(n_traits - 1))
+  mu_samples <- as.matrix(posterior[, mean_cols])
+  
+  vcv_cols <- outer(0:(n_traits - 1), 0:(n_traits - 1),
+                    FUN = function(i, j) paste0(species, "_vcv_(", i, ",", j, ")"))
+  vcv_mat <- as.matrix(posterior[, as.vector(vcv_cols)])
+  
+  draw <- function(s) {
+    Sigma <- matrix(vcv_mat[s, ], nrow = n_traits, ncol = n_traits)
+    Sigma <- (Sigma + t(Sigma)) / 2
+    Sigma <- Sigma + diag(1e-6, n_traits)
+    res <- mvrnorm(n = 100, mu = mu_samples[s, ], Sigma = Sigma)
+    c(colMeans(res), apply(res, 2, sd))
+  }
+  
+  preds <- do.call(rbind, mclapply(1:n_samples, draw, mc.cores = detectCores() - 1))
+  
+  means_mat <- preds[, 1:n_traits]
+  sd_mat    <- preds[, (n_traits + 1):(2 * n_traits)]
+  
+  colnames(means_mat) <- trait_labels
+  colnames(sd_mat)    <- trait_labels
+  
+  return(list(means = means_mat, sd = sd_mat))
+}
+
+#select posterior samples
+lc_subset <- sample(1:nrow(lc_posterior), size = n_samples,replace = F)
+ui2_subset <- sample(1:nrow(ui2_posterior), size = n_samples,replace = F)
+
+### LC
+present_taxa <- names(taxon_map)[sapply(names(taxon_map), function(taxon) {
+  any(str_detect(names(lc_posterior[lc_subset, ]), paste0("^", taxon, "_mean_\\d+$")))
+})]
+taxon_map <- taxon_map[present_taxa]
+
+lc_mean_list <- list()
+lc_sd_list <- list()
+for(i in 1:length(taxon_map)){
+  lc_post_pred_check <- get_posterior_predictive_summary(lc_posterior[lc_subset, ], names(taxon_map)[i], n_traits, n_samples)
+  lc_mean_list[[names(taxon_map)[i]]] <- lc_post_pred_check$means
+  lc_sd_list[[names(taxon_map)[i]]] <- lc_post_pred_check$sd
+}
+saveRDS(lc_mean_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_posterior_predictive_check_means.RDS")
+saveRDS(lc_sd_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_posterior_predictive_check_sd.RDS")
+
+
+### UI2
+present_taxa <- names(taxon_map)[sapply(names(taxon_map), function(taxon) {
+  any(str_detect(names(ui2_posterior[ui2_subset, ]), paste0("^", taxon, "_mean_\\d+$")))
+})]
+taxon_map <- taxon_map[present_taxa]
+
+ui2_mean_list <- list()
+ui2_sd_list <- list()
+for(i in 1:length(taxon_map)){
+  ui2_post_pred_check <- get_posterior_predictive_summary(ui2_posterior[ui2_subset, ], names(taxon_map)[i], n_traits, n_samples)
+  ui2_mean_list[[names(taxon_map)[i]]] <- ui2_post_pred_check$means
+  ui2_sd_list[[names(taxon_map)[i]]] <- ui2_post_pred_check$sd
+}
+saveRDS(ui2_mean_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_posterior_predictive_check_means.RDS")
+saveRDS(ui2_sd_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_posterior_predictive_check_sd.RDS")
