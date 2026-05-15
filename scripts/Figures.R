@@ -1086,7 +1086,7 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
         TRUE          ~ "middle"
       )
     )
-  
+
   mle_sp <- lc_mle %>%
     filter(genus == species) %>%
     pivot_longer(cols      = starts_with("Decile."),
@@ -1105,7 +1105,6 @@ plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
       linewidth = 0.8,
       linetype  = "solid"
     ) +
-    scale_x_continuous(limits = c(0,30))+
     scale_fill_manual(
       values = c("tail" = "red", "middle" = "black"),
       labels = c("tail" = "Lower/Upper 2.5%", "middle" = "Middle 95%"),
@@ -1169,7 +1168,7 @@ for(i in species){
     width = 10, height = 8,
     device = cairo_pdf
   )
-} ### note: pan paniscus plotted with breaks 0:40
+}
 
 
 # missing data imputation -------------------------------------------------
