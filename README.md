@@ -34,7 +34,7 @@ BURL flags:
   * -p How often do you want to print useful diagnostics to command line?
   * -s How often do you want to save the current MCMC state as a sample from your posterior distribution
   * -c How many MCMC chains do you want to run? 1 for MCMC, 2+ for Metropolis-coupled MCMC
-  * -nt How many threads do you want to use? -nt must be <= -c and must be at  most 1 less than your system's maximum available threads (if you do not know this, BURL will automatically detect maximum threads)
+  * -nt How many threads do you want to use? -nt must be <= -c and at most 1 less than your system's maximum available threads (if you do not know this, BURL will automatically detect maximum threads)
 * Optional
   * -h prints help statement and exits program; standalone
   * -log Do you want to log-transform your dataset? This is relatively untested and would make interpreting rates and covariances difficult. This option is included only to facilitate analyses of exceptionally variant datasets, but default is turned off and we recommend it stays off.
