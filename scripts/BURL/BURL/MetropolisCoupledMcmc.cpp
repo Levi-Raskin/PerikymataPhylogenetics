@@ -150,6 +150,11 @@ void MetropolisCoupledMcmc::run(void) {
         
         if (n == 1 || n == numCycles || n % sampleFrequency == 0 )
             sample(n);
+            
+        coldModelIdx = -1;
+        for (int i = 0; i < numModels; i++)
+            if (indices[i] == 0)
+                coldModelIdx = i;
     }
 }
 
