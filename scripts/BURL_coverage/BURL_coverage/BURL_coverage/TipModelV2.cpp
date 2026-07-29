@@ -80,6 +80,7 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
         mu = tipDataIncomplete.row(0);
     }
     
+    /*
     // mini MCMC to get us into high prob region quickly
     double curLnL = lnLikelihood();
     double curLnP = lnPriorProbability();
@@ -106,6 +107,7 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
             updateForRejection();
             }
     }
+    */
 }
 
 TipModelV2::~TipModelV2(void){

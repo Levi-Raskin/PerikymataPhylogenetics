@@ -3,12 +3,14 @@
 #number of MCMC cycles
 nc=100000000
 
+RESULTS=/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3
+
 ### posterior estimation ###
 # Lower canine with hominins
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10.tsv" \
+    -o "$RESULTS/lc/lc_dec3_10.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -21,7 +23,7 @@ for i in 1 2 3 4; do
     BURL/build/burl \
         -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv" \
         -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/gelmanRubin/out${i}.tsv" \
+        -o "$RESULTS/lc/gelmanRubin/out${i}.tsv" \
         -n "$nc" \
         -p 1000 \
         -s 1000 \
@@ -34,7 +36,7 @@ done
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10_no_hominin.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_no_hominin.tsv" \
+    -o "$RESULTS/lc/lc_dec3_10_no_hominin.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -46,7 +48,7 @@ BURL/build/burl \
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10_species_means.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_dec3_10_species_means.tsv" \
+    -o "$RESULTS/lc/lc_dec3_10_species_means.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -58,7 +60,7 @@ BURL/build/burl \
 BURL/build/burl \
     -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv" \
     -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-    -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_dec3_10_no_pongo.tsv" \
+    -o "$RESULTS/ui2/ui2_dec3_10_no_pongo.tsv" \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
@@ -83,7 +85,7 @@ for i in 1 2 3 4; do
     BURL/build/burl \
         -i "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv" \
         -it "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt" \
-        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/gelmanRubin/out${i}.tsv" \
+        -o "$RESULTS/ui2/gelmanRubin/out${i}.tsv" \
         -n "$nc" \
         -p 1000 \
         -s 1000 \

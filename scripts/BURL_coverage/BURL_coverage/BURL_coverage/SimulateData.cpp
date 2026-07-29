@@ -60,7 +60,7 @@ void SimulateData::simulateData(void){
         
     //---simulate evo VCV---//
     sampledEvoVCV = psi;
-    Probability::InverseWishart::rv(&rng, sampledEvoVCV, psi, priorDOF);
+    Probability::InverseWishart::rv(&rng, sampledEvoVCV, psi.llt().matrixL(), priorDOF);
     
     //---simulate data---//
     

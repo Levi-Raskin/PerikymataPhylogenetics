@@ -1131,7 +1131,7 @@ double Probability::InverseWishart::lnPdf(Eigen::MatrixXd* support, Eigen::Matri
     thread_local static double logPi = std::log(PI);
     double multiGammaRes = p * (p - 1) / 4.0 * logPi;
     for (int j = 1; j <= p; ++j) {
-        multiGammaRes += std::lgamma(vHalf - (1-j) / 2.0);
+        multiGammaRes += std::lgamma(vHalf + (1-j) / 2.0);
     }
     res -= multiGammaRes;
     

@@ -180,20 +180,21 @@ double PerikymataHSPv4::update(void){
     UserSettings& settings = UserSettings::userSettings();
     RandomVariable& rng = RandomVariable::randomVariableInstance();
 
-    if(settings.getWithPhylogeny() == false){
-        goto forceUpdateTips;
-    }
-
     if(rng.uniformRv() < 0.9 && updateTipsOn == true){
-        forceUpdateTips:
         tipUpdate = true;
-        retry:
-        std::string s = tipNames[(int)(rng.uniformRv() * tipNames.size())];
-        updatedTipModel = tipModels[s];
-        if(updatedTipModel == nullptr)
-            goto retry;
-        double hr = updatedTipModel->update();
-        MultivariateBrownianMotionV2::tipData.row(tipIdxs[s]) = updatedTipModel->getTipMean();
+        
+        const std::string s = tipNames[(int)(rng.uniformRv() * tipNames.size())];
+        updatedTipModel = tipModels.at(s);
+        if (updatedTipModel == nullptr)
+            Msg::error("null tip model for " + s);
+ 
+        const double hr = updatedTipModel->update();
+        savedTipIdx     = tipIdxs.at(s);
+        savedTipDataRow = MultivariateBrownianMotionV2::tipData.row(savedTipIdx);
+ 
+        MultivariateBrownianMotionV2::tipData.row(savedTipIdx) = updatedTipModel->getTipMean();
+            
+        MultivariateBrownianMotionV2::instantiateIndependentContrasts();
         return hr;
     }else{
         tipUpdate = false;
@@ -210,8 +211,11 @@ void PerikymataHSPv4::updateForAcceptance(void){
 }
 
 void PerikymataHSPv4::updateForRejection(void){
-    if(tipUpdate == false)
+    if (tipUpdate == false) {
         MultivariateBrownianMotionV2::updateForRejection();
-    else
+    } else {
         updatedTipModel->updateForRejection();
+        MultivariateBrownianMotionV2::tipData.row(savedTipIdx) = savedTipDataRow;
+        MultivariateBrownianMotionV2::instantiateIndependentContrasts();
+    }
 }
