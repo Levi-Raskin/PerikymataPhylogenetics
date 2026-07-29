@@ -53,11 +53,19 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-o &quot;/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/coverageCheck/coverageFirstLike&quot;"
+            argument = "-o &quot;/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/test&quot;"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-nreps 100"
+            argument = "-c 1000000"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-ntips 10"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-nreps 1"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

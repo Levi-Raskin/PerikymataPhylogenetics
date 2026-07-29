@@ -27,7 +27,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
     numChains       = 10;
     numThreads      = 10;
     printFrequency  = 1000;
-    sampleFrequency = 1000;
+    sampleFrequency = 100;
     logTransformData = false;
 
     std::vector<std::string> arguments;
