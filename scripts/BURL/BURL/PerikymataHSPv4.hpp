@@ -37,9 +37,11 @@ class PerikymataHSPv4 : public MultivariateBrownianMotionV2{
         TipModelV2*                                                                 updatedTipModel;
         Eigen::MatrixXd                                                             scratch;
         Eigen::MatrixXd                                                             tipMeansConcat;
+        Eigen::RowVectorXd                                                          savedTipDataRow;
         Tree                                                                        fixedTree;
         bool                                                                        tipUpdate;
         bool                                                                        updateTipsOn;
+        int                                                                         savedTipIdx;
 };
 
 #endif

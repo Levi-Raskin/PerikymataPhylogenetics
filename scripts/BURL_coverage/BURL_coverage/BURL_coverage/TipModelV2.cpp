@@ -79,35 +79,6 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
     }else{
         mu = tipDataIncomplete.row(0);
     }
-    
-    /*
-    // mini MCMC to get us into high prob region quickly
-    double curLnL = lnLikelihood();
-    double curLnP = lnPriorProbability();
-    RandomVariable& rng = RandomVariable::randomVariableInstance();
-    for (int n=1; n<=10000; n++) {
-        double lnProposalRatio = update();
-        double newLnL = lnLikelihood();
-        double lnLikelihoodRatio = newLnL - curLnL;
-        double newLnP = lnPriorProbability();
-        double lnPriorRatio = newLnP - curLnP;
-        double lnR = lnLikelihoodRatio + lnPriorRatio + lnProposalRatio;
-
-        bool acceptMove = false;
-        if (log(rng.uniformRv()) < lnR)
-            acceptMove = true;
-        if (acceptMove == true)
-            {
-            curLnL = newLnL;
-            curLnP = newLnP;
-            updateForAcceptance();
-            }
-        else
-            {
-            updateForRejection();
-            }
-    }
-    */
 }
 
 TipModelV2::~TipModelV2(void){

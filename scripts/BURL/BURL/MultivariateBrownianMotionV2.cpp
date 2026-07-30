@@ -238,12 +238,13 @@ double MultivariateBrownianMotionV2::update(void){
     if(fixedTree == false && rng.uniformRv() < 0.5){
         updatedParameter = treeParam; //update tree
         hr = updatedParameter->update();
+        instantiateIndependentContrasts();
     }else{
         updatedParameter = nullptr; // variance covariance matrix
+        instantiateIndependentContrasts();
         updateVarianceCovarianceMatrix();
         hr = std::numeric_limits<double>::max();
     }
-    instantiateIndependentContrasts();
     return hr;
 }
 
