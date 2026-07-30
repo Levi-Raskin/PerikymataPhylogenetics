@@ -17,11 +17,18 @@ class SimulateData{
         void                                    simulateData(void);
         
     private:
+        std::pair<double,double>                meanAndSE(const std::vector<double>& v) const;
         //coverage instance vars
         Eigen::MatrixXi                         vcvInCredInt;       // ntraits × ntraits
         Eigen::MatrixXi                         tipMeanInCredInt;   // ntips   × ntraits
         std::vector<Eigen::MatrixXi>            tipVCVInCredInt;    // ntips   × ntraits × ntraits
         Eigen::VectorXi                         imputedInCredInt;   // nimp
+        
+        std::vector<double>                     evoVCVRepCoverage;
+        std::vector<double>                     tipVCVRepCoverage;
+        std::vector<double>                     tipMeanRepCoverage;
+        std::vector<double>                     missingRepCoverage;
+        std::vector<double>                     totalRepCoverage;
         
         //prior parameters
         double                                  priorDOF;
