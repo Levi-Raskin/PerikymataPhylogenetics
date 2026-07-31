@@ -90,14 +90,20 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
         //if withIntraspecific = false, we just take species means
         if(settings.getWithIntraspecific() == false){
             Eigen::MatrixXd mean = Eigen::MatrixXd::Zero(1, s.second.cols());
+            Eigen::VectorXi nObserved = Eigen::VectorXi::Zero(s.second.cols());
             for(int i = 0; i < s.second.rows(); i++){
                 for(int j = 0; j < s.second.cols(); j++){
                     if(!std::isnan(s.second(i,j))){
                         mean(0, j) += s.second(i,j);
+                        nObserved(j)++;
                     }
                 }
             }
-            mean /= s.second.rows();
+            for(int j = 0; j < s.second.cols(); j++){
+                if(nObserved(j) == 0)
+                    Msg::error("Taxon " + s.first + " has no observed values for trait " + std::to_string(j) + "; cannot compute a species mean");
+                mean(0, j) /= (double)nObserved(j);
+            }
             TipModelV2* newTipModel = new TipModelV2(s.first, mean, this);
             tipModels.insert({s.first, newTipModel});
         }else{
@@ -177,7 +183,6 @@ void PerikymataHSPv4::print(void){
 }
 
 double PerikymataHSPv4::update(void){
-    UserSettings& settings = UserSettings::userSettings();
     RandomVariable& rng = RandomVariable::randomVariableInstance();
 
     if(rng.uniformRv() < 0.9 && updateTipsOn == true){

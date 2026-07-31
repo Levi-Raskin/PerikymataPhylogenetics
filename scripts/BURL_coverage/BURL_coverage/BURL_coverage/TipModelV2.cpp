@@ -17,7 +17,8 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
     numRows((int)tipDataIncomplete.rows()),
     numImputationRejections(0), numImputationAcceptances(0),
     cachedLnL(0.0), cachedLnP(0.0),
-    lnLDirty(true), lnPDirty(true){
+    lnLDirty(true), lnPDirty(true),
+    hasMissingData(false), gibbsPkUpdate(false){
     //Data wrangling and setting up tipdatacomplete and missingPkVals objects
     for(int i = 0; i < tipDataIncomplete.rows(); i++){
         for(int j = 0; j < tipDataIncomplete.cols(); j++){
@@ -34,9 +35,13 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
     }
     updatedImpPkDoubles.reserve(parameters.size()); // avoiding memory shuffling overhead later
     
+    for(int i = 0; i < tipDataIncomplete.rows(); i++)
+        if(tipDataIncomplete.row(i).array().isNaN().any())
+            rowsWithMissing.push_back(i);
+    
     if(numRows == 1)
         Msg::warning("One observation given for " + tn + " | treating as species mean known without uncertainty");
-    if(numRows == 1 && updatedImpPkDoubles.size() != 0)
+    if(numRows == 1 && missingPkVals.empty() == false)
         Msg::error("Imputation of species mean missing data not yet supported; coming soon");
     
     updateTipDataComplete();
@@ -281,10 +286,11 @@ void TipModelV2::updatePkGibbs(void){
     updatedImpPkDoubles.clear();
 
     //sample a row to update (just updating one row at a time; less aggressive)
-    int rowToUpdate = (int)(rng.uniformRv() * tipDataIncomplete.rows());
+    if(rowsWithMissing.empty())
+        Msg::error("updatePkGibbs called for " + tipName + " but no rows contain missing data");
+    int rowToUpdate = rowsWithMissing[(int)(rng.uniformRv() * rowsWithMissing.size())];
     
     const Eigen::VectorXd& indDat = tipDataIncomplete.row(rowToUpdate);
-
     // Count missing values first
     missingIndices.clear();
     obsIndices.clear();

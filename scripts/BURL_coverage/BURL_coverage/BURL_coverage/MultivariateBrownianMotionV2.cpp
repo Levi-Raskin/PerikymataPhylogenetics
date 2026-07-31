@@ -55,7 +55,8 @@ void MultivariateBrownianMotionV2::addData(std::vector<std::string> rn, Eigen::M
 
     // ── IW prior / posterior ─────────────────────────────────────────────────
     dof = numberOfTraits + 2; //such that the mean is the scale matrix
-    psi  = Eigen::MatrixXd::Identity(numberOfTraits, numberOfTraits);
+    psi = Eigen::MatrixXd::Constant(numberOfTraits, numberOfTraits, 1e-6);
+    psi.diagonal().array() = 1.0;
     varianceCovarianceMatrix = Eigen::MatrixXd::Identity(numberOfTraits, numberOfTraits);
     mu0 = Eigen::VectorXd::Zero(numberOfTraits);
     dofN = dof + numberOfInternalNodes;

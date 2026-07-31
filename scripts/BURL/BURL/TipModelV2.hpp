@@ -55,6 +55,7 @@ class TipModelV2 : public PhylogeneticModel{
         std::vector<std::string>                                            parmNames;
         std::vector<double>                                                 parmValues;
         std::vector<int>                                                    missingIndices;
+        std::vector<int>                                                    rowsWithMissing;
         std::vector<int>                                                    obsIndices;
         std::vector<ParameterDouble*>                                       updatedImpPkDoubles;
         PhylogeneticModel*                                                  model;

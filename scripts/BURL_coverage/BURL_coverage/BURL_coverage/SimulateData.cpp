@@ -163,7 +163,7 @@ void SimulateData::checkCredInt(void){
             size_t commaPos = s.find(',');
             int i = std::stoi(s.substr(rowPos, commaPos - rowPos));
             int j = std::stoi(s.substr(commaPos + 1));
-            auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(x), 0.1);
+            auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(x), 0.5);
             if(sampledEvoVCV(i,j) < impInterval.second && sampledEvoVCV(i,j) > impInterval.first){
                 vcvInCredInt(i,j)++;
                 evoVCVCovered++;
@@ -184,7 +184,7 @@ void SimulateData::checkCredInt(void){
             auto it = std::find(cn.begin(), cn.end(), paramName);
             if(it != cn.end()) {
                 int colIdx = std::distance(cn.begin(), it);
-                auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.1);
+                auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.5);
                 
                 if(trueMean(traitIdx) < impInterval.second && trueMean(traitIdx) > impInterval.first) {
                     tipMeanInCredInt(tipIdx,traitIdx)++;
@@ -210,7 +210,7 @@ void SimulateData::checkCredInt(void){
                 auto it = std::find(cn.begin(), cn.end(), paramName);
                 if(it != cn.end()) {
                     int colIdx = std::distance(cn.begin(), it);
-                    auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.1);
+                    auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(colIdx), 0.5);
                     
                     if(trueVCV(i,j) < impInterval.second && trueVCV(i,j) > impInterval.first) {
                         tipVCVInCredInt[tipIdx](i,j)++;
@@ -247,7 +247,7 @@ void SimulateData::checkCredInt(void){
             auto it = trueMissingValues.find({absRow, col});
             if(it != trueMissingValues.end()){
                 double trueVal = it->second;
-                auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(x), 0.1);
+                auto impInterval = Utility::Bayesian::credibleIntervalBurnIn(rDat.col(x), 0.5);
                 if(trueVal > impInterval.first && trueVal < impInterval.second){
                     int impIdx = (int)std::distance(trueMissingValues.begin(), it);
                     imputedInCredInt(impIdx)++;
