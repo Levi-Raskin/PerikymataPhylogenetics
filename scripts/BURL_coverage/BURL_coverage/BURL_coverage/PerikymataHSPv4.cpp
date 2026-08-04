@@ -196,8 +196,6 @@ double PerikymataHSPv4::update(void){
         const double hr = updatedTipModel->update();
         
         if(hr == std::numeric_limits<double>::max()){
-            //updated a tip VCV; safe to update evo VCV
-            MultivariateBrownianMotionV2::update();
             return hr;
         }
         savedTipIdx     = tipIdxs.at(s);

@@ -162,6 +162,11 @@ double PerikymataHSPv4::update(void){
             Msg::error("null tip model for " + s);
  
         const double hr = updatedTipModel->update();
+        
+        if(hr == std::numeric_limits<double>::max()){
+            //updated a tip VCV, gibbs
+            return hr;
+        }
         savedTipIdx     = tipIdxs.at(s);
         savedTipDataRow = MultivariateBrownianMotionV2::tipData.row(savedTipIdx);
  

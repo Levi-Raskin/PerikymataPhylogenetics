@@ -196,8 +196,8 @@ void TipModelV2::print(void){
         for(Parameter* p : parameters)
             if(p->getParmPrintConsole() == true)
                 std::cout << p->getName() << " a/r: " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive();
-        if(hasMissingData == true)
-            std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
+//        if(hasMissingData == true)
+//            std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
         std::cout << "\n";
     }
 }
