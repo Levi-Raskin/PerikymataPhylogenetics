@@ -24,7 +24,7 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
     // Defaults
     outputFile      = "";
     chainLength     = 2000000;
-    numChains       = 10;
+    numChains       = 1;
     numThreads      = 10;
     printFrequency  = 1000;
     sampleFrequency = 100;

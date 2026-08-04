@@ -29,8 +29,8 @@ class PerikymataHSPv4 : public MultivariateBrownianMotionV2{
         void                                                                        calculateTipMeans(void);
         void                                                                        updatePkGibbs(void);
         //objects in order of memory footprint
-        std::unordered_map<std::string, TipModelV2*>                                tipModels;
-        std::unordered_map<std::string, int>                                        tipIdxs;
+        std::map<std::string, TipModelV2*>                                          tipModels;
+        std::map<std::string, int>                                                  tipIdxs;
         std::vector<std::string>                                                    tipNames;
         std::vector<double>                                                         parmValues;
         std::vector<double>                                                         scratchVec;

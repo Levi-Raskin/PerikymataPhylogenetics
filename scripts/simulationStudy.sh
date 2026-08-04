@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ntips=(8 16 32)
+ntips=(8)
 ntraits=(8 16 32)
 nimp=(0 8 16 32)
 nobsv=(2 4 8 16)
@@ -9,10 +9,18 @@ max_jobs=3
 
 run_burlc () {
     local t="$1" tr="$2" im="$3" no="$4"
+    local outbase="/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/simulated_tips_${t}_traits_${tr}_nimp_${im}_nobs_${no}_20_reps"
+    local outfile="${outbase}CoverageResults.txt"
+
+    if [ -f "$outfile" ]; then
+        echo "Skipping (already exists): $outfile"
+        return
+    fi
+
     BURL_coverage/BURL_coverage/build/burlc \
-        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/simulated_tips_${t}_traits_${tr}_nimp_${im}_nobs_${no}_100_reps" \
-        -c 1000000 \
-        -nreps 100 \
+        -o "$outbase" \
+        -c 10000000 \
+        -nreps 20 \
         -ntips "$t" \
         -ntraits "$tr" \
         -nimp "$im" \
@@ -23,10 +31,18 @@ run_burlc () {
 
 run_burlc_wo_intra () {
     local t="$1" tr="$2" im="$3" no="$4"
+    local outbase="/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/simulated_wo_intra_${t}_traits_${tr}_nimp_${im}_nobs_${no}_20_reps"
+    local outfile="${outbase}CoverageResults.txt"
+
+    if [ -f "$outfile" ]; then
+        echo "Skipping (already exists): $outfile"
+        return
+    fi
+
     BURL_coverage/BURL_coverage/build/burlc \
-        -o "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/simulated_wo_intra_${t}_traits_${tr}_nimp_${im}_nobs_${no}_100_reps" \
-        -c 1000000 \
-        -nreps 100 \
+        -o "$outbase" \
+        -c 10000000 \
+        -nreps 20 \
         -ntips "$t" \
         -ntraits "$tr" \
         -nimp "$im" \
