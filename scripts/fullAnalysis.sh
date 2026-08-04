@@ -3,7 +3,7 @@
 #number of MCMC cycles
 nc=100000000
 
-RESULTS=/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3
+RESULTS=/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_MCMC
 
 ### posterior estimation ###
 # Lower canine with hominins
@@ -14,7 +14,7 @@ BURL/build/burl \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
-    -c 10 \
+    -c 1 \
     -nt 10 \
     -log F
 
@@ -27,7 +27,7 @@ for i in 1 2 3 4; do
         -n "$nc" \
         -p 1000 \
         -s 1000 \
-        -c 10 \
+        -c 1 \
         -nt 10 \
         -log F
 done
@@ -40,7 +40,7 @@ BURL/build/burl \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
-    -c 10 \
+    -c 1 \
     -nt 10 \
     -log F
 
@@ -52,7 +52,7 @@ BURL/build/burl \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
-    -c 10 \
+    -c 1 \
     -nt 10 \
     -log F
 
@@ -64,7 +64,7 @@ BURL/build/burl \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
-    -c 10 \
+    -c 1 \
     -nt 10 \
     -log F
     
@@ -76,7 +76,7 @@ BURL/build/burl \
     -n "$nc" \
     -p 1000 \
     -s 1000 \
-    -c 10 \
+    -c 1 \
     -nt 10 \
     -log F
 
@@ -89,7 +89,7 @@ for i in 1 2 3 4; do
         -n "$nc" \
         -p 1000 \
         -s 1000 \
-        -c 10 \
+        -c 1 \
         -nt 10 \
         -log F
 done
