@@ -5,7 +5,18 @@
 #include <iostream>
 #include <set>
 
-ParameterIntraspecificMean::ParameterIntraspecificMean(double prob, std::string n, Eigen::MatrixXd* data, PhylogeneticModel* p) : Parameter(prob, n), nTraits(data->cols()), nObs(data->rows()), tipData(data), windowSize(0.5), stepSize(1e-3), model(p), targetAcceptanceRate(0.43), upperAcceptanceRate(targetAcceptanceRate + 0.01),lowerAcceptanceRate(targetAcceptanceRate-0.01), ngAdaptive(50000), covarianceUpdateFreq(100), useEmpiricalCovariance(false), numAcceptances(0), numRejections(0){
+ParameterIntraspecificMean::ParameterIntraspecificMean(double prob, std::string n, Eigen::MatrixXd* data, PhylogeneticModel* p) : Parameter(prob, n),
+    nTraits(data->cols()), nObs(data->rows()),
+    tipData(data),
+    windowSize(0.5),
+    stepSize(1e-3),
+    model(p),
+    targetAcceptanceRate(0.43),
+    upperAcceptanceRate(targetAcceptanceRate + 0.01),lowerAcceptanceRate(targetAcceptanceRate-0.01),
+    ngAdaptive(50000),
+    covarianceUpdateFreq(100),
+    useEmpiricalCovariance(false),
+    numAcceptances(0), numRejections(0){
 
     RandomVariable& rng = RandomVariable::randomVariableInstance();
 
@@ -53,7 +64,7 @@ double ParameterIntraspecificMean::updateMHmvNDraw(void){
     const size_t totalSamples = numRejections + numAcceptances;
     
     if (totalSamples % 50 == 0 && totalSamples < ngAdaptive) {
-    const size_t numAccepted = std::count(recentAcceptRej.begin(), recentAcceptRej.end(), true);
+        const size_t numAccepted = std::count(recentAcceptRej.begin(), recentAcceptRej.end(), true);
         const double acceptanceRate = static_cast<double>(numAccepted) / recentAcceptRej.size();
         if (acceptanceRate < lowerAcceptanceRate)
             windowSize /= 1.05;
@@ -64,6 +75,7 @@ double ParameterIntraspecificMean::updateMHmvNDraw(void){
         adaptiveProposalActive = false;
     }
     
+    /*
      if (totalSamples % covarianceUpdateFreq == 0 && totalSamples < ngAdaptive) {
         updateEmpiricalCovariance();
     }
@@ -82,7 +94,10 @@ double ParameterIntraspecificMean::updateMHmvNDraw(void){
             proposalCholLower = proposalCov.llt().matrixL().toDenseMatrix();
         }
     }
+    */
     
+    proposalCov = windowSize * windowSize * varianceCovariance->getValue() / nObs;
+    proposalCholLower = proposalCov.llt().matrixL().toDenseMatrix();
     // Propose
     Probability::MultivariateNormal::rv(&rng, mean[0], mean[1], proposalCholLower);
     return 0.0;

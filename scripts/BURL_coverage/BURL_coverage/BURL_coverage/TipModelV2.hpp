@@ -4,6 +4,7 @@
 #include "PhylogeneticModel.hpp"
 #include "Eigen/Dense"
 
+class Parameter;
 class ParameterIntraspecificMean;
 class ParameterIntraspecificVariance;
 class ParameterIntraspecificVarianceGibbs;
@@ -54,10 +55,11 @@ class TipModelV2 : public PhylogeneticModel{
         std::map<std::pair<int, int>, ParameterDouble*>                     missingPkVals;
         std::vector<std::string>                                            parmNames;
         std::vector<double>                                                 parmValues;
-        std::vector<int>                                                    missingIndices;
-        std::vector<int>                                                    rowsWithMissing;
-        std::vector<int>                                                    obsIndices;
+        std::vector<std::vector<int>>                                       patternMissingIdx;
+        std::vector<std::vector<int>>                                       patternObsIdx;
+        std::vector<std::vector<int>>                                       patternRows;
         std::vector<ParameterDouble*>                                       updatedImpPkDoubles;
+        std::vector<Parameter*>                                              updatableParameters; // parameters with nonzero proposal probability
         PhylogeneticModel*                                                  model;
         ParameterIntraspecificMean*                                         taxonMean;
         ParameterIntraspecificVarianceGibbs*                                taxonVariance;

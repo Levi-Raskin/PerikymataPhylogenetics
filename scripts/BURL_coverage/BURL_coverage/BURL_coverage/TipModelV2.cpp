@@ -35,9 +35,34 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
     }
     updatedImpPkDoubles.reserve(parameters.size()); // avoiding memory shuffling overhead later
     
-    for(int i = 0; i < tipDataIncomplete.rows(); i++)
-        if(tipDataIncomplete.row(i).array().isNaN().any())
-            rowsWithMissing.push_back(i);
+    std::map<std::vector<int>, int> patternIdByKey;
+
+    for(int i = 0; i < numRows; i++){
+        if(tipDataIncomplete.row(i).array().isNaN().any()){
+            std::vector<int> missIdx, obsIdx;
+            missIdx.reserve(numCols);
+            obsIdx.reserve(numCols);
+            for(int j = 0; j < numCols; j++){
+                if(std::isnan(tipDataIncomplete(i,j)))
+                    missIdx.push_back(j);
+                else
+                    obsIdx.push_back(j);
+            }
+
+            auto it = patternIdByKey.find(missIdx);
+            int patternIdx;
+            if(it == patternIdByKey.end()){
+                patternIdx = (int)patternMissingIdx.size();
+                patternIdByKey.emplace(missIdx, patternIdx);
+                patternMissingIdx.push_back(missIdx);
+                patternObsIdx.push_back(obsIdx);
+                patternRows.push_back({});
+            }else{
+                patternIdx = it->second;
+            }
+            patternRows[patternIdx].push_back(i);
+        }
+    }
     
     if(numRows == 1)
         Msg::warning("One observation given for " + tn + " | treating as species mean known without uncertainty");
@@ -59,22 +84,25 @@ TipModelV2::TipModelV2(std::string tn, Eigen::MatrixXd d, PerikymataHSPv4* m) : 
         taxonVariance->updateForAcceptance();
         
         hasMissingData = tipDataIncomplete.array().isNaN().any();
-        
+
         double sum = 0.0;
         for (Parameter* p : parameters)
             sum += p->getProposalProbability();
         for (Parameter* p : parameters)
             p->setProposalProbability(p->getProposalProbability()/sum);
-        
-        
+            
+        updatableParameters.clear();
+        for (Parameter* p : parameters)
+            if (p->getProposalProbability() > 0.0)
+                updatableParameters.push_back(p);
+                
         //preallocs
         mu = taxonMean->getValue();
         sigma = taxonVariance->getValue();
         sigmaChol = sigma.llt();
-        L = sigmaChol.matrixL();
-        sigmaLogDet = L.diagonal().array().log().sum();
-        
-        xDiff.resize(numRows);
+        sigmaLogDet = sigmaChol.matrixLLT().diagonal().array().log().sum();\
+
+        xDiff.resize(numCols);
         scratchVec.resize(taxonMean->getValue().size());
         scratchMat.resize(taxonVariance->getValue().rows(), taxonVariance->getValue().cols());
         
@@ -150,8 +178,7 @@ double TipModelV2::computeLnLikelihood(void){
     mu = taxonMean->getValue();
     sigma = taxonVariance->getValue();
     sigmaChol = sigma.llt();
-    L = sigmaChol.matrixL();
-    sigmaLogDet = L.diagonal().array().log().sum();
+    sigmaLogDet = sigmaChol.matrixLLT().diagonal().array().log().sum();
     
     double term2 = -numRows * sigmaLogDet;
     
@@ -196,8 +223,8 @@ void TipModelV2::print(void){
         for(Parameter* p : parameters)
             if(p->getParmPrintConsole() == true)
                 std::cout << p->getName() << " a/r: " << p->getAcceptanceRatio() << " " << p->getAdaptiveProposalActive();
-        if(hasMissingData == true)
-            std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
+//        if(hasMissingData == true)
+//            std::cout << " | missing data imputation a/r: " << (double)numImputationAcceptances / (double)(numImputationRejections + numImputationAcceptances);
         std::cout << "\n";
     }
 }
@@ -217,15 +244,17 @@ double TipModelV2::update(void){
         Parameter* parm = nullptr;
         double sum = 0.0;
         double u = rng.uniformRv();
-        for (Parameter* p : parameters)
+        for (Parameter* p : updatableParameters)
             {
             sum += p->getProposalProbability();
-            if (u <= sum)
+            if (u < sum)
                 {
                 parm = p;
                 break;
                 }
             }
+        if (parm == nullptr)
+            parm = updatableParameters.back();
         updatedParameter = parm;
         double hr = updatedParameter->update();
         lnLDirty = true;
@@ -285,83 +314,69 @@ void TipModelV2::updatePkGibbs(void){
 
     updatedImpPkDoubles.clear();
 
-    //sample a row to update (just updating one row at a time; less aggressive)
-    if(rowsWithMissing.empty())
-        Msg::error("updatePkGibbs called for " + tipName + " but no rows contain missing data");
-    int rowToUpdate = rowsWithMissing[(int)(rng.uniformRv() * rowsWithMissing.size())];
-    
-    const Eigen::VectorXd& indDat = tipDataIncomplete.row(rowToUpdate);
-    // Count missing values first
-    missingIndices.clear();
-    obsIndices.clear();
-    missingIndices.reserve(indDat.size());
-    obsIndices.reserve(indDat.size());
-    
-    for(int i = 0; i < indDat.size(); i++) {
-        if(std::isnan(indDat(i)))
-            missingIndices.push_back(i);
-        else
-            obsIndices.push_back(i);
+    if(patternRows.empty())
+        Msg::error("updatePkGibbs called for " + tipName + " but no missingness patterns are present");
+
+    // Pick a missingness-pattern group at random.
+    int groupIdx = (int)(rng.uniformRv() * patternRows.size());
+    if(groupIdx >= (int)patternRows.size())
+        groupIdx = (int)patternRows.size() - 1;   // guard against uniformRv() == 1.0
+
+    const std::vector<int>& missingIdx  = patternMissingIdx[groupIdx];
+    const std::vector<int>& obsIdx      = patternObsIdx[groupIdx];
+    const std::vector<int>& rowsInGroup = patternRows[groupIdx];
+
+    const int numMissing = (int)missingIdx.size();
+    const int numObs     = (int)obsIdx.size();
+
+    if(obsIdx.empty())
+        Msg::error("all tip data is missing for a row in " + tipName);
+
+    sigma11.resize(numMissing, numMissing);
+    sigma12.resize(numMissing, numObs);
+    sigma21.resize(numObs, numMissing);
+    sigma22.resize(numObs, numObs);
+    u1.resize(numMissing);
+    u2.resize(numObs);
+    x2.resize(numObs);
+
+    for(int i = 0; i < numMissing; i++){
+        int mi = missingIdx[i];
+        u1(i) = tipMean(mi);
+        for(int j = 0; j < numMissing; j++)
+            sigma11(i, j) = tipVCV(mi, missingIdx[j]);
+        for(int j = 0; j < numObs; j++)
+            sigma12(i, j) = tipVCV(mi, obsIdx[j]);
     }
-    
-    // Skip individuals with no missing data
-    if(!missingIndices.empty()){
-        if(obsIndices.empty())
-            Msg::error("all tip data is missing");
-        
-        int numMissing = (int)missingIndices.size();
-        int numObs = (int)obsIndices.size();
-        
-        // Resize matrices only when necessary (reuse memory)
-        sigma11.resize(numMissing, numMissing);
-        sigma12.resize(numMissing, numObs);
-        sigma21.resize(numObs, numMissing);
-        sigma22.resize(numObs, numObs);
-        u1.resize(numMissing);
-        u2.resize(numObs);
-        x2.resize(numObs);
-        
-        for(int i = 0; i < numMissing; i++) {
-            int mi = missingIndices[i];
-            u1(i) = tipMean(mi);
-            for(int j = 0; j < numMissing; j++) {
-                sigma11(i, j) = tipVCV(mi, missingIndices[j]);
-            }
-            for(int j = 0; j < numObs; j++) {
-                sigma12(i, j) = tipVCV(mi, obsIndices[j]);
-            }
-        }
-        
-        for(int i = 0; i < numObs; i++) {
-            int oi = obsIndices[i];
-            u2(i) = tipMean(oi);
-            x2(i) = indDat(oi);
-            for(int j = 0; j < numMissing; j++) {
-                sigma21(i, j) = tipVCV(oi, missingIndices[j]);
-            }
-            for(int j = 0; j < numObs; j++) {
-                sigma22(i, j) = tipVCV(oi, obsIndices[j]);
-            }
-        }
-        
-        sigma22Solver = sigma22.llt();
-        if(sigma22Solver.info() != Eigen::Success) {
-            Msg::error("Cholesky decomposition failed");
-        }
-        
-        // Compute conditional distribution parameters
-        sigma22Inv_sigma21 = sigma22Solver.solve(sigma21);
-        sigmaCond = sigma11 - sigma12 * sigma22Inv_sigma21;
-        
-        // sigma22Inv * (x2 - u2)
+    for(int i = 0; i < numObs; i++){
+        int oi = obsIdx[i];
+        u2(i) = tipMean(oi);
+        for(int j = 0; j < numMissing; j++)
+            sigma21(i, j) = tipVCV(oi, missingIdx[j]);
+        for(int j = 0; j < numObs; j++)
+            sigma22(i, j) = tipVCV(oi, obsIdx[j]);
+    }
+
+    // Factor sigma22 ONCE for this pattern group — reused for every row below.
+    sigma22Solver = sigma22.llt();
+    if(sigma22Solver.info() != Eigen::Success)
+        Msg::error("Cholesky decomposition failed for " + tipName);
+
+    sigma22Inv_sigma21 = sigma22Solver.solve(sigma21);
+    sigmaCond = sigma11 - sigma12 * sigma22Inv_sigma21;
+
+    for(int rowToUpdate : rowsInGroup){
+        for(int i = 0; i < numObs; i++)
+            x2(i) = tipDataIncomplete(rowToUpdate, obsIdx[i]);
+
         x2_minus_u2 = x2 - u2;
         sigma22Inv_diff = sigma22Solver.solve(x2_minus_u2);
         uCond = u1 + sigma12 * sigma22Inv_diff;
-        
-        // Sample new values for missing data
+
         newVals = Probability::MultivariateNormal::rv(&rng, uCond, &sigmaCond);
-        for(int idx = 0; idx < numMissing; idx++) {
-            int j = missingIndices[idx];
+
+        for(int idx = 0; idx < numMissing; idx++){
+            int j = missingIdx[idx];
             auto key = std::make_pair(rowToUpdate, j);
             auto it = missingPkVals.find(key);
             if (it != missingPkVals.end() && it->second != nullptr) {
