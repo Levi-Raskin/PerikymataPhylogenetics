@@ -47,7 +47,8 @@ class MultivariateBrownianMotionV2 : public PhylogeneticModel{
         // Tip data
         // indexed rowise by tip index-- tip 0 corresponds to row 0 etc.
         std::vector<Eigen::VectorXd>                                        nodeVals;
-        std::vector<Eigen::VectorXd>                                        contrasts;
+        Eigen::MatrixXd                                                     contrasts;
+        int                                                                 numContrasts;
         std::vector<std::pair<int, double>>                                 modifiedBranches;
         std::vector<double>                                                 branchLength;
         std::vector<std::string>                                            originalDataRownames;
@@ -58,6 +59,7 @@ class MultivariateBrownianMotionV2 : public PhylogeneticModel{
         Eigen::MatrixXd                                                     varianceCovarianceMatrix;
         Eigen::MatrixXd                                                     psi;
         Eigen::MatrixXd                                                     psiN;
+        Eigen::MatrixXd                                                     scratch;
         Eigen::VectorXd                                                     mu0;
         Eigen::MatrixXd*                                                    originalData;
         ParameterTree*                                                      treeParam;

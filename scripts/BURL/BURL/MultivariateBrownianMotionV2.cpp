@@ -50,8 +50,10 @@ void MultivariateBrownianMotionV2::addData(std::vector<std::string> rn, Eigen::M
 
     // ── Contrast computation scratch space ───────────────────────────────────
     contrastScatterMatrix.resize(numberOfTraits, numberOfTraits);
-    contrasts.reserve(numberOfInternalNodes);
-
+    contrasts.resize(numberOfTraits, numberOfInternalNodes);
+    numContrasts = 0;
+    scratch.resize(numberOfTraits, numberOfInternalNodes);
+    
     // ── IW prior / posterior ─────────────────────────────────────────────────
     dof = numberOfTraits + 2; //such that the mean is the scale matrix
     psi = Eigen::MatrixXd::Constant(numberOfTraits, numberOfTraits, 1e-6);
@@ -90,25 +92,13 @@ std::vector<double> MultivariateBrownianMotionV2::getParameterString(void){
 }
 
 double MultivariateBrownianMotionV2::lnLikelihood(void){
-//    Eigen::MatrixXd SigmaInv = varianceCovarianceMatrix.inverse();
-//    double logDetSigma = std::log(varianceCovarianceMatrix.determinant());
-//    
-//    cachedLnL = -0.5 * numberOfInternalNodes * (numberOfTraits * log2Pi + logDetSigma);
-//    for(const Eigen::VectorXd& c : contrasts)
-//        cachedLnL -= 0.5 * c.dot(SigmaInv * c);
-//
-//    return cachedLnL;
     Eigen::LLT<Eigen::MatrixXd> llt(varianceCovarianceMatrix);
-    const Eigen::MatrixXd& L = llt.matrixL();
 
-    double logDetSigma = 2.0 * L.diagonal().array().log().sum();
+    double logDetSigma = 2.0 * llt.matrixLLT().diagonal().array().log().sum();
 
-    Eigen::MatrixXd C(numberOfTraits, contrasts.size());
-    for(int i = 0; i < (int)contrasts.size(); i++)
-        C.col(i) = contrasts[i];
-
-    Eigen::MatrixXd Z = llt.matrixL().solve(C);
-    double traceSum = Z.squaredNorm();
+    scratch.leftCols(numContrasts) = contrasts.leftCols(numContrasts);
+    llt.matrixL().solveInPlace(scratch.leftCols(numContrasts));
+    double traceSum = scratch.leftCols(numContrasts).squaredNorm();
 
     cachedLnL = -0.5 * numberOfInternalNodes * (numberOfTraits * log2Pi + logDetSigma) - 0.5 * traceSum;
     return cachedLnL;
@@ -120,26 +110,23 @@ void MultivariateBrownianMotionV2::instantiateIndependentContrasts(void){
         t->initializeDownPassSequence();
         dpseq = t->getDownPassSequence();
         root = t->getRoot();
-                
-        // Populate branch lengths
+
         for(Node* n : dpseq) {
             if(n != root) {
                 Node* nAnc = n->getAncestor();
                 branchLength[n->getIndex()] = t->getBranchLength(n, nAnc);
             }
         }
-        
+
         branchLengthsInstantiated = true;
     }
 
     modifiedBranches.clear();
-    contrasts.clear();
-    
-    //Instantiate independent contrasts
-    
+    numContrasts = 0;   // reset column counter instead of contrasts.clear()
+
     for(Node* n : dpseq){
         int nIdx = n->getIndex();
-        
+
         if(n->getIsTip() == false){
             nDesc = n->getDescendants();
             const Eigen::VectorXd& x0 = nodeVals[nDesc[0]->getIndex()];
@@ -148,22 +135,24 @@ void MultivariateBrownianMotionV2::instantiateIndependentContrasts(void){
             double v1 = branchLength[nDesc[1]->getIndex()];
             double blSum = v0 + v1;
             double invBlSum = 1.0 / blSum;
-                
-            contrasts.push_back((x1 - x0) / std::sqrt(blSum)); //felsensteins standardized contrast
-            
-            nodeVals[nIdx] = ( v1*x0 + v0*x1 ) * invBlSum; //this is the pruned node estimate;
-            
+
+            // write directly into the preallocated column — no allocation
+            contrasts.col(numContrasts).noalias() = (x1 - x0) / std::sqrt(blSum);
+            numContrasts++;
+
+            nodeVals[nIdx] = ( v1*x0 + v0*x1 ) * invBlSum;
+
             if(n != root){
                 double origBL = branchLength[nIdx];
                 modifiedBranches.emplace_back(nIdx, origBL);
                 branchLength[nIdx] = origBL + (v0 * v1) * invBlSum;
             }
-            
+
         }else{
             nodeVals[nIdx] = tipData.row(nIdx);
         }
     }
-    
+
     for(auto& [idx, origVal] : modifiedBranches)
         branchLength[idx] = origVal;
 }
@@ -262,12 +251,13 @@ void MultivariateBrownianMotionV2::updateForRejection(void){
 void MultivariateBrownianMotionV2::updateVarianceCovarianceMatrix(void){
     RandomVariable& rng = RandomVariable::randomVariableInstance();
     
-    contrastScatterMatrix = Eigen::MatrixXd::Zero(numberOfTraits, numberOfTraits);
-    for(const Eigen::VectorXd& c : contrasts)
-        contrastScatterMatrix.noalias() += c * c.transpose();
+    contrastScatterMatrix.setZero();
+    contrastScatterMatrix.selfadjointView<Eigen::Lower>().rankUpdate(contrasts.leftCols(numContrasts));
     
-    psiN = psi + contrastScatterMatrix;
+    psiN = contrastScatterMatrix.selfadjointView<Eigen::Lower>();
+    psiN += psi;
     Eigen::MatrixXd psiNInvLower = psiN.inverse().llt().matrixL();
     
-    Probability::InverseWishart::rv(&rng, varianceCovarianceMatrix, psiNInvLower, dofN);
+    const double dofNlocal = dof + numContrasts;
+    Probability::InverseWishart::rv(&rng, varianceCovarianceMatrix, psiNInvLower, dofNlocal);
 }

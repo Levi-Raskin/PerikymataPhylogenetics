@@ -142,7 +142,6 @@ double PerikymataHSPv4::lnLikelihood(void){
     //CANNOT CACHE LNL BECAUSE TIP MEANS CHANGE
     double lnl = 0.0;
 
-    UserSettings& settings = UserSettings::userSettings();
     if(withPhylo== true)
         lnl += MultivariateBrownianMotionV2::lnLikelihood();
 

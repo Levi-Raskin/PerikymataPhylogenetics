@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ntips=(8 16)
+ntips=(8 16 32)
 ntraits=(8 16 32)
 nimp=(0 8 16 32)
 nobsv=(2 4 8 16)
@@ -8,7 +8,7 @@ nobsv=(2 4 8 16)
 max_jobs=8
 
 nc=10000000
-nr=20
+nr=100
 
 run_burlc () {
     local t="$1" tr="$2" im="$3" no="$4"

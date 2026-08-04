@@ -17,7 +17,9 @@
 
 PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN, Eigen::MatrixXd* dat) : MultivariateBrownianMotionV2(),
     fixedTree(*backbone),
-    updateTipsOn(true){
+    updateTipsOn(true),
+    savedTipIdx(-1){
+    UserSettings& settings = UserSettings::userSettings();
     
     fixedTree = Tree(*backbone);
 
@@ -42,27 +44,23 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
         std::cout << "dropping " << name << std::endl;
         fixedTree.dropTip(name);
     }
-    
+
     fixedTree.reindexNodes();
     fixedTree.initializeDownPassSequence();
-    
+
+    std::unordered_map<std::string, int> nodeIdxByName;
     for(Node* n : fixedTree.getDownPassSequence()){
         if(n->getIsTip()){
-            bool found = false;
             for(const std::string& s : datRN){
                 if(s == n->getName()){
-                    found = true;
-                    tipIdxs.insert({s, n->getIndex()});
+                    nodeIdxByName.insert({s, n->getIndex()});
                     break;
                 }
             }
         }
     }
 
-
     //----------Data wrangling-------//
-
-    // Constructing tipDataIncomplete objects
     std::map<std::string, Eigen::MatrixXd> tipMatrices;
     for(int i = 0; i < datRN.size(); i++){
         std::string taxName = datRN[i];
@@ -75,99 +73,106 @@ PerikymataHSPv4::PerikymataHSPv4(Tree* backbone, std::vector<std::string> datRN,
             tipDat.row(tipDat.rows() - 1) = datRow;
         }
     }
-     
-    UserSettings& settings = UserSettings::userSettings();
+
     if(settings.getLogTransformData() == true)
         for(auto& s : tipMatrices)
             s.second = s.second.array().log();
 
-    for(auto&s : tipMatrices){
+    tipNames.reserve(tipMatrices.size());
+    tipModels.reserve(tipMatrices.size());
+
+    for(auto& s : tipMatrices){
         tipNames.push_back(s.first);
+
         TipModelV2* newTipModel = new TipModelV2(s.first, s.second, this);
-        tipModels.insert({s.first, newTipModel});
+        tipModels.push_back(newTipModel);
     }
-    
+
+    // resolve node indices in the same order as tipNames/tipModels
+    tipNodeIdxs.resize(tipNames.size());
+    for(int idx = 0; idx < (int)tipNames.size(); idx++){
+        auto it = nodeIdxByName.find(tipNames[idx]);
+        if(it == nodeIdxByName.end())
+            Msg::error("Could not find tree node index for taxon " + tipNames[idx]);
+        tipNodeIdxs[idx] = it->second;
+    }
+
     tipMeansConcat.resize(tipModels.size(), dat->cols());
-    int idx = 0;
-    for(auto&s : tipModels){
-        tipMeansConcat.row(idx) = s.second->getTipMean();
-        idx++;
-    }
-    
+    for(int idx = 0; idx < (int)tipModels.size(); idx++)
+        tipMeansConcat.row(idx) = tipModels[idx]->getTipMean();
+
     //mvBM set up
     MultivariateBrownianMotionV2::addData(tipNames, &tipMeansConcat);
     MultivariateBrownianMotionV2::setTree(&fixedTree);
-    
-    if(tipModels.size() != fixedTree.getNumTaxa())
+
+    if((int)tipModels.size() != fixedTree.getNumTaxa())
         Msg::error("diff # of tip models instantiated from taxa");
 }
 
 PerikymataHSPv4::~PerikymataHSPv4(void){
-    for(auto&s : tipModels){
-        delete s.second;
-    }
+    for(TipModelV2* t : tipModels)
+        delete t;
 }
 
 double PerikymataHSPv4::lnLikelihood(void){
     //CANNOT CACHE LNL BECAUSE TIP MEANS CHANGE
-    double lnl = MultivariateBrownianMotionV2::lnLikelihood();
-    for (auto s : tipModels)
-        lnl += s.second->lnLikelihood();
+    double lnl =  MultivariateBrownianMotionV2::lnLikelihood();
+
+    for(TipModelV2* t : tipModels)
+        lnl += t->lnLikelihood();
     return lnl;
 }
 
 
 double PerikymataHSPv4::lnPriorProbability(void){
     double lnp = MultivariateBrownianMotionV2::lnPriorProbability();
-    for (auto s : tipModels)
-        lnp += s.second->lnPriorProbability();
+    for(TipModelV2* t : tipModels)
+        lnp += t->lnPriorProbability();
     return lnp;
 }
 
 std::vector<std::string> PerikymataHSPv4::getParameterNames(void){
     std::vector<std::string> parmValues = MultivariateBrownianMotionV2::getParameterNames();
-    //adding in tipModel names
-    for(auto& s : tipModels){
-        std::vector<std::string> n = s.second->getParameterNames();
+    for(TipModelV2* t : tipModels){
+        std::vector<std::string> n = t->getParameterNames();
         parmValues.insert(parmValues.end(), n.begin(), n.end());
     }
-    
     return parmValues;
 }
 
 std::vector<double> PerikymataHSPv4::getParameterString(void){
     parmValues = MultivariateBrownianMotionV2::getParameterString();
-    
-    //adding in tipModel values
-    for(auto& s : tipModels){
-        scratchVec = s.second->getParameterString();
+    for(TipModelV2* t : tipModels){
+        scratchVec = t->getParameterString();
         parmValues.insert(parmValues.end(), scratchVec.begin(), scratchVec.end());
     }
-    
     return parmValues;
 }
 
 void PerikymataHSPv4::print(void){
-    for(auto& s : tipModels)
-        s.second->print();
+    for(TipModelV2* t : tipModels)
+        t->print();
 }
 
 double PerikymataHSPv4::update(void){
     RandomVariable& rng = RandomVariable::randomVariableInstance();
+
     if(rng.uniformRv() < 0.9 && updateTipsOn == true){
         tipUpdate = true;
-        const std::string s = tipNames[(int)(rng.uniformRv() * tipNames.size())];
-        updatedTipModel = tipModels.at(s);
-        if (updatedTipModel == nullptr)
-            Msg::error("null tip model for " + s);
- 
-        const double hr = updatedTipModel->update();
         
-        savedTipIdx     = tipIdxs.at(s);
+        int drawIdx = (int)(rng.uniformRv() * tipModels.size());
+        if(drawIdx >= (int)tipModels.size())
+            drawIdx = (int)tipModels.size() - 1;
+
+        updatedTipModel = tipModels[drawIdx];
+        savedTipIdx     = tipNodeIdxs[drawIdx];
         savedTipDataRow = MultivariateBrownianMotionV2::tipData.row(savedTipIdx);
- 
+
+        const double hr = updatedTipModel->update();
+        if(hr == std::numeric_limits<double>::max())
+            return hr;
+
         MultivariateBrownianMotionV2::tipData.row(savedTipIdx) = updatedTipModel->getTipMean();
-            
         MultivariateBrownianMotionV2::instantiateIndependentContrasts();
         return hr;
     }else{
