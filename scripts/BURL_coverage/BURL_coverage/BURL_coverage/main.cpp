@@ -34,18 +34,16 @@ int main(int argc, const char* argv[]) {
     SimulateData s = SimulateData();
     
     int numReps = settings.getNumReps();
-    auto wallStart = std::chrono::steady_clock::now();
 
     for(int i = 0; i < numReps; i++){
         std::cout << "-----------------------------------------------------------------------" << std::endl;
         std::cout << "On rep " << i + 1 << " of " << numReps << "\n";
 
         if (i > 0) {
-            auto now = std::chrono::steady_clock::now();
-            double elapsed = std::chrono::duration<double>(now - wallStart).count();
+            double elapsed = s.getIncrementedElapsed();     // MCMC-only cumulative time
             double avgPerRep = elapsed / i;
             double eta = avgPerRep * (numReps - i);
-            std::cout << "Elapsed: " << formatDuration(elapsed)
+            std::cout << "MCMC elapsed: " << formatDuration(elapsed)
                       << "  |  Avg/rep: " << formatDuration(avgPerRep)
                       << "  |  ETA: " << formatDuration(eta) << "\n";
         }
@@ -58,15 +56,19 @@ int main(int argc, const char* argv[]) {
         if(numChains > 1){
             std::vector<PhylogeneticModel*> perikymataModels;
             perikymataModels.resize(numChains);
-            for(int i = 0; i < numChains; i++)
-                perikymataModels[i] = new PerikymataHSPv4(s.getSimulatedTree(), s.getSimulatedRownames(), s.getSimulatedData());
+            for(int c = 0; c < numChains; c++)
+                perikymataModels[c] = new PerikymataHSPv4(s.getSimulatedTree(), s.getSimulatedRownames(), s.getSimulatedData());
 
             MetropolisCoupledMcmc mcmc(numCycles, pf, sf, perikymataModels);
+            s.startIncrement();
             mcmc.run();
+            s.endIncrement();
         } else if (numChains == 1){
             PhylogeneticModel* perikymataModel = new PerikymataHSPv4(s.getSimulatedTree(), s.getSimulatedRownames(), s.getSimulatedData());
             Mcmc mcmc(numCycles, pf, sf, perikymataModel);
+            s.startIncrement();
             mcmc.run();
+            s.endIncrement();
         }
         
         // Check coverage
@@ -75,10 +77,9 @@ int main(int argc, const char* argv[]) {
     }
 
     {
-        auto now = std::chrono::steady_clock::now();
-        double elapsed = std::chrono::duration<double>(now - wallStart).count();
         std::cout << "-----------------------------------------------------------------------" << std::endl;
-        std::cout << "All " << numReps << " reps completed in " << formatDuration(elapsed) << std::endl;
+        std::cout << "All " << numReps << " reps completed | MCMC time: "
+                  << formatDuration(s.getIncrementedElapsed()) << std::endl;
         std::cout << "-----------------------------------------------------------------------" << std::endl;
     }
     

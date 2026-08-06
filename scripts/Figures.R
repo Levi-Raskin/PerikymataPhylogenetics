@@ -21,7 +21,7 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::summarise)
 conflicts_prefer(dplyr::mutate)
 
-input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/"
+input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_MCMC/"
 output <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/figures/"
 
 lc_posterior <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10.tsv")))
@@ -1034,7 +1034,7 @@ writeTableOne(pt_preds)
 
 plot_species_posteriors <- function(lc_posterior, lc_mle, species, bins = 500) {
   lc_mle <- lc_mle %>%
-    rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
+    dplyr::rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
   decile_map <- c(
     "mean_0" = "Decile.3",
     "mean_1" = "Decile.4",
@@ -1347,7 +1347,7 @@ plot_ppc <- function(ppc_means, ppc_sds, observed_data, species, bins = 200) {
   library(patchwork)
   
   observed_data <- observed_data %>%
-    rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
+    dplyr::rename(any_of(c("Decile.10" = "Buccal.decile.10..cervical.")))
   decile_levels <- paste0("Decile.", 3:10)
   decile_labels <- setNames(paste0("Decile ", 3:10), decile_levels)
   
@@ -1432,8 +1432,8 @@ plot_ppc <- function(ppc_means, ppc_sds, observed_data, species, bins = 200) {
 }
 
 #LC
-lc_mean_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_posterior_predictive_check_means.RDS")
-lc_sd_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/lc/lc_posterior_predictive_check_sd.RDS")
+lc_mean_list <- readRDS(paste0(input, "lc/lc_posterior_predictive_check_means.RDS"))
+lc_sd_list <- readRDS(paste0(input, "lc/lc_posterior_predictive_check_sd.RDS"))
 
 species<- c(
   "Homo_sapiens",

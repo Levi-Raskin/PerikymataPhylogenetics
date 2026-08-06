@@ -12,8 +12,14 @@
 #include <iostream>
 #include <fstream>
 
-SimulateData::SimulateData(void) : tree(nullptr), trials(0){
-    RandomVariable& rng = RandomVariable::randomVariableInstance();
+SimulateData::SimulateData(void) :
+    tree(nullptr),
+    incrementedElapsed(0.0),
+    incrementRunning(false),
+    rankFileInitialized(false),
+    rankBurninFraction(0.1),
+    rankThinStride(1),
+    trials(0){
     
     UserSettings& settings = UserSettings::userSettings();
     ntraits = settings.getNumTraits();
@@ -148,11 +154,134 @@ void SimulateData::simulateData(void){
     }
 }
 
+void SimulateData::startIncrement(void){
+    incrementStart = std::chrono::steady_clock::now();
+    incrementRunning = true;
+}
+
+void SimulateData::endIncrement(void){
+    if(incrementRunning == false){
+        Msg::warning("endIncrement() called without a matching startIncrement(); ignoring");
+        return;
+    }
+    auto now = std::chrono::steady_clock::now();
+    incrementedElapsed += std::chrono::duration<double>(now - incrementStart).count();
+    incrementRunning = false;
+}
+
+Eigen::VectorXd SimulateData::postBurninThinned(const Eigen::VectorXd& col) const {
+    int n = (int)col.size();
+    int discard = (int)(n * rankBurninFraction);
+    if(discard >= n)
+        Msg::error("postBurninThinned: rankBurninFraction leaves no post-burn-in samples");
+
+    std::vector<double> kept;
+    kept.reserve((n - discard) / rankThinStride + 1);
+    for(int i = discard; i < n; i += rankThinStride)
+        kept.push_back(col(i));
+
+    Eigen::VectorXd out(kept.size());
+    for(size_t i = 0; i < kept.size(); i++)
+        out(i) = kept[i];
+    return out;
+}
+
+Eigen::VectorXd SimulateData::vcvTraceTrace(const Eigen::MatrixXd& rDat, const std::vector<std::string>& cn,
+                                              const std::string& vcvPrefix, int nTraits) const {
+    Eigen::VectorXd result;
+    for(int i = 0; i < nTraits; i++){
+        std::string colName = vcvPrefix + "_(" + std::to_string(i) + "," + std::to_string(i) + ")";
+        auto it = std::find(cn.begin(), cn.end(), colName);
+        if(it == cn.end())
+            Msg::error("vcvTraceTrace: could not find diagonal column " + colName);
+        int colIdx = (int)std::distance(cn.begin(), it);
+        Eigen::VectorXd trimmed = postBurninThinned(rDat.col(colIdx));
+        if(i == 0) result = trimmed;
+        else       result += trimmed;
+    }
+    return result;
+}
+
+int SimulateData::computeRank(const Eigen::VectorXd& posterior, double trueVal) const {
+    int rank = 0;
+    for(int l = 0; l < posterior.size(); l++)
+        if(posterior(l) < trueVal)
+            rank++;
+    return rank;
+}
+
+void SimulateData::writeRankRow(const std::string& label, int rank, int L){
+    double normalizedRank = (double)rank / (double)(L + 1);
+    rankOut << trials << "," << label << "," << rank << "," << L << "," << normalizedRank << "\n";
+}
+
+void SimulateData::checkRankUniformity(const Eigen::MatrixXd& rDat, const std::vector<std::string>& cn){
+    UserSettings& settings = UserSettings::userSettings();
+
+    if(rankFileInitialized == false){
+        rankOut.open(settings.getOutputFile() + "rank_uniform_test.csv");
+        if(!rankOut.is_open())
+            Msg::error("Could not open rank uniformity output file");
+        rankOut << "replicate_id,parameter_label,rank,L,normalized_rank\n";
+        rankFileInitialized = true;
+    }
+
+    // --- evolutionary VCV: rank of the TRUE trace among posterior trace draws ---
+    if(settings.getWithPhylogeny() == true){
+        Eigen::VectorXd evoTrace = vcvTraceTrace(rDat, cn, "evo_vcv", ntraits);
+        double trueTrace = sampledEvoVCV.trace();
+        int rank = computeRank(evoTrace, trueTrace);
+        writeRankRow("evo_vcv_trace", rank, (int)evoTrace.size());
+    }
+
+    // --- per-taxon intraspecific VCV: rank of TRUE trace among posterior trace draws ---
+    for(auto& tipEntry : trueTipVCVs){
+        const std::string& tipName = tipEntry.first;
+        const Eigen::MatrixXd& trueVCV = tipEntry.second;
+
+        std::string firstCol = tipName + "_vcv_(0,0)";
+        if(std::find(cn.begin(), cn.end(), firstCol) == cn.end())
+            continue;   // e.g. a singleton-observation tip has no VCV parameter; skip cleanly
+
+        Eigen::VectorXd tipTrace = vcvTraceTrace(rDat, cn, tipName + "_vcv", ntraits);
+        double trueTrace = trueVCV.trace();
+        int rank = computeRank(tipTrace, trueTrace);
+        writeRankRow(tipName + "_vcv_trace", rank, (int)tipTrace.size());
+    }
+
+    // --- per-taxon, per-trait intraspecific mean: rank for EACH component ---
+    for(auto& tipEntry : trueTipMeans){
+        const std::string& tipName = tipEntry.first;
+        const Eigen::VectorXd& trueMean = tipEntry.second;
+
+        std::string firstCol = tipName + "_mean_0";
+        if(std::find(cn.begin(), cn.end(), firstCol) == cn.end())
+            continue;   // singleton-observation tip: mean is fixed, not sampled
+
+        for(int k = 0; k < ntraits; k++){
+            std::string colName = tipName + "_mean_" + std::to_string(k);
+            auto it = std::find(cn.begin(), cn.end(), colName);
+            if(it == cn.end()){
+                Msg::warning("checkRankUniformity: could not find column " + colName + "; skipping");
+                continue;
+            }
+            int colIdx = (int)std::distance(cn.begin(), it);
+            Eigen::VectorXd posterior = postBurninThinned(rDat.col(colIdx));
+            int rank = computeRank(posterior, trueMean(k));
+            writeRankRow(tipName + "_mean_" + std::to_string(k), rank, (int)posterior.size());
+        }
+    }
+
+    rankOut.flush();
+}
+
 void SimulateData::checkCredInt(void){
     UserSettings& settings = UserSettings::userSettings();
     ReadTSV r(settings.getOutputFile() + "Outfile.tsv", false, true);
     Eigen::MatrixXd rDat = r.getEigenMat();
     std::vector<std::string> cn = r.getColnames();
+    
+    checkRankUniformity(rDat, cn);
     
     // Evaluate evolutionary VCV coverage
     int evoVCVCovered = 0;
@@ -391,5 +520,7 @@ void SimulateData::writeCoverage(void){
     log << "Missing data coverage:                " << missingStats.first << " +/- " << missingStats.second << "\n";
 
     log.close();
-
+    
+    if(rankFileInitialized)
+        rankOut.close();
 }

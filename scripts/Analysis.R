@@ -47,14 +47,13 @@ calcSymmetrizedKLDivergence <- function(posteriorFit1, posteriorFit2){
 }
 
 
-
 # read data ----------------------------------------------------------------
 #raw data
 lc_data <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/LCdec3_10.csv")
 ui2_data <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/UI2dec3_10_no_pongo.csv")
 
 #posteriors
-input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/"
+input <- "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_MCMC/"
 
 lc_posterior <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10.tsv")))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ] #apply burnin
@@ -73,6 +72,7 @@ ui2_gr <- readRDS(paste0(input, "ui2/ui2_dec3_10_ess_gelman_rubin.RDS"))
 #posterior fits
 lc_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits.RDS"))
 lc_no_hominin_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_no_hominin_posterior_fits.RDS"))
+lc_species_means_posteriorFits <- readRDS(paste0(input, "lc/lc_dec3_10_posterior_fits_species_means.RDS"))
 ui2_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_posterior_fits.RDS"))
 ui2_species_means_posteriorFits <- readRDS(paste0(input, "ui2/ui2_dec3_10_posterior_fits_species_means.RDS"))
 
@@ -413,9 +413,9 @@ calcSymmetrizedKLDivergence(ui2_species_means_posteriorFits$evolutionary, ui2_po
 #### overlap % ####
 library(overlapping)
 
-lc_posterior <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/lc/lc_dec3_10.tsv"))
+lc_posterior <- as.data.frame(fread(paste0(input, "/lc/lc_dec3_10.tsv")))
 lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)):nrow(lc_posterior), ]
-lc_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/lc/lc_dec3_10_species_means.tsv"))
+lc_posterior_species_means <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_species_means.tsv")))
 lc_posterior_species_means <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)):nrow(lc_posterior_species_means), ]
 
 vcv_cols_lc <- grep("^evo_vcv_", colnames(lc_posterior), value = TRUE)
