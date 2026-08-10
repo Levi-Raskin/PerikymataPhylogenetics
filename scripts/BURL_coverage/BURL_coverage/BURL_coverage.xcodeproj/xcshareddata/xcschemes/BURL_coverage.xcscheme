@@ -53,23 +53,23 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-o &quot;/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/test&quot;"
+            argument = "-o &quot;/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/&quot;"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-c 1000000"
+            argument = "-c 10000"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-ntips 10"
+            argument = "-ntips 32"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-nreps 1"
+            argument = "-nreps 100"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-ntraits 8"
+            argument = "-ntraits 32"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

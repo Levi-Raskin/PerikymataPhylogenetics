@@ -33,8 +33,7 @@ class UserSettings {
         bool                        getWithIntraspecific(void) { checkSettings(); return withIntraspecific; }
         void                        print(void);
         void                        printHelp(void);
-        void                        startTiming(void);
-        void                        endTiming(void);
+        void                        endTiming(std::string s);
         void                        writeLog(void);
 
     private:
@@ -42,7 +41,6 @@ class UserSettings {
                                     UserSettings(const UserSettings& u);
         UserSettings&               operator=(const UserSettings&);
         void                        checkSettings(void);
-        std::chrono::steady_clock::time_point startTime;
         std::string                 executablePath;
         std::string                 logFile;
         std::string                 outputFile;

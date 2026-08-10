@@ -118,6 +118,8 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     settingsInitialized = true;
 
+    printFrequency = (int) chainLength / 2;
+
     // ── Post-parse validation  ──────────────────────────────
 
     int maxNumThreads = (int)std::thread::hardware_concurrency();
@@ -241,14 +243,8 @@ void UserSettings::writeLog(void){
 
 }
 
-void UserSettings::startTiming(void){
-    startTime = std::chrono::steady_clock::now();
-}
-
-void UserSettings::endTiming(void){
+void UserSettings::endTiming(std::string s){
     std::ofstream log(logFile, std::ios::app);
-    auto endTime = std::chrono::steady_clock::now();
-    double elapsedMinutes = std::chrono::duration<double, std::ratio<60>>(endTime - startTime).count();
-    log << "Time elapsed (minutes):                " << std::fixed << std::setprecision(4) << elapsedMinutes << "\n";
+    log << "Time elapsed (minutes):                " << s << "\n";
     log.close();
 }
