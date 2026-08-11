@@ -74,7 +74,7 @@ double ParameterIntraspecificMean::updateMHmvNDraw(void){
     }else if ((numRejections + numAcceptances) == ngAdaptive){
         adaptiveProposalActive = false;
     }
-    
+    /*
     if (totalSamples % covarianceUpdateFreq == 0 && totalSamples < ngAdaptive) {
         updateEmpiricalCovariance();
     }
@@ -93,7 +93,10 @@ double ParameterIntraspecificMean::updateMHmvNDraw(void){
             proposalCholLower = proposalCov.llt().matrixL().toDenseMatrix();
         }
     }
+    */
     
+    proposalCov = windowSize * windowSize * varianceCovariance->getValue() / nObs;
+    proposalCholLower = proposalCov.llt().matrixL().toDenseMatrix();
     // Propose
     Probability::MultivariateNormal::rv(&rng, mean[0], mean[1], proposalCholLower);
     return 0.0;

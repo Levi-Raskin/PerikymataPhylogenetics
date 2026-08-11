@@ -26,7 +26,6 @@ class UserSettings {
         int                         getNumObserved(void) { return numObs; }
         std::string                 getOutputFile(void) { checkSettings(); return outputFile; }
         int                         getPrintFrequency(void) { checkSettings(); return printFrequency; }
-        bool                        getRankUniformTesting(void) { return runk; }
         std::string                 getReadDataType(void) { checkSettings(); return readDatDatatype; }
         int                         getSampleFrequency(void) { checkSettings(); return sampleFrequency; }
         bool                        getWithPhylogeny(void) { checkSettings(); return withPhylogeny; }
@@ -59,7 +58,6 @@ class UserSettings {
         int                         sampleFrequency;
         bool                        settingsInitialized;
         bool                        logTransformData;
-        bool                        runk; 
         bool                        withPhylogeny;
         bool                        withIntraspecific;
 };

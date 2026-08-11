@@ -1464,8 +1464,8 @@ for (i in species) {
 
 
 ### UI2
-ui2_mean_list <- readRDS(paste0(input, "ui2/ui2_posterior_predictive_check_means.RDS"))
-ui2_sd_list <- readRDS(paste0(input, "ui2/ui2_posterior_predictive_check_sd.RDS"))
+ui2_mean_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_posterior_predictive_check_means.RDS")
+ui2_sd_list <- readRDS("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v2/ui2/ui2_posterior_predictive_check_sd.RDS")
 
 species<- c(
   "Homo_sapiens",

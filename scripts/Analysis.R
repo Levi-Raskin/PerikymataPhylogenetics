@@ -1,13 +1,10 @@
 library(coda)
 library(data.table)
 library(dplyr)
-library(ggplot2)
 library(MCMCpack)
 library(overlapping)
 library(parallel)
 library(RiemBase)
-library(stringr)
-library(tidyr)
 
 
 # functions ---------------------------------------------------------------
@@ -108,96 +105,6 @@ lc_Frechet_Var <- readRDS(paste0(input, "lc/lc_vcv_frechet_var.RDS"))
 lc_Frechet_Var_nh <- readRDS(paste0(input, "lc/lc_vcv_frechet_var_no_hominin.RDS"))
 ui2_Frechet_Var <- readRDS(paste0(input, "ui2/ui2_vcv_frechet_var.RDS"))
 
-
-# Rank uniform test -------------------------------------------------------
-
-ranks  <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/rank_uniform_test_tips_8_traits_8_nimp_0_nobs_2_reps_2500_rank_uniform_test.csv")
-n_reps <- n_distinct(ranks$replicate_id)
-alpha  <- 0.05
-eps    <- sqrt(log(2/alpha) / (2*n_reps))
-stopifnot(all(table(ranks$parameter_label) == n_reps))
-
-bin_width <- 0.05
-
-evo_df <- ranks %>% filter(parameter_label == "evo_vcv_trace")
-vcv_df <- ranks %>%
-  filter(str_detect(parameter_label, "_vcv_trace$"), parameter_label != "evo_vcv_trace") %>%
-  mutate(taxon = str_remove(parameter_label, "_vcv_trace$"))
-mean_df <- ranks %>%
-  filter(str_detect(parameter_label, "_mean_\\d+$")) %>%
-  extract(parameter_label, into = c("taxon", "trait"),
-          regex = "(.+)_mean_(\\d+)$", remove = FALSE) %>%
-  mutate(trait = as.integer(trait))
-
-# expected bar height under a uniform distribution, given n draws and bin_width
-expected_height <- function(n, bin_width) n * bin_width
-
-# 1. headline: one panel, with the confirmatory p-value in the subtitle
-p_evo <- ks.test(evo_df$normalized_rank, "punif")$p.value
-ggplot(evo_df, aes(normalized_rank)) +
-  geom_histogram(binwidth = bin_width, boundary = 0,
-                 fill = "grey70", color = "white") +
-  geom_hline(yintercept = expected_height(nrow(evo_df), bin_width),
-             linetype = "dashed", color = "black") +
-  theme_minimal() +
-  labs(title = "Evolutionary VCV trace",
-       subtitle = paste0("KS p = ", signif(p_evo, 3), ", n = ", n_reps),
-       x = "normalized rank", y = "count")
-
-# 2. one panel per taxon -- VCV trace is a single scalar per taxon, no color needed
-ks.test(dplyr::filter(vcv_df, taxon == "t0")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t1")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t2")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t3")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t4")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t5")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t6")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t7")$normalized_rank, "punif")$p.value
-ggplot(vcv_df, aes(normalized_rank)) +
-  geom_histogram(binwidth = bin_width, boundary = 0,
-                 fill = "grey70", color = "white") +
-  geom_hline(data = vcv_df %>% group_by(taxon) %>% summarise(n = n(), .groups = "drop"),
-             aes(yintercept = expected_height(n, bin_width)),
-             linetype = "dashed", color = "black") +
-  facet_wrap(~taxon) +
-  theme_minimal() +
-  labs(title = "Intraspecific VCV trace by taxon", x = "normalized rank", y = "count")
-
-# 3. one panel per taxon, one colored histogram per trait within it -- 8 panels instead of 48
-#    position = "identity" + alpha lets the 8 overlapping trait histograms stay readable
-for(i in 0:7){
-  if(any(c(
-    ks.test(dplyr::filter(mean_df, taxon == "t0", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t1", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t2", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t3", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t4", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t5", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t6", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t7", trait == i)$normalized_rank, "punif")$p.value
-  )) < alpha){
-    print(
-      c(
-        ks.test(dplyr::filter(mean_df, taxon == "t0", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t1", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t2", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t3", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t4", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t5", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t6", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t7", trait == i)$normalized_rank, "punif")$p.value
-      )
-    )
-  }
-}
-ggplot(mean_df, aes(normalized_rank, fill = factor(trait))) +
-  geom_histogram(binwidth = bin_width, boundary = 0,
-                 position = "identity", alpha = 0.4, color = NA) +
-  facet_wrap(~taxon) +
-  theme_minimal() +
-  labs(title = "Intraspecific mean components by taxon", fill = "trait",
-       x = "normalized rank", y = "count")
-
 # ESS/GR ------------------------------------------------------------------
 ### ess LC
 mcmcObj <- mcmc(lc_posterior[,2:ncol(lc_posterior)]) #removes n
@@ -208,14 +115,18 @@ summary(ess)
 #GR
 summary(unlist(lc_gr))
 
+### ess LC w/o hominin
+mcmcObj <- mcmc(lc_posterior_no_hominin[,2:ncol(lc_posterior_no_hominin)]) #removes n
+ess <- effectiveSize(mcmcObj)
+print(ess)
+summary(ess)
+
 ### ess UI2
 mcmcObj <- mcmc(ui2_posterior[,2:ncol(ui2_posterior)]) #removes n
 ess <- effectiveSize(mcmcObj)
 print(ess)
 summary(ess)
 
-#GR
-summary(unlist(ui2_gr))
 
 # KL divergence -------------------------------------------------
 convertLatexTable <- function(kl, postFits){
@@ -536,7 +447,7 @@ for (k in seq_along(shared_cols)) {
 
 ui2_posterior <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_no_pongo.tsv")))
 ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ] #apply burnin
-ui2_posterior_species_means <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_species_means.tsv")))
+ui2_posterior_species_means <- as.data.frame(fread("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/ui2/ui2_dec3_10_species_means.tsv"))
 ui2_posterior_species_means <- ui2_posterior_species_means[round(0.1 * nrow(ui2_posterior_species_means)):nrow(ui2_posterior_species_means), ]
 
 vcv_cols_ui2 <- grep("^evo_vcv_", colnames(ui2_posterior), value = TRUE)
@@ -655,7 +566,7 @@ for(i in 1:length(lc_vcv_list)){
   lc_Frechet_Var[i] <- calculateFrechetVariance(lc_vcv_list[[i]])
 }
 lc_Frechet_Var
-saveRDS(lc_Frechet_Var, paste0(input, "lc/lc_vcv_frechet_var.RDS"))
+saveRDS(lc_Frechet_Var, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/lc/lc_vcv_frechet_var.RDS")
 
 lc_Frechet_Var_nh <- vector(length = length(lc_vcv_list_no_hominins))
 names(lc_Frechet_Var_nh) <- names(lc_vcv_list_no_hominins)
@@ -663,7 +574,7 @@ for(i in 1:length(lc_vcv_list_no_hominins)){
   lc_Frechet_Var_nh[i] <- calculateFrechetVariance(lc_vcv_list_no_hominins[[i]])
 }
 lc_Frechet_Var_nh
-saveRDS(lc_Frechet_Var_nh, paste0(input, "lc/lc_vcv_frechet_var_no_hominin.RDS"))
+saveRDS(lc_Frechet_Var_nh, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/lc/lc_vcv_frechet_var_no_hominin.RDS")
 
 ### UI2
 ui2_Frechet_Var <- vector(length = length(ui2_vcv_list))
@@ -672,7 +583,7 @@ for(i in 1:length(ui2_vcv_list)){
   ui2_Frechet_Var[i] <- calculateFrechetVariance(ui2_vcv_list[[i]])
 }
 ui2_Frechet_Var
-saveRDS(ui2_Frechet_Var, paste0(input, "ui2/ui2_vcv_frechet_var.RDS"))
+saveRDS(ui2_Frechet_Var, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/ui2/ui2_vcv_frechet_var.RDS")
 
 ### species means Frechet
 print("LC evo")
@@ -824,8 +735,9 @@ for(i in 1:length(taxon_map)){
   lc_mean_list[[names(taxon_map)[i]]] <- lc_post_pred_check$means
   lc_sd_list[[names(taxon_map)[i]]] <- lc_post_pred_check$sd
 }
-saveRDS(lc_mean_list, paste0(input, "lc/lc_posterior_predictive_check_means.RDS"))
-saveRDS(lc_sd_list, paste0(input,  "lc/lc_posterior_predictive_check_sd.RDS"))
+saveRDS(lc_mean_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/lc/lc_posterior_predictive_check_means.RDS")
+saveRDS(lc_sd_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/lc/lc_posterior_predictive_check_sd.RDS")
+
 
 ### UI2
 present_taxa <- names(taxon_map)[sapply(names(taxon_map), function(taxon) {
@@ -840,5 +752,5 @@ for(i in 1:length(taxon_map)){
   ui2_mean_list[[names(taxon_map)[i]]] <- ui2_post_pred_check$means
   ui2_sd_list[[names(taxon_map)[i]]] <- ui2_post_pred_check$sd
 }
-saveRDS(ui2_mean_list, paste0(input, "ui2/ui2_posterior_predictive_check_means.RDS"))
-saveRDS(ui2_sd_list, paste0(input, "ui2/ui2_posterior_predictive_check_sd.RDS"))
+saveRDS(ui2_mean_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/ui2/ui2_posterior_predictive_check_means.RDS")
+saveRDS(ui2_sd_list, "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_v3/ui2/ui2_posterior_predictive_check_sd.RDS")
