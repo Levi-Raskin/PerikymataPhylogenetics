@@ -3,8 +3,9 @@
 
 #include <set>
 #include <string>
-class RandomVariable;
+#include <vector>
 
+class RandomVariable;
 
 class Node {
 

@@ -10,6 +10,7 @@
 
 
 #include "Eigen/Dense"
+#include "Node.hpp"
 #include "PhylogeneticModel.hpp"
 #include "Tree.hpp"
 #include <map>
