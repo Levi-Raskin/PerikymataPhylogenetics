@@ -23,7 +23,9 @@ int main(int argc, const char* argv[]) {
     settings.print();
     std::string readDatType = settings.getReadDataType();
     settings.writeLog();
-        
+    
+    settings.startTiming();
+    
     int numChains = settings.getNumChains();
     unsigned long numCycles = settings.getChainLength();
     int pf = settings.getPrintFrequency();
@@ -82,7 +84,7 @@ int main(int argc, const char* argv[]) {
     }
     
     s.writeCoverage();
-    settings.endTiming(formatDuration(s.getIncrementedElapsed()));
+    settings.endTiming();
     return 0;
 }
 
