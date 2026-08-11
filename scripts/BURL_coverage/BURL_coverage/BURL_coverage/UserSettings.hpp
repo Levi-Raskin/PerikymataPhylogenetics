@@ -26,14 +26,14 @@ class UserSettings {
         int                         getNumObserved(void) { return numObs; }
         std::string                 getOutputFile(void) { checkSettings(); return outputFile; }
         int                         getPrintFrequency(void) { checkSettings(); return printFrequency; }
+        bool                        getRankUniformTesting(void) { return runk; }
         std::string                 getReadDataType(void) { checkSettings(); return readDatDatatype; }
         int                         getSampleFrequency(void) { checkSettings(); return sampleFrequency; }
         bool                        getWithPhylogeny(void) { checkSettings(); return withPhylogeny; }
         bool                        getWithIntraspecific(void) { checkSettings(); return withIntraspecific; }
         void                        print(void);
         void                        printHelp(void);
-        void                        startTiming(void);
-        void                        endTiming(void);
+        void                        endTiming(std::string s);
         void                        writeLog(void);
 
     private:
@@ -41,7 +41,6 @@ class UserSettings {
                                     UserSettings(const UserSettings& u);
         UserSettings&               operator=(const UserSettings&);
         void                        checkSettings(void);
-        std::chrono::steady_clock::time_point startTime;
         std::string                 executablePath;
         std::string                 logFile;
         std::string                 outputFile;
@@ -57,6 +56,7 @@ class UserSettings {
         int                         printFrequency;
         int                         sampleFrequency;
         bool                        settingsInitialized;
+        bool                        runk;
         bool                        logTransformData;
         bool                        withPhylogeny;
         bool                        withIntraspecific;

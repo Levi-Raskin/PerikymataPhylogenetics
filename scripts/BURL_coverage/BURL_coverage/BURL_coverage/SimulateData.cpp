@@ -281,7 +281,8 @@ void SimulateData::checkCredInt(void){
     Eigen::MatrixXd rDat = r.getEigenMat();
     std::vector<std::string> cn = r.getColnames();
     
-    checkRankUniformity(rDat, cn);
+    if(settings.getRankUniformTesting() == true)
+        checkRankUniformity(rDat, cn);
     
     // Evaluate evolutionary VCV coverage
     int evoVCVCovered = 0;

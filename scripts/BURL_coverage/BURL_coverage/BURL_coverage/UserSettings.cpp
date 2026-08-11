@@ -38,10 +38,10 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
 
     // Known flags and whether they take a value
     std::set<std::string> knownFlags = {
-        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-p", "-i", "-help", "-h"
+        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-p", "-i", "-runk" , "-help", "-h"
     };
     std::set<std::string> valueFlags = {
-        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-p", "-i"
+        "-o", "-c", "-nreps", "-ntips", "-ntraits", "-nimp", "-nobs", "-p", "-i", "-runk"
     };
 
     for (int i = 1; i < (int)arguments.size(); i++) {
@@ -81,6 +81,13 @@ void UserSettings::initializeSettings(int argc, const char* argv[]) {
                     withPhylogeny = false;
                 else
                     Msg::error("Flag \"-p\" expects T/true or F/false, but got \"" + val + "\".");
+            }else if (arg == "-runk") {
+                if (val == "T" || val == "t" || val == "true")
+                    runk = true;
+                else if (val == "F" || val == "f" || val == "false")
+                    runk = false;
+                else
+                    Msg::error("Flag \"-runk\" expects T/true or F/false, but got \"" + val + "\".");
             }else if (arg == "-i") {
                 if (val == "T" || val == "t" || val == "true")
                     withIntraspecific = true;
@@ -202,6 +209,7 @@ void UserSettings::printHelp(void){
     std::cout << "  -nobs       <int>       Number of observations per species\n";
     std::cout << "  -p          <T/F>       Inference with phylogeny (true/T, false/F)\n";
     std::cout << "  -i          <T/F>       Inference with intraspecific variation (true/T, false/F) \n";
+    std::cout << "  -runk       <T/F>       Rank uniform testing (true/T, false/F) \n";
 }
 
 void UserSettings::writeLog(void){
@@ -233,14 +241,8 @@ void UserSettings::writeLog(void){
 
 }
 
-void UserSettings::startTiming(void){
-    startTime = std::chrono::steady_clock::now();
-}
-
-void UserSettings::endTiming(void){
+void UserSettings::endTiming(std::string s){
     std::ofstream log(logFile, std::ios::app);
-    auto endTime = std::chrono::steady_clock::now();
-    double elapsedMinutes = std::chrono::duration<double, std::ratio<60>>(endTime - startTime).count();
-    log << "Time elapsed (minutes):                " << std::fixed << std::setprecision(4) << elapsedMinutes << "\n";
+    log << "Time elapsed (minutes):                " << s << "\n";
     log.close();
 }
