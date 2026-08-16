@@ -1,3 +1,4 @@
+library(bayesplot)
 library(coda)
 library(data.table)
 library(dplyr)
@@ -108,116 +109,61 @@ lc_Frechet_Var_nh <- readRDS(paste0(input, "lc/lc_vcv_frechet_var_no_hominin.RDS
 ui2_Frechet_Var <- readRDS(paste0(input, "ui2/ui2_vcv_frechet_var.RDS"))
 
 # Rank uniform test -------------------------------------------------------
-
 ranks  <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/simulation_study/rank_uniform_test_tips_8_traits_8_nimp_0_nobs_2_reps_2500_rank_uniform_test.csv")
+
 n_reps <- n_distinct(ranks$replicate_id)
 alpha  <- 0.05
-eps    <- sqrt(log(2/alpha) / (2*n_reps))
 stopifnot(all(table(ranks$parameter_label) == n_reps))
+stopifnot(all(ranks$normalized_rank >= 0), all(ranks$normalized_rank <= 1))
 
 bin_width <- 0.05
+expected_height <- function(n, bin_width) n * bin_width   # bar height under uniformity
 
-evo_df <- ranks %>% filter(parameter_label == "evo_vcv_trace")
-vcv_df <- ranks %>%
-  filter(str_detect(parameter_label, "_vcv_trace$"), parameter_label != "evo_vcv_trace") %>%
-  mutate(taxon = str_remove(parameter_label, "_vcv_trace$"))
-mean_df <- ranks %>%
-  filter(str_detect(parameter_label, "_mean_\\d+$")) %>%
-  extract(parameter_label, into = c("taxon", "trait"),
-          regex = "(.+)_mean_(\\d+)$", remove = FALSE) %>%
-  mutate(trait = as.integer(trait))
+K <- 200
+z <- seq_len(K) / K
 
-# expected bar height under a uniform distribution, given n draws and bin_width
-expected_height <- function(n, bin_width) n * bin_width
-
-# 1. headline: one panel, with the confirmatory p-value in the subtitle
-p_evo <- ks.test(evo_df$normalized_rank, "punif")$p.value
-ggplot(evo_df, aes(normalized_rank)) +
-  geom_histogram(binwidth = bin_width, boundary = 0,
-                 fill = "grey70", color = "white") +
-  geom_hline(yintercept = expected_height(nrow(evo_df), bin_width),
-             linetype = "dashed", color = "black") +
-  theme_minimal() +
-  labs(title = "Evolutionary VCV trace",
-       subtitle = paste0("KS p = ", signif(p_evo, 3), ", n = ", n_reps),
-       x = "normalized rank", y = "count")
-
-# 2. one panel per taxon -- VCV trace is a single scalar per taxon, no color needed
-ks.test(dplyr::filter(vcv_df, taxon == "t0")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t1")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t2")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t3")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t4")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t5")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t6")$normalized_rank, "punif")$p.value
-ks.test(dplyr::filter(vcv_df, taxon == "t7")$normalized_rank, "punif")$p.value
-ggplot(vcv_df, aes(normalized_rank)) +
-  geom_histogram(binwidth = bin_width, boundary = 0,
-                 fill = "grey70", color = "white") +
-  geom_hline(data = vcv_df %>% group_by(taxon) %>% summarise(n = n(), .groups = "drop"),
-             aes(yintercept = expected_height(n, bin_width)),
-             linetype = "dashed", color = "black") +
-  facet_wrap(~taxon) +
-  theme_minimal() +
-  labs(title = "Intraspecific VCV trace by taxon", x = "normalized rank", y = "count")
-
-# 3. one panel per taxon, one colored histogram per trait within it -- 8 panels instead of 48
-#    position = "identity" + alpha lets the 8 overlapping trait histograms stay readable
-for(i in 0:7){
-  if(any(c(
-    ks.test(dplyr::filter(mean_df, taxon == "t0", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t1", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t2", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t3", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t4", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t5", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t6", trait == i)$normalized_rank, "punif")$p.value,
-    ks.test(dplyr::filter(mean_df, taxon == "t7", trait == i)$normalized_rank, "punif")$p.value
-  )) < alpha){
-    print(
-      c(
-        ks.test(dplyr::filter(mean_df, taxon == "t0", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t1", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t2", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t3", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t4", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t5", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t6", trait == i)$normalized_rank, "punif")$p.value,
-        ks.test(dplyr::filter(mean_df, taxon == "t7", trait == i)$normalized_rank, "punif")$p.value
-      )
-    )
-  }
+gamma_stat <- function(u, z) {
+  N <- length(u)
+  r <- findInterval(z, sort(u))                              # r_i = N * ECDF(z_i)
+  2 * min(pmin(pbinom(r, N, z),                              # P(X <= r_i)
+               pbinom(r - 1, N, z, lower.tail = FALSE)))     # P(X >= r_i)
 }
-ggplot(mean_df, aes(normalized_rank, fill = factor(trait))) +
-  geom_histogram(binwidth = bin_width, boundary = 0,
-                 position = "identity", alpha = 0.4, color = NA) +
-  facet_wrap(~taxon) +
-  theme_minimal() +
-  labs(title = "Intraspecific mean components by taxon", fill = "trait",
-       x = "normalized rank", y = "count")
+
+g5 <- bayesplot:::adjust_gamma(N = n_reps, L = 1, K = K, prob = 1 - alpha)
+cat(sprintf("gamma_5 = %.4e   (N = %d, K = %d, prob = %.2f)\n",
+            g5, n_reps, K, 1 - alpha))
+
+gam <- ranks %>%
+  group_by(parameter_label) %>%
+  summarise(gamma = gamma_stat(normalized_rank, z), .groups = "drop") %>%
+  mutate(log_ratio = log(gamma / g5),
+         reject    = log_ratio < 0)
+
+print(arrange(gam, log_ratio), n = Inf)
+cat(sprintf("\n%d / %d parameters reject uniformity at the %.0f%% level\n\n",
+            sum(gam$reject), nrow(gam), 100 * alpha))
 
 # ESS/GR ------------------------------------------------------------------
 ### ess LC
-mcmcObj <- mcmc(lc_posterior[,2:ncol(lc_posterior)]) #removes n
+mcmcObj <- mcmc(lc_posterior[,3:ncol(lc_posterior)]) #removes n, LnL
 ess <- effectiveSize(mcmcObj)
 print(ess)
 summary(ess)
-
+ess[which(ess == min(ess))]
 #GR
-summary(unlist(lc_gr))
+mean(unlist(lc_gr))
+max(unlist(lc_gr))
 
-### ess LC w/o hominin
-mcmcObj <- mcmc(lc_posterior_no_hominin[,2:ncol(lc_posterior_no_hominin)]) #removes n
-ess <- effectiveSize(mcmcObj)
-print(ess)
-summary(ess)
 
 ### ess UI2
-mcmcObj <- mcmc(ui2_posterior[,2:ncol(ui2_posterior)]) #removes n
+mcmcObj <- mcmc(ui2_posterior[,3:ncol(ui2_posterior)]) #removes n, LnL
 ess <- effectiveSize(mcmcObj)
 print(ess)
 summary(ess)
+ess[which(ess == min(ess))]
 
+mean(unlist(ui2_gr))
+max(unlist(ui2_gr))
 
 # KL divergence -------------------------------------------------
 convertLatexTable <- function(kl, postFits){
@@ -844,3 +790,94 @@ for(i in 1:length(taxon_map)){
 }
 saveRDS(ui2_mean_list, paste0(input, "ui2/ui2_posterior_predictive_check_means.RDS"))
 saveRDS(ui2_sd_list, paste0(input, "ui2/ui2_posterior_predictive_check_sd.RDS"))
+
+
+# Parse simulation study data ---------------------------------------------
+
+parseCoverage <- function(f){
+  x <- read.delim(f, header = FALSE, stringsAsFactors = FALSE)
+  
+  line <- x$V1[grepl("Total coverage:", x$V1) & grepl("\\+/-", x$V1)]
+  nums <- regmatches(line, gregexpr("[-+]?[0-9]*\\.?[0-9]+(e[-+]?[0-9]+)?", line))[[1]]
+  mean_val <- as.numeric(nums[1])
+  se_val   <- as.numeric(nums[2])
+  
+  fname <- basename(f)
+  
+  n_tips   <- as.numeric(sub(".*_([0-9]+)_tips.*", "\\1", fname))
+  n_traits <- as.numeric(sub(".*_([0-9]+)_traits.*", "\\1", fname))
+  n_imp    <- as.numeric(sub(".*_([0-9]+)_nimp.*", "\\1", fname))
+  n_obs    <- as.numeric(sub(".*_([0-9]+)_nobs.*", "\\1", fname))
+  
+  return(data.frame(
+    n_tips   = n_tips,
+    n_traits = n_traits,
+    n_imp    = n_imp,
+    n_obs    = n_obs,
+    mean     = mean_val,
+    se       = se_val
+  ))
+}
+
+parseTiming <- function(f){
+  x <- read.delim(f, header = F, stringsAsFactors = FALSE)
+  
+  line <- x$V1[grepl("Time elapsed", x$V1)]
+  time_str <- trimws(sub(".*Time elapsed \\(minutes\\):", "", line))
+
+  h <- as.numeric(sub(".*?([0-9]+)h.*", "\\1", time_str))
+  if (!grepl("h", time_str)) h <- 0
+  
+  m <- as.numeric(sub(".*?([0-9]+)m.*", "\\1", time_str))
+  if (!grepl("m", time_str)) m <- 0
+  
+  s <- as.numeric(sub(".*?([0-9]+)s.*", "\\1", time_str))
+  if (!grepl("s", time_str)) s <- 0
+
+  time_elapsed_minutes <- h * 60 + m + s / 60
+  
+  fname <- basename(f)
+  
+  n_tips   <- as.numeric(sub(".*_([0-9]+)_tips.*", "\\1", fname))
+  n_traits <- as.numeric(sub(".*_([0-9]+)_traits.*", "\\1", fname))
+  n_imp    <- as.numeric(sub(".*_([0-9]+)_nimp.*", "\\1", fname))
+  n_obs    <- as.numeric(sub(".*_([0-9]+)_nobs.*", "\\1", fname))
+  
+  return(data.frame(
+    n_tips   = n_tips,
+    n_traits = n_traits,
+    n_imp    = n_imp,
+    n_obs    = n_obs,
+    timing   = time_elapsed_minutes
+  ))
+}
+
+# full model
+full_model_coverage_files <- list.files(paste0(input, "simulation_study/full_model"), pattern = "*_CoverageResults.txt", full.names = T)
+full_model_coverage_result <- mclapply(
+  full_model_coverage_files,
+  parseCoverage,
+  mc.cores = detectCores() - 1
+)
+full_model_coverage_result <- do.call(rbind, full_model_coverage_result)
+saveRDS(full_model_coverage_result, paste0(input, "simulation_study/full_model_coverage_result_parsed.rds"))
+
+full_model_timing_files <- list.files(paste0(input, "simulation_study/full_model"), pattern = "*_Log.txt", full.names = T)
+full_model_timing_result <- mclapply(
+  full_model_timing_files,
+  parseTiming,
+  mc.cores = detectCores() - 1
+)
+full_model_timing_result <- do.call(rbind, full_model_timing_result)
+saveRDS(full_model_timing_result, paste0(input, "simulation_study/full_model_timing_result_parsed.rds"))
+
+
+# wo intra model
+wo_intra_coverage_files <- list.files(paste0(input, "simulation_study/wo_intra"), pattern = "*_CoverageResults.txt", full.names = T)
+wo_intra_coverage_result <- mclapply(
+  wo_intra_coverage_files,
+  parseCoverage,
+  mc.cores = detectCores() - 1
+)
+wo_intra_coverage_result <- do.call(rbind, wo_intra_coverage_result)
+saveRDS(wo_intra_coverage_result, paste0(input, "simulation_study/wo_intra_coverage_result_parsed.rds"))
