@@ -23,7 +23,7 @@ Rscript cmd_line_rscripts/data_wrangling.R \
 Rscript cmd_line_rscripts/data_wrangling.R \
     $RESULTS/ui2/ui2_dec3_10_no_pongo.tsv \
     $RESULTS/ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS
-
+    
 # fit IW to VCV posterior distributions
 Rscript cmd_line_rscripts/posterior_fits.R \
     $RESULTS/lc/lc_dec3_10_vcv_extracted.RDS \

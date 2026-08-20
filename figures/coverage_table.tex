@@ -1,0 +1,107 @@
+\clearpage
+\begingroup
+\scriptsize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{cccccc}
+\caption{Coverage probability and Markov chain Monte Carlo (MCMC) runtime from a full-factorial simulation study that varied the number of taxa (8, 16, or 32; shown top to bottom in separate panels), the number of traits (8, 16, or 32; panel rows), the number of individual per taxon (2, 4, 8, or 16; panel columns), and the number of missing observations across the entire simulated dataset (0, 8, 16, or 32; rows within each cell). For each combination of conditions we simulated 100 datasets and inferred parameters with both the full model, which accounts for intraspecific variation, and the taxon means model, which takes the mean value across observations in a taxon as known without uncertainty. For the taxon means model only, we ensured that all simulated datasets contained at least one individual observed per trait (i.e., so that if there are two individuals at a taxon, both cannot be missing trait $i$); for the full model, no such restriction was applied. Within each cell, the top line reports coverage probability (mean $\pm$ standard error across replicates) for the full model (left of the slash) and the taxon means model (right of the slash); the bottom line reports the mean wall clock time in minutes per ten million MCMC cycles for the full model running serially. The expected coverage probability is 95\%. } \label{table:coverage} \\
+ 
+\toprule
+ & & \multicolumn{4}{c}{Observations per Taxon} \\
+\cmidrule(lr){3-6}
+\textbf{Traits} & \textbf{Missing} & \textbf{2} & \textbf{4} & \textbf{8} & \textbf{16} \\
+\midrule
+\endfirsthead
+ 
+\multicolumn{6}{l}{\textit{Table \thetable{} continued from previous page}} \\
+\toprule
+ & & \multicolumn{4}{c}{Observations per Taxon} \\
+\cmidrule(lr){3-6}
+\textbf{Traits} & \textbf{Missing} & \textbf{2} & \textbf{4} & \textbf{8} & \textbf{16} \\
+\midrule
+\endhead
+ 
+\midrule
+\multicolumn{6}{r}{\textit{continued on next page}} \\
+\endfoot
+ 
+\bottomrule
+\endlastfoot
+
+% ------------------------------------------------------------------
+% Panel: 8 taxa
+% ------------------------------------------------------------------
+\multicolumn{6}{c}{\textbf{8 Taxa}} \\
+\midrule
+% 8 traits
+8 & 0 & \cellentry{0.95}{0.004}{0.67}{0.014}{0.8} & \cellentry{0.96}{0.003}{0.73}{0.014}{0.9} & \cellentry{0.95}{0.003}{0.75}{0.017}{1.0} & \cellentry{0.95}{0.003}{0.85}{0.012}{1.2} \\
+8 & 8 & \cellentry{0.95}{0.003}{--}{--}{0.8} & \cellentry{0.95}{0.003}{0.72}{0.014}{0.8} & \cellentry{0.95}{0.003}{0.75}{0.016}{0.9} & \cellentry{0.94}{0.003}{0.83}{0.014}{1.2} \\
+8 & 16 & \cellentry{0.95}{0.004}{--}{--}{0.8} & \cellentry{0.95}{0.003}{0.69}{0.015}{0.8} & \cellentry{0.95}{0.002}{0.75}{0.015}{0.9} & \cellentry{0.95}{0.003}{0.84}{0.013}{1.2} \\
+8 & 32 & \cellentry{0.95}{0.003}{--}{--}{0.8} & \cellentry{0.94}{0.003}{0.72}{0.014}{0.8} & \cellentry{0.95}{0.003}{0.76}{0.016}{1.0} & \cellentry{0.95}{0.002}{0.81}{0.015}{1.2} \\
+\midrule
+% 16 traits
+16 & 0 & \cellentry{0.95}{0.003}{0.66}{0.015}{2.2} & \cellentry{0.95}{0.003}{0.72}{0.016}{2.4} & \cellentry{0.95}{0.003}{0.80}{0.014}{2.8} & \cellentry{0.95}{0.003}{0.87}{0.011}{3.3} \\
+16 & 8 & \cellentry{0.95}{0.003}{--}{--}{2.2} & \cellentry{0.95}{0.003}{0.75}{0.015}{2.5} & \cellentry{0.95}{0.003}{0.78}{0.015}{2.7} & \cellentry{0.95}{0.003}{0.85}{0.012}{3.3} \\
+16 & 16 & \cellentry{0.95}{0.003}{--}{--}{2.3} & \cellentry{0.95}{0.003}{0.73}{0.016}{2.4} & \cellentry{0.95}{0.003}{0.78}{0.015}{2.7} & \cellentry{0.95}{0.002}{0.84}{0.013}{3.3} \\
+16 & 32 & \cellentry{0.95}{0.003}{--}{--}{2.3} & \cellentry{0.95}{0.003}{0.74}{0.014}{2.5} & \cellentry{0.95}{0.003}{0.78}{0.015}{2.7} & \cellentry{0.95}{0.002}{0.86}{0.010}{3.3} \\
+\midrule
+% 32 traits
+32 & 0 & \cellentry{0.95}{0.003}{0.71}{0.013}{11.0} & \cellentry{0.95}{0.003}{0.76}{0.013}{11.5} & \cellentry{0.95}{0.003}{0.80}{0.013}{12.5} & \cellentry{0.95}{0.003}{0.85}{0.010}{14.2} \\
+32 & 8 & \cellentry{0.95}{0.004}{--}{--}{11.1} & \cellentry{0.95}{0.003}{0.74}{0.013}{11.5} & \cellentry{0.95}{0.003}{0.79}{0.015}{12.5} & \cellentry{0.95}{0.003}{0.86}{0.011}{14.2} \\
+32 & 16 & \cellentry{0.95}{0.004}{--}{--}{10.9} & \cellentry{0.95}{0.003}{0.75}{0.013}{11.6} & \cellentry{0.95}{0.002}{0.80}{0.014}{12.2} & \cellentry{0.95}{0.003}{0.86}{0.012}{14.1} \\
+32 & 32 & \cellentry{0.95}{0.003}{--}{--}{11.1} & \cellentry{0.94}{0.003}{0.76}{0.013}{11.4} & \cellentry{0.95}{0.003}{0.80}{0.012}{12.1} & \cellentry{0.95}{0.003}{0.85}{0.012}{14.1} \\
+ 
+% ------------------------------------------------------------------
+% Panel: 16 taxa
+% ------------------------------------------------------------------
+\midrule
+\multicolumn{6}{c}{\textbf{16 Taxa}} \\
+\midrule
+% 8 traits
+8 & 0 & \cellentry{0.95}{0.003}{0.64}{0.017}{0.9} & \cellentry{0.95}{0.003}{0.67}{0.015}{0.9} & \cellentry{0.95}{0.002}{0.72}{0.016}{1.1} & \cellentry{0.95}{0.002}{0.80}{0.016}{1.4} \\
+8 & 8 & \cellentry{0.95}{0.002}{--}{--}{0.9} & \cellentry{0.95}{0.002}{0.70}{0.013}{1.0} & \cellentry{0.95}{0.002}{0.75}{0.017}{1.1} & \cellentry{0.95}{0.002}{0.80}{0.015}{1.4} \\
+8 & 16 & \cellentry{0.95}{0.002}{--}{--}{0.9} & \cellentry{0.95}{0.002}{0.69}{0.015}{0.9} & \cellentry{0.95}{0.002}{0.74}{0.015}{1.1} & \cellentry{0.95}{0.002}{0.79}{0.014}{1.4} \\
+8 & 32 & \cellentry{0.95}{0.003}{--}{--}{0.9} & \cellentry{0.95}{0.002}{0.65}{0.016}{0.9} & \cellentry{0.94}{0.003}{0.73}{0.016}{1.1} & \cellentry{0.95}{0.002}{0.80}{0.015}{1.3} \\
+\midrule
+% 16 traits
+16 & 0 & \cellentry{0.95}{0.002}{0.69}{0.015}{2.5} & \cellentry{0.94}{0.002}{0.73}{0.014}{2.8} & \cellentry{0.95}{0.002}{0.75}{0.014}{3.0} & \cellentry{0.95}{0.002}{0.82}{0.011}{3.6} \\
+16 & 8 & \cellentry{0.95}{0.002}{--}{--}{2.5} & \cellentry{0.95}{0.002}{0.71}{0.014}{2.8} & \cellentry{0.95}{0.002}{0.80}{0.010}{3.0} & \cellentry{0.95}{0.002}{0.83}{0.009}{3.6} \\
+16 & 16 & \cellentry{0.95}{0.002}{--}{--}{2.6} & \cellentry{0.95}{0.002}{0.72}{0.013}{2.7} & \cellentry{0.95}{0.002}{0.77}{0.011}{3.0} & \cellentry{0.95}{0.002}{0.84}{0.013}{3.6} \\
+16 & 32 & \cellentry{0.95}{0.002}{--}{--}{2.6} & \cellentry{0.95}{0.002}{0.70}{0.015}{2.8} & \cellentry{0.95}{0.002}{0.76}{0.014}{3.1} & \cellentry{0.95}{0.002}{0.81}{0.014}{3.6} \\
+\midrule
+% 32 traits
+32 & 0 & \cellentry{0.95}{0.002}{0.72}{0.011}{12.9} & \cellentry{0.95}{0.002}{0.74}{0.014}{13.1} & \cellentry{0.95}{0.002}{0.79}{0.010}{14.0} & \cellentry{0.95}{0.002}{0.84}{0.010}{15.6} \\
+32 & 8 & \cellentry{0.95}{0.003}{--}{--}{12.7} & \cellentry{0.95}{0.002}{0.73}{0.014}{13.1} & \cellentry{0.95}{0.002}{0.79}{0.012}{14.1} & \cellentry{0.95}{0.002}{0.83}{0.014}{15.7} \\
+32 & 16 & \cellentry{0.95}{0.002}{--}{--}{13.0} & \cellentry{0.95}{0.002}{0.72}{0.013}{13.4} & \cellentry{0.95}{0.002}{0.80}{0.011}{14.3} & \cellentry{0.95}{0.002}{0.84}{0.010}{15.6} \\
+32 & 32 & \cellentry{0.94}{0.002}{--}{--}{13.3} & \cellentry{0.95}{0.002}{0.77}{0.012}{13.7} & \cellentry{0.95}{0.002}{0.77}{0.016}{14.2} & \cellentry{0.95}{0.002}{0.82}{0.014}{15.6} \\
+ 
+% ------------------------------------------------------------------
+% Panel: 32 taxa
+% ------------------------------------------------------------------
+\midrule
+\multicolumn{6}{c}{\textbf{32 Taxa}} \\
+\midrule
+% 8 traits
+8 & 0 & \cellentry{0.95}{0.002}{0.63}{0.014}{1.2} & \cellentry{0.95}{0.002}{0.63}{0.016}{1.2} & \cellentry{0.95}{0.002}{0.72}{0.014}{1.4} & \cellentry{0.95}{0.002}{0.76}{0.014}{1.6} \\
+8 & 8 & \cellentry{0.95}{0.002}{--}{--}{1.2} & \cellentry{0.95}{0.002}{0.64}{0.015}{1.3} & \cellentry{0.95}{0.002}{0.70}{0.017}{1.4} & \cellentry{0.95}{0.002}{0.77}{0.014}{1.7} \\
+8 & 16 & \cellentry{0.95}{0.002}{--}{--}{1.1} & \cellentry{0.95}{0.002}{0.66}{0.013}{1.2} & \cellentry{0.95}{0.001}{0.67}{0.016}{1.4} & \cellentry{0.95}{0.001}{0.76}{0.015}{1.8} \\
+8 & 32 & \cellentry{0.95}{0.002}{--}{--}{1.2} & \cellentry{0.95}{0.001}{0.65}{0.014}{1.3} & \cellentry{0.95}{0.001}{0.71}{0.014}{1.4} & \cellentry{0.95}{0.001}{0.74}{0.016}{1.8} \\
+\midrule
+% 16 traits
+16 & 0 & \cellentry{0.95}{0.002}{0.64}{0.014}{3.9} & \cellentry{0.95}{0.002}{0.67}{0.017}{4.1} & \cellentry{0.95}{0.001}{0.75}{0.013}{4.5} & \cellentry{0.95}{0.002}{0.79}{0.012}{5.2} \\
+16 & 8 & \cellentry{0.95}{0.002}{--}{--}{4.0} & \cellentry{0.95}{0.001}{0.69}{0.013}{4.1} & \cellentry{0.95}{0.002}{0.75}{0.014}{4.5} & \cellentry{0.95}{0.001}{0.79}{0.014}{5.3} \\
+16 & 16 & \cellentry{0.95}{0.002}{--}{--}{4.0} & \cellentry{0.95}{0.002}{0.67}{0.016}{4.1} & \cellentry{0.95}{0.001}{0.74}{0.016}{4.6} & \cellentry{0.95}{0.001}{0.77}{0.016}{5.3} \\
+16 & 32 & \cellentry{0.95}{0.002}{--}{--}{4.1} & \cellentry{0.95}{0.001}{0.71}{0.014}{4.3} & \cellentry{0.95}{0.001}{0.74}{0.013}{4.6} & \cellentry{0.95}{0.002}{0.78}{0.016}{5.4} \\
+\midrule
+% 32 traits
+32 & 0 & \cellentry{0.95}{0.002}{0.68}{0.012}{15.1} & \cellentry{0.95}{0.002}{0.73}{0.013}{15.5} & \cellentry{0.95}{0.001}{0.73}{0.016}{16.0} & \cellentry{0.95}{0.001}{0.80}{0.011}{17.3} \\
+32 & 8 & \cellentry{0.94}{0.002}{0.68}{0.012}{15.0} & \cellentry{0.95}{0.001}{0.68}{0.015}{15.3} & \cellentry{0.95}{0.001}{0.75}{0.015}{16.0} & \cellentry{0.95}{0.001}{0.81}{0.013}{17.3} \\
+32 & 16 & \cellentry{0.95}{0.002}{--}{--}{15.1} & \cellentry{0.95}{0.001}{0.71}{0.013}{15.4} & \cellentry{0.95}{0.001}{0.75}{0.015}{15.8} & \cellentry{0.95}{0.001}{0.83}{0.011}{17.0} \\
+32 & 32 & \cellentry{0.95}{0.002}{--}{--}{14.1} & \cellentry{0.95}{0.001}{0.72}{0.013}{14.2} & \cellentry{0.95}{0.001}{0.76}{0.016}{15.1} & \cellentry{0.95}{0.001}{0.82}{0.012}{16.0} \\
+
+\end{longtable}
+\endgroup
+ 
+\bigskip
+{\footnotesize\textit{Note.}~Each cell reports coverage probability (mean $\pm$ SE) for the full model / taxon-means model above the rule, and mean MCMC runtime (minutes per 10 million cycles, full model) below the rule.}
+

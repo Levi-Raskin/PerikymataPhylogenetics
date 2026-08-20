@@ -624,10 +624,13 @@ saveRDS(ui2_Frechet_Var, paste0(input, "ui2/ui2_vcv_frechet_var.RDS"))
 ### species means Frechet
 print("LC evo")
 calculateFrechetVariance(lc_vcv_list$evolutionary)
-calculateFrechetVariance(lc_vcv_list_species_means$evolutionary)
+lc_vcv_list_sp_mean <- calculateFrechetVariance(lc_vcv_list_species_means$evolutionary)
+saveRDS(lc_vcv_list_sp_mean, paste0(input, "lc/lc_evo_vcv_frechet_var_species_mean.RDS"))
+
 print("UI2 evo")
-calculateFrechetVariance(ui2_vcv_list$evolutionary)
-calculateFrechetVariance(ui2_vcv_list_species_means$evolutionary)
+# calculateFrechetVariance(ui2_vcv_list$evolutionary)
+ui2_vcv_list_sp_mean <- calculateFrechetVariance(ui2_vcv_list_species_means$evolutionary)
+saveRDS(ui2_vcv_list_sp_mean, paste0(input, "ui2/ui2_evo_vcv_frechet_var_species_mean.RDS"))
 
 
 # Posterior mean uncertainty ----------------------------------------------
@@ -881,3 +884,4 @@ wo_intra_coverage_result <- mclapply(
 )
 wo_intra_coverage_result <- do.call(rbind, wo_intra_coverage_result)
 saveRDS(wo_intra_coverage_result, paste0(input, "simulation_study/wo_intra_coverage_result_parsed.rds"))
+
