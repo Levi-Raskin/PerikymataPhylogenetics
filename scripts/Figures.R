@@ -367,6 +367,67 @@ plotRidgePlotCombined <- function(pred1_lc, pred2_lc, pred1_ui2, pred2_ui2,
   return(pt)
 }
 
+plotRidgePlot <- function(pred1, pred2, specName1, specName2, plotName1, plotName2, color1, color2){
+  recode_vec <- setNames(c(plotName1, plotName2), c(specName1, specName2))
+  color_vec  <- setNames(c(color1, color2), c(plotName1, plotName2))
+  
+  plot_data <- bind_rows(pred1, pred2) |>
+    pivot_longer(cols = all_of(trait_labels),
+                 names_to = "trait",
+                 values_to = "value") |>
+    mutate(
+      trait   = factor(trait, levels = trait_labels),
+      species = recode(species, !!!recode_vec)
+    )
+  
+  overlap_data <- plot_data |>
+    group_by(trait) |>
+    group_modify(~{
+      df <- .x
+      
+      ov <- overlapping::overlap(
+        list(
+          df$value[df$species == plotName1],
+          df$value[df$species == plotName2]
+        )
+      )$OV
+      
+      tibble(overlap = ov)
+    }) |>
+    ungroup() |>
+    mutate(
+      trait = factor(trait, levels = trait_labels),
+      label = paste0(round(overlap * 100, 1), "%")
+    )  
+  pt <- ggplot(plot_data, aes(x = trait, y = value, fill = species)) +
+    geom_half_violin(data = filter(plot_data, species == plotName1),
+                     aes(fill = species),
+                     alpha = 0.6, scale = "width", side = "l") +
+    geom_half_violin(data = filter(plot_data, species == plotName2),
+                     aes(fill = species),
+                     alpha = 0.6, scale = "width", side = "r") +
+    geom_half_boxplot(data = filter(plot_data, species == plotName1),
+                      alpha = 0.6, scale = "width", side = "l", outlier.shape = NA) +
+    geom_half_boxplot(data = filter(plot_data, species == plotName2),
+                      alpha = 0.6, scale = "width", side = "r", outlier.shape = NA) +
+    geom_text(data = overlap_data,
+              aes(x = trait, y = Inf, label = label),
+              inherit.aes = FALSE,
+              vjust = 1.5, size = 5, color = "grey30") +
+    scale_fill_manual(values = color_vec) +
+    scale_y_continuous(limits = c(0, 40)) +
+    labs(
+      x    = "Decile",
+      y    = "Perikymata count per millimeter",
+      fill = "Species"
+    ) +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(size = 12, angle = 45, hjust = 1)
+    )
+  return(pt)
+}
 homo <- plotRidgePlotCombined(
   hs_preds_lc, ne_preds_lc, hs_preds_ui2, ne_preds_ui2,
   "Homo_sapiens", "Neanderthal",
@@ -401,7 +462,7 @@ pongo <- plotRidgePlot(
 combined <- homo /  pan / (gorilla + pongo)
 combined
 
-ggsave(paste0(output, "postPredCombined.svg"), plot = combined, width = 14, height = 12)
+ggsave(paste0(output, "postPredCombined.svg"), plot = combined, width = 14, height = 20)
 
 # Table 1: Posterior predictive means and variances -----------------------
 
