@@ -12,6 +12,7 @@ library(overlapping)
 library(parallel)
 library(patchwork)
 library(RColorBrewer)
+library(RiemBase)
 library(tidyr)
 library(tidyverse)
 
@@ -88,64 +89,56 @@ ggsave(paste0(output, "homoData.svg"), plot = p1, width = 7, height = 6)
 
 # evo VCV, tree, tipmeans ---------------------------------------
 
-map_estimate <- function(x) {
-  as.numeric(bayestestR::map_estimate(x))
+lc_vcv_list                <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
+ui2_vcv_list                <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS"))
+lc_vcv_list_species_means   <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted_species_means.RDS"))
+ui2_vcv_list_species_means  <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted_species_means.RDS"))
+
+vcv_mean_estimate <- function(vcv_list) {
+  data_list <- riemfactory(vcv_list, name = "spd")
+  x <- rbase.mean(data_list)
+  return(x$x)
 }
 
-evo_vcv_cols <- paste0("evo_vcv_(", rep(0:7, each = 8), ",", rep(0:7, times = 8), ")")
+decile_labels <- paste0("Decile ", 3:10)
 
-shared_max <- max(
-  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(lc_posterior_species_means, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(ui2_posterior_species_means, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
-)
+matrix_to_long <- function(mat) {
+  df <- as.data.frame(mat)
+  colnames(df) <- 0:(ncol(mat) - 1)
+  df$row <- 0:(nrow(mat) - 1)
+  
+  tidyr::pivot_longer(df, -row, names_to = "col", values_to = "mean_val") |>
+    mutate(
+      col       = as.integer(col),
+      row_label = factor(decile_labels[row + 1], levels = decile_labels),
+      col_label = factor(decile_labels[col + 1], levels = decile_labels),
+      is_diag   = row_label == col_label
+    )
+}
 
-shared_min <- min(
-  dplyr::select(lc_posterior, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(ui2_posterior, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(lc_posterior_species_means, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist(),
-  dplyr::select(ui2_posterior_species_means, all_of(evo_vcv_cols)) |> 
-    dplyr::summarise(across(everything(), map_estimate)) |> unlist()
-)
+# Compute each group's Fréchet-mean evolutionary VCV matrix once
+lc_mean     <- vcv_mean_estimate(lc_vcv_list$evolutionary)
+ui2_mean    <- vcv_mean_estimate(ui2_vcv_list$evolutionary)
+lc_mean_sp  <- vcv_mean_estimate(lc_vcv_list_species_means$evolutionary)
+ui2_mean_sp <- vcv_mean_estimate(ui2_vcv_list_species_means$evolutionary)
+
+shared_max <- max(lc_mean, ui2_mean, lc_mean_sp, ui2_mean_sp)
+shared_min <- min(lc_mean, ui2_mean, lc_mean_sp, ui2_mean_sp)
 
 # Helper to build a heatmap so we're not retyping the whole ggplot call four times
-build_evoVCV <- function(posterior_df) {
-  evo_map <- dplyr::select(posterior_df, all_of(evo_vcv_cols)) |>
-    summarise(across(everything(), map_estimate)) |>
-    pivot_longer(everything(), names_to = "element", values_to = "map") |>
-    mutate(
-      row = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\1", element)),
-      col = as.integer(sub(".*\\((\\d+),(\\d+)\\)", "\\2", element))
-    )
+build_evoVCV <- function(mean_mat) {
+  evo_map <- matrix_to_long(mean_mat)
   
-  decile_labels <- paste0("Decile ", 3:10)
-  
-  evo_map <- evo_map |>
-    mutate(
-      row_label = factor(decile_labels[row + 1], levels = decile_labels),
-      col_label = factor(decile_labels[col + 1], levels = decile_labels)
-    )
-  
-  evo_map$is_diag <- evo_map$col_label == evo_map$row_label
-  
-  ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = map)) +
+  ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = mean_val)) +
     geom_tile() +
     geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
-    geom_text(aes(label = round(map, 2)), size = 3, color = "black") +
+    geom_text(aes(label = round(mean_val, 2)), size = 3, color = "black") +
     scale_fill_gradient(
       low    = "white",
       high   = "#a31e22",
       limits = c(shared_min, shared_max)
     ) +
-    labs(x = NULL, y = NULL, fill = "MAP") +
+    labs(x = NULL, y = NULL, fill = "Mean") +
     theme_minimal(base_family = "Georgia") +
     theme(
       legend.position = "none",
@@ -155,7 +148,7 @@ build_evoVCV <- function(posterior_df) {
 }
 
 ### LC full ###
-evoVCV_lc <- build_evoVCV(lc_posterior)
+evoVCV_lc <- build_evoVCV(lc_mean)
 evoVCV_lc
 
 #tree
@@ -173,7 +166,7 @@ lcHominins <- (evoVCV_lc + treeplot_lc) + plot_layout(widths = c(1, 1))
 lcHominins
 
 ### LC wo intra (species means) ###
-evoVCV_lc_sp <- build_evoVCV(lc_posterior_species_means)
+evoVCV_lc_sp <- build_evoVCV(lc_mean_sp)
 evoVCV_lc_sp
 
 treeplot_lc_sp <- treeplot_lc  # same tree/rotation as above
@@ -182,7 +175,7 @@ lcHominins_species <- (evoVCV_lc_sp + treeplot_lc_sp) + plot_layout(widths = c(1
 lcHominins_species
 
 ### UI2 ###
-evoVCV_ui2 <- build_evoVCV(ui2_posterior)
+evoVCV_ui2 <- build_evoVCV(ui2_mean)
 evoVCV_ui2
 
 plottree_ui2 <- ape::read.tree(file = "/Users/levir/Documents/GitHub/PerikymataPhylogenetics/data/tree.txt")
@@ -198,7 +191,7 @@ ui2 <- (evoVCV_ui2 + treeplot_ui2) + plot_layout(widths = c(1, 1))
 ui2
 
 ### UI2 species means ###
-evoVCV_ui2_sp <- build_evoVCV(ui2_posterior_species_means)
+evoVCV_ui2_sp <- build_evoVCV(ui2_mean_sp)
 evoVCV_ui2_sp
 
 treeplot_ui2_sp <- treeplot_ui2  # same pruned tree/rotation as above
@@ -219,6 +212,102 @@ combined <- wrap_plots(
 combined
 
 ggsave(paste0(output, "treeMAPCombined.svg"), plot = combined, width = 28, height = 12)
+
+
+# SOM mean intraspecific VCV matrices -------------------------------------
+# SOM mean intraspecific VCV matrices -------------------------------------
+lc_vcv_list  <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
+ui2_vcv_list <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS"))
+
+vcv_mean_estimate <- function(vcv_list) {
+  data_list <- riemfactory(vcv_list, name = "spd")
+  x <- rbase.mean(data_list)
+  return(x$x)
+}
+
+decile_labels <- paste0("Decile ", 3:10)
+
+matrix_to_long <- function(mat) {
+  df <- as.data.frame(mat)
+  colnames(df) <- 0:(ncol(mat) - 1)
+  df$row <- 0:(nrow(mat) - 1)
+  
+  tidyr::pivot_longer(df, -row, names_to = "col", values_to = "mean_val") |>
+    mutate(
+      col       = as.integer(col),
+      row_label = factor(decile_labels[row + 1], levels = decile_labels),
+      col_label = factor(decile_labels[col + 1], levels = decile_labels),
+      is_diag   = row_label == col_label
+    )
+}
+
+build_evoVCV <- function(mean_mat) {
+  evo_map <- matrix_to_long(mean_mat)
+  
+  ggplot(evo_map, aes(x = col_label, y = fct_rev(row_label), fill = mean_val)) +
+    geom_tile() +
+    geom_tile(data = subset(evo_map, is_diag), color = "black", linewidth = 1.5, fill = NA) +
+    geom_text(aes(label = round(mean_val, 2)), size = 3, color = "black") +
+    scale_fill_gradient(
+      low    = "white",
+      high   = "#a31e22",
+      limits = c(shared_min, shared_max)
+    ) +
+    labs(x = NULL, y = NULL, fill = "Mean") +
+    theme_minimal(base_family = "Georgia") +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid = element_blank()
+    )
+}
+
+intraTaxonOrder <- c(
+  "Homo_sapiens",
+  "Neanderthal",
+  "Pan_paniscus",
+  "Pan_troglodytes",
+  "Gorilla_beringei",
+  "Gorilla_gorilla",
+  "Pongo_abelii",
+  "Pongo_pygmaeus"
+)
+
+### LC ###
+lc_vcv_means <- list()
+for (nm in intraTaxonOrder) {
+  if (nm %in% names(lc_vcv_list)) {
+    lc_vcv_means[[nm]] <- vcv_mean_estimate(lc_vcv_list[[nm]])
+  }
+}
+lc_shared_max <- max(unlist(lc_vcv_means))
+lc_shared_min <- min(unlist(lc_vcv_means))
+shared_max <- lc_shared_max
+shared_min <- lc_shared_min
+lc_vcv_plots <- Map(function(mat, nm) build_evoVCV(mat) + ggtitle(gsub("_", " ", nm)) + theme(plot.title = element_text(hjust = 0.5)), lc_vcv_means, names(lc_vcv_means))
+
+### UI2 ###
+ui2_vcv_means <- list()
+for (nm in intraTaxonOrder) {
+  if (nm %in% names(ui2_vcv_list)) {
+    ui2_vcv_means[[nm]] <- vcv_mean_estimate(ui2_vcv_list[[nm]])
+  }
+}
+ui2_shared_max <- max(unlist(ui2_vcv_means))
+ui2_shared_min <- min(unlist(ui2_vcv_means))
+shared_max <- ui2_shared_max
+shared_min <- ui2_shared_min
+ui2_vcv_plots <- Map(function(mat, nm) build_evoVCV(mat) + ggtitle(gsub("_", " ", nm)) + theme(plot.title = element_text(hjust = 0.5)), ui2_vcv_means, names(ui2_vcv_means))
+
+### Combine ###
+n_col <- max(length(lc_vcv_plots), length(ui2_vcv_plots))
+lc_vcv_plots  <- c(lc_vcv_plots,  replicate(n_col - length(lc_vcv_plots),  plot_spacer(), simplify = FALSE))
+ui2_vcv_plots <- c(ui2_vcv_plots, replicate(n_col - length(ui2_vcv_plots), plot_spacer(), simplify = FALSE))
+
+intraVCV_combined <- wrap_plots(c(lc_vcv_plots, ui2_vcv_plots), ncol = n_col, nrow = 2)
+intraVCV_combined
+
+ggsave(paste0(output, "intraspecificVCV_SOM.svg"), plot = intraVCV_combined, width = 5 * n_col, height = 10)
 
 # UI2 LC combined ---------------------------------------------------------
 hs_preds_lc   <- read_rds(paste0(input, "/lc/posteriorPredictive/hsPostPred.rds"))
