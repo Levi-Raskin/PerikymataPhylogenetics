@@ -215,7 +215,6 @@ ggsave(paste0(output, "treeMAPCombined.svg"), plot = combined, width = 28, heigh
 
 
 # SOM mean intraspecific VCV matrices -------------------------------------
-# SOM mean intraspecific VCV matrices -------------------------------------
 lc_vcv_list  <- readRDS(paste0(input, "lc/lc_dec3_10_vcv_extracted.RDS"))
 ui2_vcv_list <- readRDS(paste0(input, "ui2/ui2_dec3_10_no_pongo_vcv_extracted.RDS"))
 
@@ -552,50 +551,6 @@ combined <- homo /  pan / (gorilla + pongo)
 combined
 
 ggsave(paste0(output, "postPredCombined.svg"), plot = combined, width = 14, height = 20)
-
-# Table 1: Posterior predictive means and variances -----------------------
-
-writeTableOne <- function(pred){
-  string <- ""
-  for(i in 1:8){
-    mean <- mean(pred[,i])
-    var <- var(pred[,i])
-    string <- paste0(string, round(mean, 2), " (" , round(var, 2), ")")
-    if(i != 8){
-      string <- paste0(string, " & ") 
-    }
-  }
-  print(string)
-}
-
-#### LC
-hs_preds <- read_rds(paste0(input, "lc/posteriorPredictive/hsPostPred.rds"))
-ne_preds <- read_rds(paste0(input, "lc/posteriorPredictive/neanderthalPostPred.rds"))
-pp_preds <- read_rds(paste0(input, "lc/posteriorPredictive/panpaniscusPostPred.rds"))
-pt_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pantroglodytesPostPred.rds"))
-gb_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorrillaberingeiPostPred.rds"))
-gg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/gorillagorillaPostPred.rds"))
-pa_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongoabeliiPostPred.rds"))
-ppyg_preds <- read_rds(paste0(input, "lc/posteriorPredictive/pongopygmaeusPostPred.rds"))
-
-writeTableOne(hs_preds)
-writeTableOne(ne_preds)
-writeTableOne(pp_preds)
-writeTableOne(pt_preds)
-writeTableOne(gb_preds)
-writeTableOne(gg_preds)
-writeTableOne(pa_preds)
-writeTableOne(ppyg_preds)
-
-#### ui2
-hs_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/hsPostPred.rds"))
-ne_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/neanderthalPostPred.rds"))
-pp_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/panpaniscusPostPred.rds"))
-pt_preds <- read_rds(paste0(input, "ui2/posteriorPredictive/pantroglodytesPostPred.rds"))
-writeTableOne(hs_preds)
-writeTableOne(ne_preds)
-writeTableOne(pp_preds)
-writeTableOne(pt_preds)
 
 # intraspecific means vs. MLE ------------------------------------------
 
@@ -1115,10 +1070,10 @@ header_tex <- r"---(\clearpage
 \renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{3pt}
 \begin{longtable}{cccccc}
-\caption{Coverage probability and Markov chain Monte Carlo (MCMC) runtime from a full-factorial simulation study that varied the number of taxa (8, 16, or 32; shown top to bottom in separate panels), the number of traits (8, 16, or 32; panel rows), the number of observations per taxon (2, 4, 8, or 16; panel columns), and the number of missing observations across the entire simulated dataset (0, 8, 16, or 32; rows within each cell). For each combination of conditions we simulated 100 datasets and inferred parameters with both the full model, which accounts for intraspecific variation, and the taxon means model, which takes the mean value across observations in a taxon as known without uncertainty. Within each cell, the top line reports coverage probability (mean $\pm$ standard error across replicates) for the full model (left of the slash) and the taxon means model (right of the slash); the bottom line reports the mean wall clock time in minutes per ten million MCMC cycles for the full model running serially. The expected coverage probability is 95\%. } \label{table:coverage} \\
+\caption{Coverage probability and Markov chain Monte Carlo (MCMC) runtime from a full-factorial simulation study that varied the number of taxa (8, 16, or 32; shown top to bottom in separate panels), the number of traits (8, 16, or 32; panel rows), the number of individuals per taxon (2, 4, 8, or 16; panel columns), and the number of missing observations across the entire simulated dataset (0, 8, 16, or 32; rows within each cell). For each combination of conditions we simulated 100 datasets and inferred parameters with both the full model, which accounts for intraspecific variation, and the taxon means model, which takes the mean value across individuals in a taxon as known without uncertainty. Within each cell, the top line reports coverage probability (mean $\pm$ standard error across replicates) for the full model (left of the slash) and the taxon means model (right of the slash); the bottom line reports the mean wall clock time in minutes per ten million MCMC cycles for the full model running serially. The expected coverage probability is 95\%. } \label{table:coverage} \\
  
 \toprule
- & & \multicolumn{4}{c}{Observations per Taxon} \\
+ & & \multicolumn{4}{c}{Individuals per Taxon} \\
 \cmidrule(lr){3-6}
 \textbf{Traits} & \textbf{Missing} & \textbf{2} & \textbf{4} & \textbf{8} & \textbf{16} \\
 \midrule
@@ -1126,7 +1081,7 @@ header_tex <- r"---(\clearpage
  
 \multicolumn{6}{l}{\textit{Table \thetable{} continued from previous page}} \\
 \toprule
- & & \multicolumn{4}{c}{Observations per Taxon} \\
+ & & \multicolumn{4}{c}{Individuals per Taxon} \\
 \cmidrule(lr){3-6}
 \textbf{Traits} & \textbf{Missing} & \textbf{2} & \textbf{4} & \textbf{8} & \textbf{16} \\
 \midrule
@@ -1157,6 +1112,7 @@ writeLines(full_table_tex, paste0(output, "/coverage_table.tex"))
 full_model_coverage_result <- readRDS(paste0(input, "simulation_study/full_model_coverage_result_parsed.rds"))
 wo_intra_coverage_result   <- readRDS(paste0(input, "simulation_study/wo_intra_coverage_result_parsed.rds"))
 full_model_timing_result   <- readRDS(paste0(input, "simulation_study/full_model_timing_result_parsed.rds"))
+ranks <- read.csv("/Users/levir/Documents/GitHub/PerikymataPhylogenetics/results/withGibbs_MCMC/simulation_study/runk/simulated_runk_8_tips_8_traits_32_nimp_16_nobs_5000_reps_rank_uniform_test.csv")
 
 sim_join_keys <- c("n_tips", "n_traits", "n_imp", "n_obs")
 sim_obs_levels <- c(2, 4, 8, 16)
@@ -1197,6 +1153,14 @@ coverage_labels <- coverage_dat %>%
     sprintf("%.1f", `Taxon means model` * 100), "%"
   ))
 
+coverage_se_dat <- coverage_dat %>%
+  group_by(obs_lab, model) %>%
+  summarise(
+    mean_coverage = mean(coverage),
+    se_coverage   = sd(coverage) / sqrt(n()),
+    .groups       = "drop"
+  )
+
 coveragePanel <- ggplot(coverage_dat, aes(x = obs_lab, y = coverage, fill = model)) +
   geom_hline(yintercept = 0.95, linetype = "dashed", linewidth = 0.4, color = "grey30") +
   geom_half_violin(
@@ -1226,7 +1190,7 @@ coveragePanel <- ggplot(coverage_dat, aes(x = obs_lab, y = coverage, fill = mode
     expand = expansion(mult = c(0.05, 0.14))
   ) +
   labs(
-    x    = "Observations per taxon",
+    x    = "Individuals per taxon",
     y    = "Coverage probability",
     fill = "Model"
   ) +
@@ -1264,7 +1228,7 @@ timingPanel <- ggplot(timing_dat, aes(x = obs_lab, y = mean_time, color = trait_
     minor_breaks = NULL
   ) +
   labs(
-    x     = "Observations per taxon",
+    x     = "Individuals per taxon",
     y     = "Mean wall clock time per 10 million\nMCMC cycles (minutes, log scale)",
     color = "Traits"
   ) +
@@ -1276,13 +1240,392 @@ timingPanel <- ggplot(timing_dat, aes(x = obs_lab, y = mean_time, color = trait_
     axis.text.x      = element_text(size = 12)
   )
 
+n_reps <- n_distinct(ranks$replicate_id)
+alpha  <- 0.05
+stopifnot(all(table(ranks$parameter_label) == n_reps))
+stopifnot(all(ranks$normalized_rank >= 0), all(ranks$normalized_rank <= 1))
+bin_width <- 0.05
+expected_height <- function(n, bin_width) n * bin_width
+K <- 200
+z <- seq_len(K) / K
+gamma_stat <- function(u, z) {
+  N <- length(u)
+  r <- findInterval(z, sort(u))
+  2 * min(pmin(pbinom(r, N, z),
+               pbinom(r - 1, N, z, lower.tail = FALSE)))
+}
+g5 <- bayesplot:::adjust_gamma(N = n_reps, L = 1, K = K, prob = 1 - alpha)
+cat(sprintf("gamma_5 = %.4e   (N = %d, K = %d, prob = %.2f)\n",
+            g5, n_reps, K, 1 - alpha))
+gam <- ranks %>%
+  group_by(parameter_label) %>%
+  summarise(gamma = gamma_stat(normalized_rank, z), .groups = "drop") %>%
+  mutate(log_ratio = log(gamma / g5),
+         reject    = log_ratio < 0)
+print(arrange(gam, log_ratio), n = Inf)
+cat(sprintf("\n%d / %d parameters reject uniformity at the %.0f%% level\n\n",
+            sum(gam$reject), nrow(gam), 100 * alpha))
+
+rank_param_groups <- gam %>%
+  mutate(
+    param_type = case_when(
+      str_detect(parameter_label, "^evo_vcv") ~ "Evolutionary VCV",
+      str_detect(parameter_label, "_vcv_")    ~ "Intraspecific VCV",
+      str_detect(parameter_label, "_mean_")   ~ "Taxon means",
+      TRUE ~ NA_character_
+    ),
+    taxon = if_else(
+      param_type %in% c("Intraspecific VCV", "Taxon means"),
+      str_remove(parameter_label, "_(vcv|mean)_.*$"),
+      NA_character_
+    )
+  )
+
+stopifnot(!any(is.na(rank_param_groups$param_type)))
+
+ranks_grouped <- ranks %>%
+  left_join(
+    dplyr::select(rank_param_groups, parameter_label, param_type, taxon),
+    by = "parameter_label"
+  )
+
+nbins <- round(1 / bin_width)
+
+rank_hist_dat <- ranks_grouped %>%
+  mutate(bin = pmin(floor(normalized_rank / bin_width), nbins - 1)) %>%
+  count(param_type, bin, name = "n_rank") %>%
+  complete(param_type, bin = 0:(nbins - 1), fill = list(n_rank = 0)) %>%
+  mutate(
+    bin_lo  = bin * bin_width,
+    bin_hi  = bin_lo + bin_width,
+    bin_mid = bin_lo + bin_width / 2
+  )
+
+group_gamma_summary <- rank_param_groups %>%
+  group_by(param_type) %>%
+  summarise(
+    n_params        = n_distinct(parameter_label),
+    n_reject        = sum(reject),
+    worst_log_ratio = min(log_ratio),
+    .groups         = "drop"
+  ) %>%
+  mutate(
+    reject = n_reject > 0,
+    label  = paste0(
+      "log(\u03b3/\u03b3\u2085) = ", sprintf("%.2f", worst_log_ratio),
+      if_else(reject, " *", ""),
+      "  (", n_reject, "/", n_params, ")"
+    )
+  )
+
+print(as.data.frame(group_gamma_summary))
+
+rank_ci_dat <- rank_param_groups %>%
+  distinct(param_type, parameter_label) %>%
+  count(param_type, name = "n_entries") %>%
+  mutate(
+    N_pooled = n_entries * n_reps,
+    band_lo  = qbinom(alpha / 2,     N_pooled, bin_width),
+    band_hi  = qbinom(1 - alpha / 2, N_pooled, bin_width),
+    band_mid = expected_height(N_pooled, bin_width)
+  )
+
+rank_hist_theme <- theme_minimal(base_family = "Georgia") +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.x      = element_text(size = 12),
+    plot.title       = element_text(size = 12, face = "bold", hjust = 0.5)
+  )
+
+evoPanel <- ggplot() +
+  geom_rect(
+    data = filter(rank_ci_dat, param_type == "Evolutionary VCV"),
+    aes(xmin = 0, xmax = 1, ymin = band_lo, ymax = band_hi),
+    inherit.aes = FALSE, fill = "grey70", alpha = 0.4
+  ) +
+  geom_hline(
+    data = filter(rank_ci_dat, param_type == "Evolutionary VCV"),
+    aes(yintercept = band_mid),
+    linetype = "dashed", linewidth = 0.4, color = "grey30"
+  ) +
+  geom_col(
+    data = filter(rank_hist_dat, param_type == "Evolutionary VCV"),
+    aes(x = bin_mid, y = n_rank),
+    width = bin_width * 0.9, fill = sim_model_colors[["Full model"]], alpha = 0.7
+  ) +
+  geom_text(
+    data = filter(group_gamma_summary, param_type == "Evolutionary VCV"),
+    aes(x = Inf, y = Inf, label = label),
+    inherit.aes = FALSE, hjust = 1.02, vjust = 1.5, size = 3.8, color = "grey30"
+  ) +
+  scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+  scale_y_continuous(labels = scales::label_comma()) +
+  labs(x = "Normalized rank", y = "Count", title = "Evolutionary VCV") +
+  rank_hist_theme
+
+intraPanel <- ggplot() +
+  geom_rect(
+    data = filter(rank_ci_dat, param_type == "Intraspecific VCV"),
+    aes(xmin = 0, xmax = 1, ymin = band_lo, ymax = band_hi),
+    inherit.aes = FALSE, fill = "grey70", alpha = 0.4
+  ) +
+  geom_hline(
+    data = filter(rank_ci_dat, param_type == "Intraspecific VCV"),
+    aes(yintercept = band_mid),
+    linetype = "dashed", linewidth = 0.4, color = "grey30"
+  ) +
+  geom_col(
+    data = filter(rank_hist_dat, param_type == "Intraspecific VCV"),
+    aes(x = bin_mid, y = n_rank),
+    width = bin_width * 0.9, fill = sim_model_colors[["Full model"]], alpha = 0.7
+  ) +
+  geom_text(
+    data = filter(group_gamma_summary, param_type == "Intraspecific VCV"),
+    aes(x = Inf, y = Inf, label = label),
+    inherit.aes = FALSE, hjust = 1.02, vjust = 1.5, size = 3.8, color = "grey30"
+  ) +
+  scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+  scale_y_continuous(labels = scales::label_comma()) +
+  labs(x = "Normalized rank", y = "Count", title = "Intraspecific VCV") +
+  rank_hist_theme
+
+meanPanel <- ggplot() +
+  geom_rect(
+    data = filter(rank_ci_dat, param_type == "Taxon means"),
+    aes(xmin = 0, xmax = 1, ymin = band_lo, ymax = band_hi),
+    inherit.aes = FALSE, fill = "grey70", alpha = 0.4
+  ) +
+  geom_hline(
+    data = filter(rank_ci_dat, param_type == "Taxon means"),
+    aes(yintercept = band_mid),
+    linetype = "dashed", linewidth = 0.4, color = "grey30"
+  ) +
+  geom_col(
+    data = filter(rank_hist_dat, param_type == "Taxon means"),
+    aes(x = bin_mid, y = n_rank),
+    width = bin_width * 0.9, fill = sim_model_colors[["Full model"]], alpha = 0.7
+  ) +
+  geom_text(
+    data = filter(group_gamma_summary, param_type == "Taxon means"),
+    aes(x = Inf, y = Inf, label = label),
+    inherit.aes = FALSE, hjust = 1.02, vjust = 1.5, size = 3.8, color = "grey30"
+  ) +
+  scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+  scale_y_continuous(labels = scales::label_comma()) +
+  labs(x = "Normalized rank", y = "Count", title = "Taxon means") +
+  rank_hist_theme
+
+rankUniformPanel <- (evoPanel / intraPanel / meanPanel)
+
 sim_tag_theme <- theme(plot.tag = element_text(family = "Georgia", face = "bold", size = 13))
 
-simulationFigure <- (coveragePanel + sim_tag_theme) / (timingPanel + sim_tag_theme) +
-  plot_annotation(tag_levels = "a", tag_suffix = ")")
+simulationFigure <- (coveragePanel / timingPanel) | rankUniformPanel
 
 simulationFigure
-ggsave(paste0(output, "simulationStudy.svg"), plot = simulationFigure, width = 12, height = 9)
+
+ggsave(paste0(output, "simulationStudy.svg"), plot = simulationFigure, width = 14, height = 9)
+
+
+# SOM runk figs -----------------------------------------------------------
+
+makeRunkFig <- function(fp){
+  ranks <- read.csv(fp)
+  
+  fname <- basename(fp)
+  pattern <- "simulated_runk_[0-9]+_tips_[0-9]+_traits_[0-9]+_nimp_[0-9]+_nobs_[0-9]+_reps"
+  base <- regmatches(fname, regexpr(pattern, fname))
+  
+  n_reps <- n_distinct(ranks$replicate_id)
+  alpha  <- 0.05
+  stopifnot(all(table(ranks$parameter_label) == n_reps))
+  stopifnot(all(ranks$normalized_rank >= 0), all(ranks$normalized_rank <= 1))
+  bin_width <- 0.05
+  expected_height <- function(n, bin_width) n * bin_width
+  K <- 200
+  z <- seq_len(K) / K
+  gamma_stat <- function(u, z) {
+    N <- length(u)
+    r <- findInterval(z, sort(u))
+    2 * min(pmin(pbinom(r, N, z),
+                 pbinom(r - 1, N, z, lower.tail = FALSE)))
+  }
+  g5 <- bayesplot:::adjust_gamma(N = n_reps, L = 1, K = K, prob = 1 - alpha)
+  cat(sprintf("gamma_5 = %.4e   (N = %d, K = %d, prob = %.2f)\n",
+              g5, n_reps, K, 1 - alpha))
+  gam <- ranks %>%
+    group_by(parameter_label) %>%
+    summarise(gamma = gamma_stat(normalized_rank, z), .groups = "drop") %>%
+    mutate(log_ratio = log(gamma / g5),
+           reject    = log_ratio < 0)
+  print(arrange(gam, log_ratio), n = Inf)
+  cat(sprintf("\n%d / %d parameters reject uniformity at the %.0f%% level\n\n",
+              sum(gam$reject), nrow(gam), 100 * alpha))
+  
+  rank_param_groups <- gam %>%
+    mutate(
+      param_type = case_when(
+        str_detect(parameter_label, "^evo_vcv") ~ "Evolutionary VCV",
+        str_detect(parameter_label, "_vcv_")    ~ "Intraspecific VCV",
+        str_detect(parameter_label, "_mean_")   ~ "Taxon means",
+        TRUE ~ NA_character_
+      ),
+      taxon = if_else(
+        param_type %in% c("Intraspecific VCV", "Taxon means"),
+        str_remove(parameter_label, "_(vcv|mean)_.*$"),
+        NA_character_
+      )
+    )
+  
+  stopifnot(!any(is.na(rank_param_groups$param_type)))
+  
+  ranks_grouped <- ranks %>%
+    left_join(
+      dplyr::select(rank_param_groups, parameter_label, param_type, taxon),
+      by = "parameter_label"
+    )
+  
+  nbins <- round(1 / bin_width)
+  
+  rank_hist_dat <- ranks_grouped %>%
+    mutate(bin = pmin(floor(normalized_rank / bin_width), nbins - 1)) %>%
+    count(param_type, bin, name = "n_rank") %>%
+    complete(param_type, bin = 0:(nbins - 1), fill = list(n_rank = 0)) %>%
+    mutate(
+      bin_lo  = bin * bin_width,
+      bin_hi  = bin_lo + bin_width,
+      bin_mid = bin_lo + bin_width / 2
+    )
+  
+  group_gamma_summary <- rank_param_groups %>%
+    group_by(param_type) %>%
+    summarise(
+      n_params        = n_distinct(parameter_label),
+      n_reject        = sum(reject),
+      worst_log_ratio = min(log_ratio),
+      .groups         = "drop"
+    ) %>%
+    mutate(
+      reject = n_reject > 0,
+      label  = paste0(
+        "log(\u03b3/\u03b3\u2085) = ", sprintf("%.2f", worst_log_ratio),
+        if_else(reject, " *", ""),
+        "  (", n_reject, "/", n_params, ")"
+      )
+    )
+  
+  rank_ci_dat <- rank_param_groups %>%
+    distinct(param_type, parameter_label) %>%
+    count(param_type, name = "n_entries") %>%
+    mutate(
+      N_pooled = n_entries * n_reps,
+      band_lo  = qbinom(alpha / 2,     N_pooled, bin_width),
+      band_hi  = qbinom(1 - alpha / 2, N_pooled, bin_width),
+      band_mid = expected_height(N_pooled, bin_width)
+    )
+  
+  rank_hist_theme <- theme_minimal(base_family = "Georgia") +
+    theme(
+      panel.grid.minor = element_blank(),
+      axis.text.x      = element_text(size = 12),
+      plot.title       = element_text(size = 12, face = "bold", hjust = 0.5)
+    )
+  
+  evoPanel <- ggplot() +
+    geom_rect(
+      data = filter(rank_ci_dat, param_type == "Evolutionary VCV"),
+      aes(xmin = 0, xmax = 1, ymin = band_lo, ymax = band_hi),
+      inherit.aes = FALSE, fill = "grey70", alpha = 0.4
+    ) +
+    geom_hline(
+      data = filter(rank_ci_dat, param_type == "Evolutionary VCV"),
+      aes(yintercept = band_mid),
+      linetype = "dashed", linewidth = 0.4, color = "grey30"
+    ) +
+    geom_col(
+      data = filter(rank_hist_dat, param_type == "Evolutionary VCV"),
+      aes(x = bin_mid, y = n_rank),
+      width = bin_width * 0.9, fill = sim_model_colors[["Full model"]], alpha = 0.7
+    ) +
+    geom_text(
+      data = filter(group_gamma_summary, param_type == "Evolutionary VCV"),
+      aes(x = Inf, y = Inf, label = label),
+      inherit.aes = FALSE, hjust = 1.02, vjust = 1.5, size = 3.8, color = "grey30"
+    ) +
+    scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+    scale_y_continuous(labels = scales::label_comma()) +
+    labs(x = "Normalized rank", y = "Count", title = "Evolutionary VCV") +
+    rank_hist_theme
+  
+  intraPanel <- ggplot() +
+    geom_rect(
+      data = filter(rank_ci_dat, param_type == "Intraspecific VCV"),
+      aes(xmin = 0, xmax = 1, ymin = band_lo, ymax = band_hi),
+      inherit.aes = FALSE, fill = "grey70", alpha = 0.4
+    ) +
+    geom_hline(
+      data = filter(rank_ci_dat, param_type == "Intraspecific VCV"),
+      aes(yintercept = band_mid),
+      linetype = "dashed", linewidth = 0.4, color = "grey30"
+    ) +
+    geom_col(
+      data = filter(rank_hist_dat, param_type == "Intraspecific VCV"),
+      aes(x = bin_mid, y = n_rank),
+      width = bin_width * 0.9, fill = sim_model_colors[["Full model"]], alpha = 0.7
+    ) +
+    geom_text(
+      data = filter(group_gamma_summary, param_type == "Intraspecific VCV"),
+      aes(x = Inf, y = Inf, label = label),
+      inherit.aes = FALSE, hjust = 1.02, vjust = 1.5, size = 3.8, color = "grey30"
+    ) +
+    scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+    scale_y_continuous(labels = scales::label_comma()) +
+    labs(x = "Normalized rank", y = "Count", title = "Intraspecific VCV") +
+    rank_hist_theme
+  
+  meanPanel <- ggplot() +
+    geom_rect(
+      data = filter(rank_ci_dat, param_type == "Taxon means"),
+      aes(xmin = 0, xmax = 1, ymin = band_lo, ymax = band_hi),
+      inherit.aes = FALSE, fill = "grey70", alpha = 0.4
+    ) +
+    geom_hline(
+      data = filter(rank_ci_dat, param_type == "Taxon means"),
+      aes(yintercept = band_mid),
+      linetype = "dashed", linewidth = 0.4, color = "grey30"
+    ) +
+    geom_col(
+      data = filter(rank_hist_dat, param_type == "Taxon means"),
+      aes(x = bin_mid, y = n_rank),
+      width = bin_width * 0.9, fill = sim_model_colors[["Full model"]], alpha = 0.7
+    ) +
+    geom_text(
+      data = filter(group_gamma_summary, param_type == "Taxon means"),
+      aes(x = Inf, y = Inf, label = label),
+      inherit.aes = FALSE, hjust = 1.02, vjust = 1, size = 3.8, color = "grey30"
+    ) +
+    scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+    scale_y_continuous(labels = scales::label_comma()) +
+    labs(x = "Normalized rank", y = "Count", title = "Taxon means") +
+    rank_hist_theme
+  
+  rankUniformPanel <- (evoPanel / intraPanel / meanPanel)
+  
+  
+  ggsave(paste0(output, "runk/", base, "_figure.pdf"), 
+         plot = rankUniformPanel, 
+         width = 7, height = 9,
+         device = cairo_pdf)
+}
+
+
+runk_file_list <- list.files(
+  paste0(input, "simulation_study/runk/"),
+  full.names = T,
+  pattern = "*_rank_uniform_test.csv"
+)
+
+lapply(runk_file_list, makeRunkFig)
+
 
 #### Table Latex Generation ####
 
@@ -1538,8 +1881,6 @@ ui2_Frechet_Var <- readRDS(paste0(input, "ui2/ui2_vcv_frechet_var.RDS"))
 lc_Frechet_Var_TaxonMeans  <- readRDS(paste0(input, "lc/lc_evo_vcv_frechet_var_species_mean.RDS"))
 ui2_Frechet_Var_TaxonMeans <- readRDS(paste0(input, "ui2/ui2_evo_vcv_frechet_var_species_mean.RDS"))
 
-# tableTaxonOrder is assumed to start with "evolutionary" followed by the 8 taxa,
-# as used previously; strip "evolutionary" out to get just the intraspecific taxa
 intraTaxonOrder <- tableTaxonOrder[tableTaxonOrder != "evolutionary"]
 
 frechetVariancesData <- rbind(
@@ -1755,49 +2096,6 @@ sep = "\n"
 )
 
 writeTableOutputs(overlapEmpiricalFullTex, overlapEmpiricalFullData, "table_overlapEmpiricalFull")
-
-## table:fullEmpiricalVar
-
-lc_posterior <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10.tsv")))
-lc_posterior <- lc_posterior[round(0.1 * nrow(lc_posterior)) : nrow(lc_posterior), ]
-
-lc_posterior_species_means <- as.data.frame(fread(paste0(input, "lc/lc_dec3_10_species_means.tsv")))
-lc_posterior_species_means <- lc_posterior_species_means[round(0.1 * nrow(lc_posterior_species_means)) : nrow(lc_posterior_species_means), ]
-
-ui2_posterior <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_no_pongo.tsv")))
-ui2_posterior <- ui2_posterior[round(0.1 * nrow(ui2_posterior)) : nrow(ui2_posterior), ]
-
-ui2_posterior_species_means <- as.data.frame(fread(paste0(input, "ui2/ui2_dec3_10_species_means.tsv")))
-ui2_posterior_species_means <- ui2_posterior_species_means[round(0.1 * nrow(ui2_posterior_species_means)) : nrow(ui2_posterior_species_means), ]
-
-evoVcvMapDifference <- function(x, y) {
-  bayestestR::map_estimate(x)$MAP_Estimate - bayestestR::map_estimate(y)$MAP_Estimate
-}
-
-fullEmpiricalVarData <- list(
-  C1 = evoVcvMatrix(lc_posterior, lc_posterior_species_means, evoVcvMapDifference),
-  I2 = evoVcvMatrix(ui2_posterior, ui2_posterior_species_means, evoVcvMapDifference)
-)
-
-fullEmpiricalVarTex <- paste(
-  r"---(\begin{table*}[p]
-    \centering
-    \resizebox{\textwidth}{!}{
-    \begin{tabular}{lcccccccc}
-    \toprule)---",
-  matrixBlockTex(fullEmpiricalVarData$C1, "\\textit{C\\textsubscript{1}}"),
-  "    \\midrule",
-  matrixBlockTex(fullEmpiricalVarData$I2, "\\textit{I\\textsuperscript{2}}"),
-  r"---(    \bottomrule
-    \end{tabular}
-    }
-    \caption{Difference in maximum \textit{a posteriori} estimate for each element of the evolutionary variance-covariance matrices in the posterior distributions inferred with the full model and the empirical species means model. Positive values indicate the full model had a greater maximum \textit{a posteriori} estimate for that element.}
-    \label{table:fullEmpiricalVar}
-\end{table*})---",
-sep = "\n"
-)
-
-writeTableOutputs(fullEmpiricalVarTex, fullEmpiricalVarData, "table_fullEmpiricalVar")
 
 ## table:meanVariances
 
